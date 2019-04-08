@@ -1,0 +1,253 @@
+{
+	"info": {
+		"_postman_id": "0d9d997e-6cb0-4456-aac5-4594eb920d00",
+		"name": "CTO Backend API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Sign Up",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "506b91f4-679d-41ad-bf91-ee6558cfccf5",
+						"exec": [
+							"const jsonData = JSON.parse(responseBody)",
+							"pm.environment.set(\"username\", jsonData.data.user.username);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/javascript",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\":   \"campbellbrett+10\",\n\t\"password\":   \"{{password}}\",\n\t\"email\":      \"brett+10@hackcapital.com\",\n\t\"firstName\":  \"Brett\",\n\t\"lastName\":   \"Campbell\",\n\t\"inviteCode\": \"\"\n}\n"
+				},
+				"url": {
+					"raw": "{{backendAPI}}/api/v1/accounts",
+					"host": [
+						"{{backendAPI}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"accounts"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": ""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Sign In",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6695fed0-1e43-440e-8604-bfbcefbcf7cf",
+						"exec": [
+							"const jsonData = JSON.parse(responseBody)",
+							"pm.environment.set(\"accessToken\", jsonData.data);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\": \"{{username}}\", \n\t\"password\": \"{{password}}\"\n}\n"
+				},
+				"url": "{{backendAPI}}/api/v1/login"
+			},
+			"response": []
+		},
+		{
+			"name": "Team Create",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6695fed0-1e43-440e-8604-bfbcefbcf7cf",
+						"exec": [
+							"const jsonData = JSON.parse(responseBody)",
+							"pm.environment.set(\"teamId\", jsonData.data.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{accessToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"cto.ai\"\n}\n"
+				},
+				"url": "{{backendAPI}}/api/v1/teams"
+			},
+			"response": []
+		},
+		{
+			"name": "Team List",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6695fed0-1e43-440e-8604-bfbcefbcf7cf",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{accessToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": "{{backendAPI}}/api/v1/teams"
+			},
+			"response": []
+		},
+		{
+			"name": "Ops Create",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6695fed0-1e43-440e-8604-bfbcefbcf7cf",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "{{accessToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"run\": \"\",\n  \"creatorId\": \"\",\n  \"ownerId\": \"\",\n  \"updaterId\": \"\",\n  \"envVariables\": \"\",\n  \"parameters\": \"\"\n}\n"
+				},
+				"url": "{{backendAPI}}/api/v1/ops"
+			},
+			"response": []
+		},
+		{
+			"name": "Ops List",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6695fed0-1e43-440e-8604-bfbcefbcf7cf",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "{{accessToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{backendAPI}}/api/v1/ops?owner_id={{teamId}}",
+					"host": [
+						"{{backendAPI}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"ops"
+					],
+					"query": [
+						{
+							"key": "owner_id",
+							"value": "{{teamId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,91 @@
+{
+  "name": "@cto.ai/ops",
+  "description": "💻 CTO.ai Ops - The CLI built for Teams 🚀",
+  "version": "1.0.34",
+  "author": "Brett Campbell",
+  "bin": {
+    "ops": "./bin/run"
+  },
+  "bugs": "https://github.com/cto.ai/ops/issues",
+  "dependencies": {
+    "@cto.ai/sdk": "^1.0.11",
+    "@feathersjs/feathers": "^3.3.1",
+    "@feathersjs/rest-client": "^1.4.7",
+    "@oclif/command": "^1.5.12",
+    "@oclif/config": "^1.12.11",
+    "@oclif/plugin-help": "^2.1.6",
+    "@types/fs-extra": "^5.0.5",
+    "JSONStream": "^1.3.5",
+    "analytics-node": "^3.3.0",
+    "axios": "^0.18.0",
+    "dockerode": "^2.5.8",
+    "fs-extra": "^7.0.1",
+    "fuzzy": "^0.1.3",
+    "nock": "^10.0.6",
+    "pkg": "^4.3.7",
+    "through2": "^3.0.1",
+    "tslib": "^1.9.3",
+    "underscore": "^1.9.1",
+    "yaml": "^1.5.0"
+  },
+  "devDependencies": {
+    "@oclif/dev-cli": "^1.21.3",
+    "@oclif/test": "^1.2.4",
+    "@oclif/tslint": "^3.1.1",
+    "@types/axios": "^0.14.0",
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.6",
+    "@types/node": "^10.14.4",
+    "chai": "^4.2.0",
+    "faker": "^4.1.0",
+    "globby": "^8.0.2",
+    "mocha": "^5.2.0",
+    "nyc": "^13.3.0",
+    "ts-node": "^8.0.3",
+    "tslint": "^5.14.0",
+    "typescript": "^3.3.4000"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/bin",
+    "/lib",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json"
+  ],
+  "homepage": "https://github.com/cto.ai/ops",
+  "keywords": [
+    "oclif"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "oclif": {
+    "commands": "./lib/commands",
+    "hooks": {
+      "build": "./lib/hooks/build",
+      "validate": "./lib/hooks/validate",
+      "publish": "./lib/hooks/publish"
+    },
+    "bin": "ops",
+    "plugins": [
+      "@oclif/plugin-help"
+    ],
+    "topics": {
+      "account": {
+        "description": "Manage your account settings."
+      }
+    }
+  },
+  "repository": "cto.ai/ops",
+  "scripts": {
+    "postpack": "rm -f oclif.manifest.json",
+    "posttest": "tslint -p test -t stylish",
+    "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
+    "compile": "./node_modules/.bin/pkg . -t node8-macos,node8-linux,node8-win --output dist/ops",
+    "build": "oclif-dev manifest && oclif-dev readme",
+    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif-dev readme && git add README.md"
+  },
+  "types": "lib/index.d.ts"
+}

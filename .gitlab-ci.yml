@@ -1,0 +1,63 @@
+###
+# Author: Brett Campbell (brett@hackcapital.com)
+# Date: Wednesday, 27th March 2019 5:21:10 pm
+###
+
+image: git.cto.ai:4567/hackcapital/infrastructure/base:nodejs-9-alpine-1.0.15
+
+###
+# Global variables
+###
+
+variables:
+  MASTER_DOCKER_IMAGE_TAG: 'latest'
+  DOCKER_DRIVER: 'overlay'
+
+###
+# Cache
+###
+
+# This folder is cached between builds
+# http://docs.gitlab.com/ce/ci/yaml/README.html#cache
+cache:
+  paths:
+    - node_modules/
+
+###
+# Stages
+###
+
+stages:
+  - setup
+  - test
+
+###
+# Run before all jobs
+###
+
+before_script:
+  # Creates the artifacts directories
+  - 'mkdir -p ci/dependencies'
+  - 'mkdir -p ci/tests'
+
+###
+# Pipeline
+###
+
+dependencies:
+  stage: setup
+  artifacts:
+    paths:
+      - ci/dependencies/
+  script:
+    - 'make install 2>&1 | tee ci/dependencies/dependencies.txt'
+    - 'make prepack 2>&1 | tee ci/dependencies/dependencies.txt'
+
+tests:
+  stage: test
+  artifacts:
+    paths:
+      - ci/test/
+  script:
+    - 'make install'
+    - 'make test 2>&1 | tee ci/tests/tests.txt'
