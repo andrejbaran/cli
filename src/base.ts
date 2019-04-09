@@ -5,7 +5,6 @@ import axios from 'axios'
 import {outputJson, readJson} from 'fs-extra'
 import * as path from 'path'
 
-import AccountSignup from './commands/account/signup'
 import Config from './types/config'
 
 const {ux} = require('@cto.ai/sdk')

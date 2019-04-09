@@ -15,7 +15,7 @@ const json = require('JSONStream')
 
 import Op from '../types/op'
 
-export default async function build(this:any, options:
+export default async function build(this: any, options:
   {tag: string, opPath: string, op: Op}
 ) {
   const {opPath, tag, op} = options
@@ -31,22 +31,20 @@ export default async function build(this:any, options:
   const all = []
   const log = this.log
   const error = this.error
-  let size = 0
 
-  let parser = through.obj(function (this:any, chunk:any, enc:any, cb:any) {
+  let parser = through.obj(function (this: any, chunk: any, _enc: any, cb: any) {
     if (chunk.stream && chunk.stream !== '\n') {
-       this.push(chunk.stream.replace('\n', ''))
-       log(chunk.stream.replace('\n', ''))
-       all.push(chunk)
-     } else if (chunk.errorDetail) {
-
-       return error(new Error(chunk.errorDetail.message), {exit: 2})
-     }
+      this.push(chunk.stream.replace('\n', ''))
+      log(chunk.stream.replace('\n', ''))
+      all.push(chunk)
+    } else if (chunk.errorDetail) {
+      return error(new Error(chunk.errorDetail.message), {exit: 2})
+    }
     cb()
   })
 
   parser._pipe = parser.pipe
-  parser.pipe = function (dest:any) {
+  parser.pipe = function (dest: any) {
     return parser._pipe(dest)
   }
 
@@ -55,14 +53,12 @@ export default async function build(this:any, options:
       stream
         .pipe(json.parse())
         .pipe(parser)
-        .on('data',(d:any) => {
+        .on('data', (d: any) => {
           all.push(d)
         })
         .on('end', async function () {
-
           log('\n⚡️ Verifying...')
           const bar = ux.progress.init()
-          let counter = 0
           bar.start(100, 0)
 
           for (let i = 0; i < all.length; i++) {

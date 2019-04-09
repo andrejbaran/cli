@@ -10,7 +10,6 @@
 import * as path from 'path'
 
 import Command, {flags} from '../base'
-import {Op} from '../types/op'
 
 const _ = require('underscore')
 const {ux} = require('@cto.ai/sdk')
@@ -43,9 +42,9 @@ export default class Run extends Command {
   CTRL_P = '\u0010'
   CTRL_Q = '\u0011'
 
-  async run(this:any) {
+  async run(this: any) {
     const self = this
-    const {args, flags} = this.parse(Run)
+    const {args} = this.parse(Run)
 
     this.isLoggedIn()
 
@@ -65,22 +64,22 @@ export default class Run extends Command {
         type: 'input',
         name: 'name',
         message: 'What is the name or path of your op?'
-      });
+      })
       name = answer.name
     }
 
-    var op_path = name.split(':');
+    let op_path = name.split(':')
 
-    let query:any = {
+    let query: any = {
       query: {
         name: op_path[0],
         $sort: {
           created_at: -1
         }
       }
-    };
+    }
 
-    if(op_path[1]) {
+    if (op_path[1]) {
       query.query.image = `${ops_registry_path}/${op_path[1].toLowerCase()}`
     }
 
@@ -91,18 +90,15 @@ export default class Run extends Command {
       const manifest = await fs.readFile(opPath, 'utf8')
       op = yaml.parse(manifest)
     } else {
-
       op = await this.client.service('ops').find(query)
-
-      if(!op.total) {
-        return this.log(`‼️  No op was found with this name or ID. Please try again`);
+      if (!op.total) {
+        return this.log('‼️  No op was found with this name or ID. Please try again')
       }
-
-      op = op.data[0];
+      op = op.data[0]
     }
 
     op.run = op.run.split(' ')
-    this.log(`⚙️  Running ${ux.colors.dim(op.name)}...`);
+    this.log(`⚙️  Running ${ux.colors.dim(op.name)}...`)
     // <-- ENVIRONMENT VARIABLES
     const envs = _.map(op.env, e => {
       let x = e.split('=')
@@ -141,21 +137,18 @@ export default class Run extends Command {
 
     docker.listImages(async (err, list) => {
       let found = false
-      for (let k in list) {
-        if (!list[k].RepoTags) {
+      for (let k of list) {
+        if (!k.RepoTags) {
           continue
         }
-        if (list[k].RepoTags.join('').indexOf(`${ops_registry_path}/${op.name}:latest`) > -1) {
-          found = true;
-          break;
+        if (k.RepoTags.join('').indexOf(`${ops_registry_path}/${op.name}:latest`) > -1) {
+          found = true
+          break
         }
       }
 
       if (!found) {
         self.log(`🔋 Pulling ${ux.colors.dim(op.name)} from registry...\n`)
-
-        const log = self.log
-        const error = self.error
         let all = []
         let size = 100
 
@@ -164,12 +157,10 @@ export default class Run extends Command {
           barCompleteChar: '\u2588',
           barIncompleteChar: '\u2591'
         })
-
-        let counter = 0
         let layers = {}
         bar.start(100, 0, {speed: '🏁 Starting...'})
 
-        let parser = through.obj(function (chunk, enc, cb) {
+        let parser = through.obj(function (chunk, _enc, cb) {
           if (chunk.id) {
             layers[chunk.id] = chunk.id
           }
@@ -228,19 +219,18 @@ export default class Run extends Command {
             .pipe(json.parse())
             .pipe(parser)
             .on('data', d => {
-            all.push(d)
-          })
+              all.push(d)
+            })
             .on('end', async function () {
+              for (let i = 0; i < size; i++) {
+                bar.update(100 - (size / i))
+                await ux.wait(5)
+              }
 
-            for (let i = 0; i < size; i++) {
-              bar.update(100 - (size / i))
-              await ux.wait(5)
-            }
-
-            bar.update(100)
-            bar.stop()
-            return err ? reject(err) : resolve(all)
-          })
+              bar.update(100)
+              bar.stop()
+              return err ? reject(err) : resolve(all)
+            })
 
         })
         ux.spinner.stop(ux.colors.green('Done!'))
@@ -261,7 +251,7 @@ export default class Run extends Command {
         Image: `${ops_registry_path}/${op.name}:latest`,
         Volumes: {},
         VolumesFrom: [],
-        WorkingDir: "",
+        WorkingDir: '',
         HostConfig: {
           Binds: op.bind,
           NetworkMode: op.network
@@ -277,7 +267,7 @@ export default class Run extends Command {
       )
     })
 
-    function handler(err:any, container:any) {
+    function handler(err: any, container: any) {
       if (err) {
         self.log(`‼️  ${err.message}`)
         process.exit()
@@ -289,32 +279,32 @@ export default class Run extends Command {
         stderr: true
       }
       ux.spinner.stop(ux.colors.green('Done!'))
-      container.attach(attach_opts, function(err:any, stream:any) {
+      container.attach(attach_opts, function (_err: any, stream: any) {
         // Show outputs
         stream.pipe(process.stdout)
 
         // Connect stdin
         const stdin = process.stdin
-        let isRaw = false;
+        let isRaw = false
 
         stdin.resume()
         stdin.setEncoding('utf8')
         stdin.setRawMode(true)
         stdin.pipe(stream)
 
-        stdin.on('data', function (this:any, key:any) {
+        stdin.on('data', function (this: any, key: any) {
           // Detects it is detaching a running container
           if (this.previousKey === this.CTRL_P && key === this.CTRL_Q)
             exit(container, stream, isRaw)
           this.previousKey = key
         })
-        container.start(function (err:any, data:any) {
+        container.start(function (err: any, _data: any) {
           if (err) self.error(err.message, {exit: 2})
           resize(container)
           process.stdout.on('resize', function () {
             resize(container)
           })
-          container.wait(function (err:any, data:any) {
+          container.wait(function (_err: any, _data: any) {
             exit(container, stream, isRaw)
           })
 
@@ -335,21 +325,21 @@ export default class Run extends Command {
     }
 
     // Resize tty
-    function resize(container:any) {
+    function resize(container: any) {
       const dimensions = {
         h: process.stdout.rows,
         w: process.stderr.columns
       }
 
-      if (dimensions.h != 0 && dimensions.w != 0) {
+      if (dimensions.h !== 0 && dimensions.w !== 0) {
         container.resize(dimensions, function () {})
       }
     }
 
     // Exit container
-    function exit(container:any, stream:any, isRaw:any) {
-      const stdout = process.stdout;
-      const stdin = process.stdin;
+    function exit(container: any, stream: any, isRaw: any) {
+      const stdout = process.stdout
+      const stdin = process.stdin
       stdout.removeListener('resize', resize)
       stdin.removeAllListeners()
       stdin.setRawMode(isRaw)

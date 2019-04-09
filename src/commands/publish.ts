@@ -3,10 +3,8 @@ import * as path from 'path'
 import Command, {flags} from '../base'
 import {Op} from '../types/op'
 
-const {ux} = require('@cto.ai/sdk')
 const fs = require('fs-extra')
 const yaml = require('yaml')
-const Docker = require('dockerode')
 
 const ops_registry_path = process.env.OPS_REGISTRY_PATH || 'registry.cto.ai'
 
@@ -19,7 +17,7 @@ export default class Publish extends Command {
 
   static args = [{name: 'path'}]
 
-  async run(this:any) {
+  async run(this: any) {
     const {args} = this.parse(Publish)
     const opPath = args.path ? path.resolve(process.cwd(), args.path) : process.cwd()
 
@@ -31,7 +29,7 @@ export default class Publish extends Command {
         this.exit()
       })
 
-    var pkg: Op = yaml.parse(manifest)
+    let pkg: Op = yaml.parse(manifest)
 
     pkg.owner = {
       _id: this.user._id,
@@ -43,7 +41,7 @@ export default class Publish extends Command {
 
     let op = await this.client.service('ops').create(pkg)
 
-    await this.client.service('ops').patch(op._id, { image: `${ops_registry_path}/${op._id.toLowerCase()}` })
+    await this.client.service('ops').patch(op._id, {image: `${ops_registry_path}/${op._id.toLowerCase()}`})
 
     await this.config.runHook('publish', {
       tag: `${ops_registry_path}/${op._id.toLowerCase()}:latest`,

@@ -8,11 +8,13 @@
  *
  */
 
+import {User} from './user'
+
 export interface Config {
   teamName: string
   teamId: string
   accessToken: string,
-  user: object
+  user: User
 }
 
 export default Config

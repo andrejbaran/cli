@@ -20,7 +20,7 @@ export default class Init extends Command {
     message: '👉 What is the name of your op?'
   }
 
-  async run(this:any) {
+  async run(this: any) {
     const {flags} = this.parse(Init)
 
     this.isLoggedIn()

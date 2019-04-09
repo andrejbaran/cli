@@ -1,9 +1,7 @@
 import Command, {flags} from '../base'
-import {Fuzzy} from '../types/fuzzy'
 import {Op} from '../types/op'
 
 const {ux} = require('@cto.ai/sdk')
-const fuzzy = require('fuzzy')
 
 let ops: Op[] = []
 
@@ -18,7 +16,7 @@ export default class Search extends Command {
   }
 
   async run() {
-    const {flags, args} = this.parse(Search)
+    const {args} = this.parse(Search)
     const {filter} = args
 
     this.isLoggedIn()
@@ -51,10 +49,10 @@ export default class Search extends Command {
   //   })
   // }
 
-  private async _getOps(this:any, filter: string | undefined): Promise<Op[]> {
-
+  private async _getOps(this: any, filter: string | undefined): Promise<Op[]> {
+    let query
     if (filter) {
-      var query = {
+      query = {
         query: {
           $limit: 100,
           $or: [
@@ -75,7 +73,7 @@ export default class Search extends Command {
       }
     }
 
-    const {data} = await this.client.service('ops').find(query ? query : { query: { $limit: 100 } })
+    const {data} = await this.client.service('ops').find(query ? query : {query: {$limit: 100}})
 
     this.analytics.track({
       userId: this.user.email,
@@ -84,7 +82,7 @@ export default class Search extends Command {
         email: this.user.email,
         username: this.user.username,
         results: data.length,
-        filter: filter
+        filter
       }
     })
 
