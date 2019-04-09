@@ -9,7 +9,7 @@ describe('account:signin', () => {
   const username = 'test'
   afterEach(async () => clearConfig())
   test
-    .nock(`${process.env.CTOAI_API_URL}`, api => api
+    .nock(`${process.env.OPS_API_HOST}${process.env.OPS_API_PATH}`, api => api
       .post('/auth')
       .reply(200, {
         user: {username, email}
@@ -28,7 +28,7 @@ describe('account:signin', () => {
     })
 
   test
-    .nock(`${process.env.CTOAI_API_URL}`, api => api
+    .nock(`${process.env.OPS_API_HOST}${process.env.OPS_API_PATH}`, api => api
       .post('/auth')
       .reply(200, {
         user: {username, email}
