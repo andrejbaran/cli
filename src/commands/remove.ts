@@ -21,20 +21,16 @@ export default class Remove extends Command {
     this.isLoggedIn()
 
     this.log('')
-
     await this.client.service('ops').find({
       query: {
         $sort: {
           created_at: -1
         },
-        owner: {
-          _id: this.user._id
-        },
+        'owner._id': this.user._id,
         $limit: 1000
       }
     })
     .then(async function (o) {
-
       if(!o.data.length) {
         self.log(`✋Nothing found in the registry. Please try again later. \n`);
         self.exit()
