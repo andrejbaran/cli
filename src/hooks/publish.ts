@@ -80,7 +80,7 @@ export default async function publish(this: any, options: {tag: string, opPath: 
 
           bar.update(100)
           bar.stop()
-          log(`\n🙌 ${ux.colors.callOutCyan(`${ops_registry_path}/${op._id.toLowerCase()}+:latest`)} has been published! \n`)
+          log(`\n🙌 ${ux.colors.callOutCyan(`${ops_registry_path}/${op._id.toLowerCase()}:latest`)} has been published! \n`)
         })
     })
   })
