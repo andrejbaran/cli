@@ -43,7 +43,7 @@ export default class Remove extends Command {
         message: '🗑  Which op would you like to remove?',
         choices: o.data.map(l => {
           return {
-            name: `${ux.colors.callOutCyan(l.name)} ${ux.colors.white(l.description)}`,
+            name: `${ux.colors.callOutCyan(l.name)} ${ux.colors.white(l.description)} | id: ${ux.colors.white(l._id.toLowerCase())}`,
             value: l
           }
         })
@@ -63,8 +63,8 @@ export default class Remove extends Command {
         userId: self.user.email,
         event: 'Ops CLI Remove',
         properties: {
-          email: this.user.email,
-          username: this.user.username,
+          email: self.user.email,
+          username: self.user.username,
           id: op.desync._id,
           name: op.desync.name,
           description: op.desync.description,
