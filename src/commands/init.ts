@@ -56,6 +56,8 @@ export default class Init extends Command {
       userId: this.user.email,
       event: 'Ops CLI Init',
       properties: {
+        email: this.user.email,
+        username: this.user.username,
         name,
         path: dest
       }

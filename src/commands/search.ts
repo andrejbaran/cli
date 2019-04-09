@@ -81,8 +81,10 @@ export default class Search extends Command {
       userId: this.user.email,
       event: 'Ops CLI Search',
       properties: {
-        filter,
-        results: data.length
+        email: this.user.email,
+        username: this.user.username,
+        results: data.length,
+        filter: filter
       }
     })
 

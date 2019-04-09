@@ -77,12 +77,19 @@ export default class AccountSignup extends Command {
 
     this.analytics.identify({
       userId: res.user.email,
-      traits: res.user
+      traits: {
+        email: res.user.email,
+        username: res.user.username
+      }
     })
 
     this.analytics.track({
       userId: res.user.email,
       event: 'Ops CLI Signup',
+      properties: {
+        email: res.user.email,
+        username: res.user.username
+      }
     })
 
     ux.spinner.stop(`${ux.colors.green('Done!')}`)

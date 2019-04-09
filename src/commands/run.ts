@@ -322,6 +322,8 @@ export default class Run extends Command {
             userId: self.user.email,
             event: 'Ops CLI Run',
             properties: {
+              email: self.user.email,
+              username: self.user.username,
               name: op.name,
               description: op.description,
               image: `${ops_registry_host}/${op._id}`

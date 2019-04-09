@@ -67,6 +67,8 @@ export default class Remove extends Command {
         userId: self.user.email,
         event: 'Ops CLI Remove',
         properties: {
+          email: this.user.email,
+          username: this.user.username,
           id: op.desync._id,
           name: op.desync.name,
           description: op.desync.description,

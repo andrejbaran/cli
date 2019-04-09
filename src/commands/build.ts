@@ -53,6 +53,8 @@ export default class Build extends Command {
       userId: this.user.email,
       event: 'Ops CLI Build',
       properties: {
+        email: this.user.email,
+        username: this.user.username,
         name: op.name,
         description: op.description,
         image: `${ops_registry_host}/${op.name}`

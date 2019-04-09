@@ -55,6 +55,8 @@ export default class Publish extends Command {
       userId: this.user.email,
       event: 'Ops CLI Publish',
       properties: {
+        email: this.user.email,
+        username: this.user.username,
         name: op.name,
         description: op.description,
         image: `${ops_registry_path}/${op._id.toLowerCase()}`,

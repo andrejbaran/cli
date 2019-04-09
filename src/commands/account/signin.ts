@@ -58,12 +58,19 @@ export default class AccountSignin extends Command {
 
     this.analytics.identify({
       userId: res.user.email,
-      traits: res.user
+      traits: {
+        email: res.user.email,
+        username: res.user.username
+      }
     })
 
     this.analytics.track({
       userId: res.user.email,
       event: 'Ops CLI Signin',
+      properties: {
+        email: res.user.email,
+        username: res.user.username
+      }
     })
   }
 }
