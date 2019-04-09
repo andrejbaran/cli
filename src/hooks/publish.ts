@@ -22,8 +22,8 @@ const ops_registry_auth = {
   serveraddress: ops_registry_host
 }
 
-export default async function publish(this:any, options: {tag: string, opPath: string, op: Op}) {
-  const {opPath, tag, op} = options
+export default async function publish(this: any, options: {tag: string, opPath: string, op: Op}) {
+  const {op} = options
   const socket = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
   const stats = fs.statSync(socket)
 
@@ -40,7 +40,7 @@ export default async function publish(this:any, options: {tag: string, opPath: s
   const error = this.error
   let size = 0
 
-  let parser = through.obj(function (this:any, chunk:any, enc:any, cb:any) {
+  let parser = through.obj(function (this: any, chunk: any, _enc: any, cb: any) {
     this.push(chunk.status)
     if (chunk.aux) {
       log(`\n🚀 ${ux.colors.white('Publishing...')}\n`)
@@ -55,11 +55,11 @@ export default async function publish(this:any, options: {tag: string, opPath: s
   })
 
   parser._pipe = parser.pipe
-  parser.pipe = function (dest:any) {
+  parser.pipe = function (dest: any) {
     return parser._pipe(dest)
   }
 
-  image.tag({repo: `${ops_registry_path}/${op._id.toLowerCase()}:latest`}, (err:any, data: any) => {
+  image.tag({repo: `${ops_registry_path}/${op._id.toLowerCase()}:latest`}, (err: any, _data: any) => {
     if (err) return error(err.message, {exist: 2})
     image.push({tag: op.tag, authconfig: ops_registry_auth}, (err: any, stream: any) => {
       if (err) return error(err.message, {exist: 2})
@@ -70,9 +70,7 @@ export default async function publish(this:any, options: {tag: string, opPath: s
           all.push(d)
         })
         .on('end', async function () {
-
           const bar = ux.progress.init()
-          let counter = 0
           bar.start(100, 0)
 
           for (let i = 0; i < size; i++) {
@@ -82,7 +80,7 @@ export default async function publish(this:any, options: {tag: string, opPath: s
 
           bar.update(100)
           bar.stop()
-          log(`\n🙌 ${ux.colors.callOutCyan(ops_registry_path + '/' + op._id.toLowerCase()+':latest')} has been published! \n`)
+          log(`\n🙌 ${ux.colors.callOutCyan(`${ops_registry_path}/${op._id.toLowerCase()}+:latest`)} has been published! \n`)
         })
     })
   })

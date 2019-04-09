@@ -27,7 +27,7 @@ export default class Build extends Command {
 
   static args = [{name: 'path'}]
 
-  async run(this:any) {
+  async run(this: any) {
     const {args} = this.parse(Build)
     const opPath = args.path ? path.resolve(process.cwd(), args.path) : process.cwd()
 

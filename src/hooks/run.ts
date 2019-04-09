@@ -7,7 +7,6 @@
  * DESCRIPTION
  *
  */
-const {ux} = require('@cto.ai/sdk')
 const Docker = require('dockerode')
 const fs = require('fs-extra')
 
@@ -16,15 +15,15 @@ import Op from '../types/op'
 const ops_registry_host = process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
 
 export default async function run(options: {tag: string, opPath: string, op: Op}) {
-  const {opPath, tag, op} = options
+  const {op} = options
   const socket = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
   const stats = fs.statSync(socket)
 
   if (!stats.isSocket()) {
-      throw new Error('Are you sure the docker is running?')
-    }
+    throw new Error('Are you sure the docker is running?')
+  }
 
   const docker = new Docker({socketPath: socket})
-  const image = docker.getImage(`${ops_registry_host}/${op.name}`)
+  docker.getImage(`${ops_registry_host}/${op.name}`)
   console.log(`${ops_registry_host}/${op.name}`)
 }

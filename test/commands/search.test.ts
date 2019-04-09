@@ -3,15 +3,20 @@ import {expect, test} from '@oclif/test'
 const {ux} = require('@cto.ai/sdk')
 const faker = require('faker')
 
+import {User} from '../../src/types/user'
 import {clearConfig, writeConfig} from '../helpers/manage-config'
 
 let accessToken: string
-let teamId: string
-describe('list', () => {
+let user: User
+describe('search', () => {
   beforeEach(async () => {
     accessToken = faker.random.uuid()
-    teamId = faker.random.uuid()
-    await writeConfig({accessToken, teamId})
+    user = {
+      username: 'test',
+      email: 'test@test.com',
+      _id: 'testId'
+    }
+    await writeConfig({accessToken, user})
   })
   afterEach(async () => {
     await clearConfig()
@@ -20,17 +25,18 @@ describe('list', () => {
   test
     .nock(`${process.env.CTOAI_API_URL}`, api => api
       .get('/ops')
-      .query({
-        owner_id: teamId
-      })
+      .query({$limit: 100})
       .reply(200, {data: []})
     )
     .stdout()
     .stub(ux, 'prompt', () => {
-      return {runOp: 'runOp'}
+      return {runOp: {
+        name: 'runOp',
+        _id: 'opTestId'
+      }}
     })
-    .command(['list'])
-    .it('runs list', ctx => {
-      expect(ctx.stdout).to.contain("Here's a list of ops available for")
+    .command(['search'])
+    .it('runs search command', ctx => {
+      expect(ctx.stdout).to.contain('\n🔍 Searching the repository for all ops...\n\n💻 Run $ ops run runOp:optestid to test your op. \n\n')
     })
 })

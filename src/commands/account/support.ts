@@ -14,9 +14,7 @@ export default class AccountSupport extends Command {
 
   static args = [{name: 'file'}]
 
-  async run(this:any) {
-    const {args, flags} = this.parse(AccountSupport)
-
+  async run(this: any) {
     this.log('')
     this.log('❔ Please reach out to us with questions anytime!')
     this.log(`⌚️ We are typically available ${ux.colors.white('Monday-Friday 9am-5pm PT')}.`)
