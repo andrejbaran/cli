@@ -324,7 +324,7 @@ export default class Run extends Command {
             properties: {
               name: op.name,
               description: op.description,
-              image: `${ops_registry_host}/${op.name}`
+              image: `${ops_registry_host}/${op._id}`
             }
           })
 
