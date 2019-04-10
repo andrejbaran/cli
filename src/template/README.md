@@ -1,4 +1,4 @@
-# Inquirer.js
+# 🛠 CTO.ai OPS SDK 🚀
 
 A collection of common interactive command line user interfaces.
 
