@@ -1,5 +1,6 @@
 --require test/helpers/init.js
 --require ts-node/register
+--require test/mocha.env
 --watch-extensions ts
 --recursive
 --reporter spec

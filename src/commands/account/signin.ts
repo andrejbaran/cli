@@ -56,13 +56,18 @@ export default class AccountSignin extends Command {
     this.log(`\n👋 ${ux.colors.white('Welcome back')} ${ux.colors.italic.dim(res.user.username)}!`)
     this.log(`\n👉 Type ${ux.colors.italic.dim('ops search')} to find ops or ${ux.colors.italic.dim('ops init')} to create your own! \n`)
 
-    this.analytics.identify({
-      userId: res.user.email,
-      traits: {
-        email: res.user.email,
-        username: res.user.username
-      }
-    })
+    // This is wrapped in an if statement because it takes a while to finish executing.
+    // The `nock` code that is supposed to intercept this call and counter it is not equipped
+    // to handle this
+    if (process.env.NODE_ENV !== 'test') {
+      this.analytics.identify({
+        userId: res.user.email,
+        traits: {
+          email: res.user.email,
+          username: res.user.username
+        }
+      })
+    }
 
     this.analytics.track({
       userId: res.user.email,

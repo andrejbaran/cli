@@ -1,4 +1,5 @@
 import {expect, test} from '@oclif/test'
+import {SEGMENT_URL} from '../../../config'
 const {ux} = require('@cto.ai/sdk')
 
 import {clearConfig, readConfig} from '../../helpers/manage-config'
@@ -9,6 +10,10 @@ describe('account:signin', () => {
   const username = 'test'
   afterEach(async () => clearConfig())
   test
+    .nock(SEGMENT_URL, api => api
+      .post(uri => true)
+      .reply(200)
+    )
     .nock(`${process.env.OPS_API_HOST}${process.env.OPS_API_PATH}`, api => api
       .post('/auth')
       .reply(200, {
@@ -28,6 +33,10 @@ describe('account:signin', () => {
     })
 
   test
+    .nock(SEGMENT_URL, api => api
+      .post(uri => true)
+      .reply(200)
+    )
     .nock(`${process.env.OPS_API_HOST}${process.env.OPS_API_PATH}`, api => api
       .post('/auth')
       .reply(200, {
