@@ -106,7 +106,7 @@ export default class AccountSignup extends Command {
 
     )
   }
-  private async _validateEmail(input) {
+  async _validateEmail(input) {
     if (!/\S+@\S+\.\S+/.test(input)) return 'Invalid email format'
     const response = await self.api({method: 'get', url: '/validate/users/unique', params: {
       email: input
@@ -115,7 +115,7 @@ export default class AccountSignup extends Command {
     return true
   }
 
-  private async _validateUsername(input) {
+  async _validateUsername(input) {
     const response = await self.api({method: 'get', url: '/validate/users/unique', params: {
       username: input
     }})
@@ -123,7 +123,7 @@ export default class AccountSignup extends Command {
     return true
   }
 
-  private _validateCpassword(input, answers) {
+  _validateCpassword(input, answers) {
     if (input !== answers.password) return "Password doesn't match, please try again."
     return true
   }
