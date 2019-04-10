@@ -1,4 +1,5 @@
 import {expect, test} from '@oclif/test'
+import {SEGMENT_URL} from '../../../config'
 const {ux} = require('@cto.ai/sdk')
 
 import AccountSignup from '../../../src/commands/account/signup'
@@ -16,6 +17,10 @@ describe('account:signup', () => {
 
   afterEach(async () => clearConfig())
   test
+    .nock(SEGMENT_URL, api => api
+      .post(uri => true)
+      .reply(200)
+    )
     .nock(`${process.env.OPS_API_HOST}${process.env.OPS_API_PATH}`, api => api
       .post('/users')
       .reply(200)
