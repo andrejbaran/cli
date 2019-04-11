@@ -19,7 +19,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.0.40 darwin-x64 node-v11.9.0
+@cto.ai/ops/1.0.40 darwin-x64 node-v11.13.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -125,8 +125,9 @@ USAGE
   $ ops init
 
 OPTIONS
-  -h, --help       show CLI help
-  -n, --name=name  op name
+  -d, --description=description  op description
+  -h, --help                     show CLI help
+  -n, --name=name                op name
 ```
 
 _See code: [src/commands/init.ts](https://github.com/cto.ai/ops/blob/v1.0.40/src/commands/init.ts)_
