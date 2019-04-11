@@ -20,7 +20,8 @@
       "program": "${workspaceFolder}/bin/run",
       "console": "integratedTerminal",
       "args": [
-        "account:signup"
+        "run",
+        "../ops/demo"
       ]
     }
   ]
