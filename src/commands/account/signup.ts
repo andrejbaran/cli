@@ -84,6 +84,7 @@ export default class AccountSignup extends Command {
       this.analytics.identify({
         userId: res.user.email,
         traits: {
+          beta: true,
           email: res.user.email,
           username: res.user.username
         }
