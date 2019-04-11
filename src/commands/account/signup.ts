@@ -1,5 +1,7 @@
 import Command, {flags} from '../../base'
 const {ux} = require('@cto.ai/sdk')
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
 
 let self
 export default class AccountSignup extends Command {
@@ -88,12 +90,17 @@ export default class AccountSignup extends Command {
       })
     }
 
+    let {stdout: terminalProgram} = await exec('echo $TERM_PROGRAM')
+    terminalProgram = terminalProgram.replace(/(\r\n|\n|\r)/gm, '')
+
     this.analytics.track({
       userId: res.user.email,
       event: 'Ops CLI Signup',
       properties: {
         email: res.user.email,
-        username: res.user.username
+        username: res.user.username,
+        os: process.platform,
+        terminal: terminalProgram
       }
     })
 

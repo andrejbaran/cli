@@ -84,7 +84,9 @@ export default class Init extends Command {
         email: self.user.email,
         username: self.user.username,
         name,
-        path: dest
+        path: dest,
+        opName: name,
+        opDescription: description
       }
     })
   }
