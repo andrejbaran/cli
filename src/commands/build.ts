@@ -42,7 +42,6 @@ export default class Build extends Command {
     await this.config.runHook('validate', op)
 
     this.log(`🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`)
-
     await this.config.runHook('build', {
       tag: `${ops_registry_host}/${op.name}:latest`,
       opPath,

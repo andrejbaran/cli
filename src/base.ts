@@ -10,6 +10,8 @@ import Config from './types/config'
 const {ux} = require('@cto.ai/sdk')
 const feathers = require('@feathersjs/feathers')
 const rest = require('@feathersjs/rest-client')
+const Docker = require('dockerode')
+const fs = require('fs-extra')
 
 const ops_segment_key = process.env.OPS_SEGMENT_KEY || 'sRsuG18Rh9IHgr9bK7GsrB7BfLfNmhCG'
 const ops_host = process.env.OPS_API_HOST || 'https://cto.ai/'
@@ -24,12 +26,13 @@ export default abstract class extends Command {
   accessToken = ''
   user = {}
   api = api
+  docker
 
   async init() {
     const {accessToken, user} = await this.readConfig()
     this.user = user
     this.accessToken = accessToken
-
+    this.docker = await this._getDocker()
   }
 
   public isLoggedIn() {
@@ -68,6 +71,15 @@ export default abstract class extends Command {
     return Promise.resolve(
       await this.client.service('auth').create({strategy: 'local', email, password})
     )
+  }
+  private async _getDocker() {
+    if (process.env.NODE_ENV === 'test') return
+    const socket = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
+    const stats = fs.statSync(socket)
+    if (!stats.isSocket()) {
+      throw new Error('Are you sure the docker is running?')
+    }
+    return new Docker({socketPath: socket})
   }
 }
 

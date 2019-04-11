@@ -31,7 +31,6 @@ export default async function build(this: any, options:
   const all = []
   const log = this.log
   const error = this.error
-
   let parser = through.obj(function (this: any, chunk: any, _enc: any, cb: any) {
     if (chunk.stream && chunk.stream !== '\n') {
       this.push(chunk.stream.replace('\n', ''))
@@ -47,32 +46,28 @@ export default async function build(this: any, options:
   parser.pipe = function (dest: any) {
     return parser._pipe(dest)
   }
-
-  docker.buildImage({context: opPath, src: op.src}, {t: tag})
-    .then((stream: any) => {
-      stream
-        .pipe(json.parse())
-        .pipe(parser)
-        .on('data', (d: any) => {
-          all.push(d)
-        })
-        .on('end', async function () {
-          log('\n⚡️ Verifying...')
-          const bar = ux.progress.init()
-          bar.start(100, 0)
-
-          for (let i = 0; i < all.length; i++) {
-            bar.update(100 - (all.length / i))
-            await ux.wait(50)
-          }
-
-          bar.update(100)
-          bar.stop()
-
-          log(`\n💻 Run ${ux.colors.green('$')} ${ux.colors.italic.dim('ops run ' + op.name)} to test your op.`)
-          log(`📦 Run ${ux.colors.green('$')} ${ux.colors.italic.dim('ops publish ' + opPath)} to share your op. \n`)
-
-        })
-
-    })
+  await new Promise(async function (resolve, reject) {
+    const stream = await docker.buildImage({context: opPath, src: op.src}, {t: tag})
+      .catch(() => reject())
+    stream
+      .pipe(json.parse())
+      .pipe(parser)
+      .on('data', (d: any) => {
+        all.push(d)
+      })
+      .on('end', async function () {
+        log('\n⚡️ Verifying...')
+        const bar = ux.progress.init()
+        bar.start(100, 0)
+        for (let i = 0; i < all.length; i++) {
+          bar.update(100 - (all.length / i))
+          await ux.wait(50)
+        }
+        bar.update(100)
+        bar.stop()
+        log(`\n💻 Run ${ux.colors.green('$')} ${ux.colors.italic.dim('ops run ' + op.name)} to test your op.`)
+        log(`📦 Run ${ux.colors.green('$')} ${ux.colors.italic.dim('ops publish ' + opPath)} to share your op. \n`)
+        resolve()
+      })
+  })
 }
