@@ -8,12 +8,11 @@
  *
  */
 const {ux} = require('@cto.ai/sdk')
-const Docker = require('dockerode')
-const fs = require('fs-extra')
 const through = require('through2')
 const json = require('JSONStream')
 
 import Op from '../types/op'
+import getDocker from '../utils/get-docker'
 const ops_registry_path = process.env.OPS_REGISTRY_PATH || 'registry.cto.ai'
 const ops_registry_host = process.env.OPS_REGISTRY_HOST || `https://${ops_registry_path}`
 const ops_registry_auth = {
@@ -24,14 +23,8 @@ const ops_registry_auth = {
 
 export default async function publish(this: any, options: {tag: string, opPath: string, op: Op}) {
   const {op} = options
-  const socket = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
-  const stats = fs.statSync(socket)
-
-  if (!stats.isSocket()) {
-    throw new Error('Are you sure the docker is running?')
-  }
-
-  const docker = new Docker({socketPath: socket})
+  const self = this
+  const docker = await getDocker(self, 'publish')
   const image = docker.getImage(`${ops_registry_path}/${op.name}`)
   this.log(`🔋 Creating release ${ux.colors.callOutCyan(ops_registry_path + '/' + op._id.toLowerCase())}... \n`)
 

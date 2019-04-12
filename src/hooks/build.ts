@@ -8,25 +8,16 @@
  *
  */
 const {ux} = require('@cto.ai/sdk')
-const Docker = require('dockerode')
-const fs = require('fs-extra')
 const through = require('through2')
 const json = require('JSONStream')
 
 import Op from '../types/op'
+import getDocker from '../utils/get-docker'
 
 export default async function build(this: any, options:
   {tag: string, opPath: string, op: Op}
 ) {
   const {opPath, tag, op} = options
-  const socket = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
-  const stats = fs.statSync(socket)
-
-  if (!stats.isSocket()) {
-    throw new Error('Are you sure the docker is running?')
-  }
-
-  const docker = new Docker({socketPath: socket})
 
   const all = []
   const log = this.log
@@ -47,6 +38,8 @@ export default async function build(this: any, options:
     return parser._pipe(dest)
   }
   await new Promise(async function (resolve, reject) {
+    const self = this
+    const docker = await getDocker(self, 'build')
     const stream = await docker.buildImage({context: opPath, src: op.src}, {t: tag})
       .catch(() => reject())
     stream
