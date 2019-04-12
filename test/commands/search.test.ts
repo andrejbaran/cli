@@ -26,7 +26,7 @@ describe('search', () => {
     .nock(SEGMENT_URL, api => api
       .post(uri => true)
       .reply(200)
-  )
+    )
     .nock(`${process.env.OPS_API_HOST}${process.env.OPS_API_PATH}`, api => api
       .get('/ops')
       .query({$limit: 100})
