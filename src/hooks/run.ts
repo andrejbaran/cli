@@ -7,23 +7,15 @@
  * DESCRIPTION
  *
  */
-const Docker = require('dockerode')
-const fs = require('fs-extra')
-
 import Op from '../types/op'
+import getDocker from '../utils/get-docker'
 
 const ops_registry_host = process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
 
 export default async function run(options: {tag: string, opPath: string, op: Op}) {
   const {op} = options
-  const socket = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
-  const stats = fs.statSync(socket)
-
-  if (!stats.isSocket()) {
-    throw new Error('Are you sure the docker is running?')
-  }
-
-  const docker = new Docker({socketPath: socket})
+  const self = this
+  const docker = await getDocker(self, 'run')
   docker.getImage(`${ops_registry_host}/${op.name}`)
   console.log(`${ops_registry_host}/${op.name}`)
 }
