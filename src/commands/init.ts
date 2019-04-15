@@ -19,20 +19,20 @@ export default class Init extends Command {
   namePrompt = {
     type: 'input',
     name: 'name',
-    message: `\nName your op to begin ${ux.colors.reset.green(
+    message: `Provide a name for your new op ${ux.colors.reset.green(
       '→'
-    )}  \n🏷  ${ux.colors.white('Name of op')}`,
+    )}  \n🏷  ${ux.colors.white('Name:')}`,
     afterMessage: `${ux.colors.reset.green('✓')}`,
-    afterMessageAppend: `${ux.colors.reset(' created!')}`,
+    afterMessageAppend: `${ux.colors.reset(' added!')}`,
     validate: this._validateName
   }
 
   descriptionPrompt = {
     type: 'input',
     name: 'description',
-    message: `\nDescribe what your op does ${ux.colors.reset.green(
+    message: `\nProvide a description ${ux.colors.reset.green(
       '→'
-    )}  \n📝 ${ux.colors.white('Ops details')}`,
+    )}  \n📝 ${ux.colors.white('Description:')}`,
     afterMessage: `${ux.colors.reset.green('✓')}`,
     afterMessageAppend: `${ux.colors.reset(' added!')}`,
     validate: this._validateDescription
@@ -67,15 +67,18 @@ export default class Init extends Command {
     manifest = yaml.stringify(op)
     await fs.writeFile(`${dest}/${name}/ops.yml`, manifest)
 
-    self.log('\n🎉 Success! Your op is ready to be worked on.')
+    self.log('\n🎉 Success! Your op is ready to start coding... \n')
     fs.readdirSync(`${dest}/${name}`).forEach((file: any) => {
+      let callout = ''
+      if (file.indexOf('index.js') > -1) {
+        callout = `${ux.colors.green('←')} ${ux.colors.white('Start developing here!')}`
+      }
       let msg = ux.colors.italic(
-        `${path.relative(dest, process.cwd())}/${name}/${file}`
+        `${path.relative(dest, process.cwd())}/${name}/${file} ${callout}`
       )
       self.log(`📁 .${msg}`)
     })
-    self.log('\n🚀 Run the following to test your new op:')
-    self.log(`${ux.colors.green('$')} ops run ${ux.colors.callOutCyan(name)}`)
+    self.log(`\n🚀 Now test your op with: ${ux.colors.green('$')} ops run ${ux.colors.callOutCyan(name)}\n`)
 
     self.analytics.track({
       userId: self.user.email,
@@ -83,10 +86,9 @@ export default class Init extends Command {
       properties: {
         email: self.user.email,
         username: self.user.username,
-        name,
         path: dest,
-        opName: name,
-        opDescription: description
+        name,
+        description
       }
     })
   }
