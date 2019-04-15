@@ -1,8 +1,8 @@
 import {expect, test} from '@oclif/test'
 import { User } from '../../../src/types/user'
 import { clearConfig, writeConfig } from '../../helpers/manage-config'
-import { SEGMENT_URL } from '../../../config'
 const faker = require('faker')
+const {SEGMENT_URL} = process.env
 
 let accessToken: string
 let user: User

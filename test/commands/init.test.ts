@@ -2,7 +2,7 @@ import {expect, test} from '@oclif/test'
 import {User} from '../../src/types/user'
 import {clearConfig, writeConfig} from '../helpers/manage-config'
 import {userFactory, accessTokenFactory} from '../factories/'
-import {SEGMENT_URL} from '../../config'
+const {SEGMENT_URL} = process.env
 const {ux} = require('@cto.ai/sdk')
 const fs = require('fs-extra')
 const yaml = require('yaml')
