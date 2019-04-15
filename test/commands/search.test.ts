@@ -1,5 +1,5 @@
 import {expect, test} from '@oclif/test'
-import {SEGMENT_URL} from '../../config'
+const {SEGMENT_URL} = process.env
 const {ux} = require('@cto.ai/sdk')
 const faker = require('faker')
 

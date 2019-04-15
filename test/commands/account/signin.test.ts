@@ -1,6 +1,6 @@
 import {expect, test} from '@oclif/test'
-import {SEGMENT_URL} from '../../../config'
 const {ux} = require('@cto.ai/sdk')
+const {SEGMENT_URL} = process.env
 
 import {clearConfig, readConfig} from '../../helpers/manage-config'
 
