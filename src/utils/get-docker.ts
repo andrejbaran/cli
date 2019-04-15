@@ -87,7 +87,7 @@ async function confirmReadyContinue() {
  */
 export default async function getDocker(self: any, type: string) {
   // Point to the docke socket
-  const socket = process.env.DOCKER_SOCKET || '/var/run/docker.so2ck'
+  const socket = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
 
   /**
    * Checks whether docker is installed on the machine
