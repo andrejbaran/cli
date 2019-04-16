@@ -8,13 +8,12 @@
  *
  */
 
-export interface ApiPostOptions {
-  url: string,
-  data: object,
-  params?: object,
+export interface ApiGetOptions {
+  url: string
+  params?: object
   headers?: {
     authorization?: string
   }
 }
 
-export default ApiPostOptions
+export default ApiGetOptions

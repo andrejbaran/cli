@@ -1,99 +1,139 @@
+import { ux } from '@cto.ai/sdk'
+import * as fs from 'fs-extra'
 import * as path from 'path'
-
-import Command, {flags} from '../base'
-
-const {ux} = require('@cto.ai/sdk')
-const fs = require('fs-extra')
-const yaml = require('yaml')
+import * as yaml from 'yaml'
+import Command, { flags } from '../base'
 
 export default class Init extends Command {
   static description = 'Easily create a new op.'
-
   static flags = {
-    help: flags.help({char: 'h'}),
-    name: flags.string({char: 'n', description: 'op name'}),
-    description: flags.string({char: 'd', description: 'op description'}),
+    help: flags.help({ char: 'h' }),
+    name: flags.string({ char: 'n', description: 'op name' }),
+    description: flags.string({ char: 'd', description: 'op description' }),
   }
   questions: object[] = []
+
+  srcDir = path.resolve(__dirname, '../template')
+  destDir = path.resolve(process.cwd())
+  opName: string
+  opDescription: string
 
   namePrompt = {
     type: 'input',
     name: 'name',
     message: `Provide a name for your new op ${ux.colors.reset.green(
-      '→'
+      '→',
     )}  \n🏷  ${ux.colors.white('Name:')}`,
     afterMessage: `${ux.colors.reset.green('✓')}`,
     afterMessageAppend: `${ux.colors.reset(' added!')}`,
-    validate: this._validateName
+    validate: this._validateName,
   }
 
   descriptionPrompt = {
     type: 'input',
     name: 'description',
     message: `\nProvide a description ${ux.colors.reset.green(
-      '→'
+      '→',
     )}  \n📝 ${ux.colors.white('Description:')}`,
     afterMessage: `${ux.colors.reset.green('✓')}`,
     afterMessageAppend: `${ux.colors.reset(' added!')}`,
-    validate: this._validateDescription
+    validate: this._validateDescription,
   }
 
-  async run(this: any) {
-    let self = this
-    const {flags} = this.parse(Init)
-    self.isLoggedIn()
-    let name = flags.name
-    let description = flags.description
-    const src = path.resolve(`${__dirname}/../template`)
-    const dest = path.resolve(process.cwd())
+  private _assignFlags() {
+    const { flags } = this.parse(Init)
+    this.opName = flags.name
+    this.opDescription = flags.description
+  }
 
-    if (!name) self.questions.push(self.namePrompt)
-    if (!description) self.questions.push(self.descriptionPrompt)
-    if (self.questions.length) {
-      const answers = await ux.prompt(self.questions)
-      if (answers.name) name = answers.name
-      if (answers.description) description = answers.description
+  private async _askQuestions() {
+    if (!this.opName) this.questions.push(this.namePrompt)
+    if (!this.opDescription) this.questions.push(this.descriptionPrompt)
+
+    if (this.questions.length) {
+      const answers = await ux.prompt(this.questions)
+      if (answers.name) this.opName = answers.name
+      if (answers.description) this.opDescription = answers.description
     }
+  }
+
+  private _customizePackageJson() {
+    const packageObj = JSON.parse(
+      fs.readFileSync(`${this.srcDir}/package.json`, 'utf8'),
+    )
+    packageObj.name = this.opName
+    packageObj.description = this.opDescription
+
+    const newPackageString = JSON.stringify(packageObj, null, 2)
+
+    fs.writeFileSync(
+      `${this.destDir}/${this.opName}/package.json`,
+      newPackageString,
+    )
+  }
+
+  private _customizeOpsYaml() {
+    const opsYamlObj = yaml.parse(
+      fs.readFileSync(`${this.destDir}/${this.opName}/ops.yml`, 'utf8'),
+    )
+    opsYamlObj.name = this.opName
+    opsYamlObj.description = this.opDescription
+
+    const newOpsString = yaml.stringify(opsYamlObj)
+
+    fs.writeFileSync(`${this.destDir}/${this.opName}/ops.yml`, newOpsString)
+  }
+
+  private async _copyTemplateFiles() {
     try {
-      await fs.ensureDir(`${dest}/${name}`)
-      await fs.copy(src, `${dest}/${name}`)
+      await fs.ensureDir(`${this.destDir}/${this.opName}`)
+      await fs.copy(this.srcDir, `${this.destDir}/${this.opName}`)
+      this._customizePackageJson()
+      this._customizeOpsYaml()
     } catch (err) {
       console.error(err)
     }
-    let manifest = await fs.readFile(`${dest}/${name}/ops.yml`, 'utf8')
-    let op = yaml.parse(manifest)
-    op.name = name
-    op.description = description
-    manifest = yaml.stringify(op)
-    await fs.writeFile(`${dest}/${name}/ops.yml`, manifest)
+  }
 
-    self.log('\n🎉 Success! Your op is ready to start coding... \n')
-    fs.readdirSync(`${dest}/${name}`).forEach((file: any) => {
+  private _logMessages() {
+    this.log('\n🎉 Success! Your op is ready to start coding... \n')
+
+    fs.readdirSync(`${this.destDir}/${this.opName}`).forEach((file: any) => {
       let callout = ''
       if (file.indexOf('index.js') > -1) {
-        callout = `${ux.colors.green('←')} ${ux.colors.white('Start developing here!')}`
+        callout = `${ux.colors.green('←')} ${ux.colors.white(
+          'Start developing here!',
+        )}`
       }
       let msg = ux.colors.italic(
-        `${path.relative(dest, process.cwd())}/${name}/${file} ${callout}`
+        `${path.relative(this.destDir, process.cwd())}/${
+          this.opName
+        }/${file} ${callout}`,
       )
-      self.log(`📁 .${msg}`)
+      this.log(`📁 .${msg}`)
     })
-    self.log(`\n🚀 Now test your op with: ${ux.colors.green('$')} ops run ${ux.colors.callOutCyan(name)}\n`)
+    this.log(
+      `\n🚀 Now test your op with: ${ux.colors.green(
+        '$',
+      )} ops run ${ux.colors.callOutCyan(this.opName)}\n`,
+    )
+  }
 
-    self.analytics.track({
-      userId: self.user.email,
+  private _trackAnalytics() {
+    this.analytics.track({
+      userId: this.user.email,
       event: 'Ops CLI Init',
       properties: {
-        email: self.user.email,
-        username: self.user.username,
-        path: dest,
-        name,
-        description
-      }
+        email: this.user.email,
+        username: this.user.username,
+        path: this.destDir,
+        name: this.opName,
+        description: this.opDescription,
+      },
     })
   }
 
-  _validateName(input) {
+  _validateName(input: string) {
     if (input === '') return 'Please provide a op name'
     if (!input.match('^[a-z0-9_-]*$')) {
       return 'Op Name must only contain numbers, letters, -, or _'
@@ -101,8 +141,17 @@ export default class Init extends Command {
     return true
   }
 
-  _validateDescription(input) {
+  _validateDescription(input: string) {
     if (input === '') return 'Please provide a op description'
     return true
+  }
+
+  async run() {
+    this.isLoggedIn()
+    this._assignFlags()
+    await this._askQuestions()
+    await this._copyTemplateFiles()
+    this._logMessages()
+    this._trackAnalytics()
   }
 }

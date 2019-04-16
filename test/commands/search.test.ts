@@ -1,46 +1,38 @@
-import {expect, test} from '@oclif/test'
-const {SEGMENT_URL} = process.env
-const {ux} = require('@cto.ai/sdk')
-const faker = require('faker')
+import { ux } from '@cto.ai/sdk'
+import { expect, test } from '@oclif/test'
+import setupTest from '../helpers/setupTest'
+const { SEGMENT_URL } = process.env
+import { clearConfig, writeConfig } from '../helpers/manage-config'
 
-import {User} from '../../src/types/user'
-import {clearConfig, writeConfig} from '../helpers/manage-config'
-
-let accessToken: string
-let user: User
 describe('search', () => {
   beforeEach(async () => {
-    accessToken = faker.random.uuid()
-    user = {
-      username: 'test',
-      email: 'test@test.com',
-      _id: 'testId'
-    }
-    await writeConfig({accessToken, user})
+    await setupTest()
   })
   afterEach(async () => {
     await clearConfig()
   })
 
   test
-    .nock(SEGMENT_URL, api => api
-      .post(uri => true)
-      .reply(200)
-    )
-    .nock(`${process.env.OPS_API_HOST}${process.env.OPS_API_PATH}`, api => api
-      .get('/ops')
-      .query({$limit: 100})
-      .reply(200, {data: []})
+    .nock(SEGMENT_URL, api => api.post(uri => true).reply(200))
+    .nock(`${process.env.OPS_API_HOST}${process.env.OPS_API_PATH}`, api =>
+      api
+        .get('/ops')
+        .query({ $limit: 100 })
+        .reply(200, { data: [] }),
     )
     .stdout()
     .stub(ux, 'prompt', () => {
-      return {runOp: {
-        name: 'runOp',
-        _id: 'opTestId'
-      }}
+      return {
+        runOp: {
+          name: 'runOp',
+          _id: 'opTestId',
+        },
+      }
     })
     .command(['search'])
     .it('runs search command', ctx => {
-      expect(ctx.stdout).to.contain('\n🔍 Searching the repository for all ops...\n\n💻 Run $ ops run runOp:optestid to test your op. \n\n')
+      expect(ctx.stdout).to.contain(
+        '\n🔍 Searching the repository for all ops...\n\n💻 Run $ ops run runOp:optestid to test your op. \n\n',
+      )
     })
 })
