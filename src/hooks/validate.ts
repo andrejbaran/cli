@@ -7,7 +7,7 @@
  * DESCRIPTION
  *
  */
-import Op from '../types/op'
+import Op from '../types/Op'
 
 export default async function validate(op: Op) {
   if (typeof op.name !== 'string' || !op.name.match('^[a-z0-9_-]*$')) {

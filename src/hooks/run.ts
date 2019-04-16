@@ -7,13 +7,17 @@
  * DESCRIPTION
  *
  */
-import Op from '../types/op'
+import Op from '../types/Op'
 import getDocker from '../utils/get-docker'
 
 const ops_registry_host = process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
 
-export default async function run(options: {tag: string, opPath: string, op: Op}) {
-  const {op} = options
+export default async function run(options: {
+  tag: string
+  opPath: string
+  op: Op
+}) {
+  const { op } = options
   const self = this
   const docker = await getDocker(self, 'run')
   docker.getImage(`${ops_registry_host}/${op.name}`)

@@ -1,17 +1,15 @@
-import Command, {flags} from '../base'
-const {ux} = require('@cto.ai/sdk')
+import Command, { flags } from '../base'
+import { ux } from '@cto.ai/sdk'
 
 const ops_registry_host = process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
 
 export default class Remove extends Command {
   static description = 'describe the command here'
 
-  static args = [
-    {name: 'op'}
-  ]
+  static args = [{ name: 'op' }]
 
   static flags = {
-    help: flags.help({char: 'h'})
+    help: flags.help({ char: 'h' }),
   }
 
   async run(this: any) {
@@ -20,18 +18,22 @@ export default class Remove extends Command {
     this.isLoggedIn()
 
     this.log('')
-    await this.client.service('ops').find({
-      query: {
-        $sort: {
-          created_at: -1
+    await this.client
+      .service('ops')
+      .find({
+        query: {
+          $sort: {
+            created_at: -1,
+          },
+          'owner._id': this.user._id,
+          $limit: 1000,
         },
-        'owner._id': this.user._id,
-        $limit: 1000
-      }
-    })
-      .then(async function (o) {
+      })
+      .then(async function(o) {
         if (!o.data.length) {
-          self.log('✋Nothing found in the registry. Please try again later. \n')
+          self.log(
+            '✋Nothing found in the registry. Please try again later. \n',
+          )
           self.exit()
         }
 
@@ -42,19 +44,29 @@ export default class Remove extends Command {
           message: '🗑  Which op would you like to remove?',
           choices: o.data.map(l => {
             return {
-              name: `${ux.colors.callOutCyan(l.name)} ${ux.colors.white(l.description)} | id: ${ux.colors.white(l._id.toLowerCase())}`,
-              value: l
+              name: `${ux.colors.callOutCyan(l.name)} ${ux.colors.white(
+                l.description,
+              )} | id: ${ux.colors.white(l._id.toLowerCase())}`,
+              value: l,
             }
-          })
+          }),
         })
         self.log('\n 🗑 Removing from registry...')
         await self.client.service('ops').remove(op.desync._id)
 
         self.log('')
         let msg = ux.colors.bold(`${op.desync.name}:${op.desync._id}`)
-        self.log(`⚡️ ${msg} has been ${ux.colors.green('removed')} from the registry!`)
+        self.log(
+          `⚡️ ${msg} has been ${ux.colors.green(
+            'removed',
+          )} from the registry!`,
+        )
         self.log('')
-        self.log(`To publish again run: ${ux.colors.green('$')} ${ux.colors.dim('ops publish <path>')}`)
+        self.log(
+          `To publish again run: ${ux.colors.green('$')} ${ux.colors.dim(
+            'ops publish <path>',
+          )}`,
+        )
         self.log('')
 
         self.analytics.track({
@@ -66,8 +78,8 @@ export default class Remove extends Command {
             id: op.desync._id,
             name: op.desync.name,
             description: op.desync.description,
-            image: `${ops_registry_host}/${op.desync.name}`
-          }
+            image: `${ops_registry_host}/${op.desync.name}`,
+          },
         })
       })
   }

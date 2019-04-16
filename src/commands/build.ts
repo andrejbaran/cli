@@ -9,12 +9,12 @@
  */
 import * as path from 'path'
 
-import Command, {flags} from '../base'
-import {Op} from '../types/op'
+import Command, { flags } from '../base'
+import { Op } from '../types/Op'
 
-const {ux} = require('@cto.ai/sdk')
-const fs = require('fs-extra')
-const yaml = require('yaml')
+import { ux } from '@cto.ai/sdk'
+import * as fs from 'fs-extra'
+import * as yaml from 'yaml'
 
 const ops_registry_host = process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
 
@@ -22,30 +22,35 @@ export default class Build extends Command {
   static description = 'Build your op for sharing.'
 
   static flags = {
-    help: flags.help({char: 'h'})
+    help: flags.help({ char: 'h' }),
   }
 
-  static args = [{name: 'path'}]
+  static args = [{ name: 'path' }]
 
   async run(this: any) {
-    const {args} = this.parse(Build)
-    const opPath = args.path ? path.resolve(process.cwd(), args.path) : process.cwd()
+    const { args } = this.parse(Build)
+    const opPath = args.path
+      ? path.resolve(process.cwd(), args.path)
+      : process.cwd()
 
     this.isLoggedIn()
 
-    const manifest = await fs.readFile(path.join(opPath, '/ops.yml'), 'utf8')
+    const manifest = await fs
+      .readFile(path.join(opPath, '/ops.yml'), 'utf8')
       .catch((err: any) => {
         this.log(`Unable to locate ops.yml at ${err.path}`)
         this.exit()
       })
-    const op: Op = yaml.parse(manifest)
+    const op: Op = manifest && yaml.parse(manifest)
     await this.config.runHook('validate', op)
 
-    this.log(`🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`)
+    this.log(
+      `🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`,
+    )
     await this.config.runHook('build', {
       tag: `${ops_registry_host}/${op.name}:latest`,
       opPath,
-      op
+      op,
     })
 
     this.analytics.track({
@@ -56,9 +61,8 @@ export default class Build extends Command {
         username: this.user.username,
         name: op.name,
         description: op.description,
-        image: `${ops_registry_host}/${op.name}`
-      }
+        image: `${ops_registry_host}/${op.name}`,
+      },
     })
-
   }
 }

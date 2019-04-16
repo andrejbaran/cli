@@ -1,5 +1,5 @@
-import {User} from '../../src/types/user'
-const faker = require('faker')
+import User from '../../src/types/User'
+import * as faker from 'faker'
 
 function generateUser(username?: string, email?: string, id?: any): User {
   return {
