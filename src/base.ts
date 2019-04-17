@@ -5,7 +5,7 @@ import Command, { flags } from '@oclif/command'
 import Analytics from 'analytics-node'
 import axios from 'axios'
 import Docker from 'dockerode'
-import { outputJson, readJson } from 'fs-extra'
+import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
 
 import Config from './types/Config'
@@ -81,6 +81,11 @@ abstract class CTOCommand extends Command {
         ...newConfig,
       }),
     )
+  }
+
+  public async clearConfig(): Promise<void> {
+    const configPath = path.join(this.config.configDir, 'config.json')
+    return Promise.resolve(await remove(configPath))
   }
 
   public async localAuthenticate(email: string, password: string) {

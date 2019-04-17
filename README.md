@@ -29,6 +29,7 @@ USAGE
 # Commands
 <!-- commands -->
 * [`ops account:signin`](#ops-accountsignin)
+* [`ops account:signout`](#ops-accountsignout)
 * [`ops account:signup`](#ops-accountsignup)
 * [`ops account:support [FILE]`](#ops-accountsupport-file)
 * [`ops build [PATH]`](#ops-build-path)
@@ -55,6 +56,17 @@ OPTIONS
 ```
 
 _See code: [src/commands/account/signin.ts](https://github.com/cto.ai/ops/blob/v1.0.44/src/commands/account/signin.ts)_
+
+## `ops account:signout`
+
+Logs you out from your account
+
+```
+USAGE
+  $ ops account:signout
+```
+
+_See code: [src/commands/account/signout.ts](https://github.com/cto.ai/ops/blob/v1.0.42/src/commands/account/signout.ts)_
 
 ## `ops account:signup`
 
