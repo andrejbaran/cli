@@ -19,7 +19,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.0.44 darwin-x64 node-v10.14.2
+@cto.ai/ops/1.0.45 darwin-x64 node-v10.15.3
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -55,18 +55,18 @@ OPTIONS
   -p, --password=password
 ```
 
-_See code: [src/commands/account/signin.ts](https://github.com/cto.ai/ops/blob/v1.0.44/src/commands/account/signin.ts)_
+_See code: [src/commands/account/signin.ts](https://github.com/cto.ai/ops/blob/v1.0.45/src/commands/account/signin.ts)_
 
 ## `ops account:signout`
 
-Logs you out from your account
+Log out from your account
 
 ```
 USAGE
   $ ops account:signout
 ```
 
-_See code: [src/commands/account/signout.ts](https://github.com/cto.ai/ops/blob/v1.0.42/src/commands/account/signout.ts)_
+_See code: [src/commands/account/signout.ts](https://github.com/cto.ai/ops/blob/v1.0.45/src/commands/account/signout.ts)_
 
 ## `ops account:signup`
 
@@ -80,7 +80,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/account/signup.ts](https://github.com/cto.ai/ops/blob/v1.0.44/src/commands/account/signup.ts)_
+_See code: [src/commands/account/signup.ts](https://github.com/cto.ai/ops/blob/v1.0.45/src/commands/account/signup.ts)_
 
 ## `ops account:support [FILE]`
 
@@ -96,7 +96,7 @@ OPTIONS
   -n, --name=name  name to print
 ```
 
-_See code: [src/commands/account/support.ts](https://github.com/cto.ai/ops/blob/v1.0.44/src/commands/account/support.ts)_
+_See code: [src/commands/account/support.ts](https://github.com/cto.ai/ops/blob/v1.0.45/src/commands/account/support.ts)_
 
 ## `ops build [PATH]`
 
@@ -110,7 +110,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/build.ts](https://github.com/cto.ai/ops/blob/v1.0.44/src/commands/build.ts)_
+_See code: [src/commands/build.ts](https://github.com/cto.ai/ops/blob/v1.0.45/src/commands/build.ts)_
 
 ## `ops help [COMMAND]`
 
@@ -143,7 +143,7 @@ OPTIONS
   -n, --name=name                op name
 ```
 
-_See code: [src/commands/init.ts](https://github.com/cto.ai/ops/blob/v1.0.44/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/cto.ai/ops/blob/v1.0.45/src/commands/init.ts)_
 
 ## `ops publish [PATH]`
 
@@ -157,7 +157,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/publish.ts](https://github.com/cto.ai/ops/blob/v1.0.44/src/commands/publish.ts)_
+_See code: [src/commands/publish.ts](https://github.com/cto.ai/ops/blob/v1.0.45/src/commands/publish.ts)_
 
 ## `ops remove [OP]`
 
@@ -171,7 +171,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/remove.ts](https://github.com/cto.ai/ops/blob/v1.0.44/src/commands/remove.ts)_
+_See code: [src/commands/remove.ts](https://github.com/cto.ai/ops/blob/v1.0.45/src/commands/remove.ts)_
 
 ## `ops run [NAMEORPATH]`
 
@@ -185,7 +185,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/run.ts](https://github.com/cto.ai/ops/blob/v1.0.44/src/commands/run.ts)_
+_See code: [src/commands/run.ts](https://github.com/cto.ai/ops/blob/v1.0.45/src/commands/run.ts)_
 
 ## `ops search [FILTER]`
 
@@ -199,7 +199,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/search.ts](https://github.com/cto.ai/ops/blob/v1.0.44/src/commands/search.ts)_
+_See code: [src/commands/search.ts](https://github.com/cto.ai/ops/blob/v1.0.45/src/commands/search.ts)_
 
 ## `ops update`
 
@@ -213,5 +213,5 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/update.ts](https://github.com/cto.ai/ops/blob/v1.0.44/src/commands/update.ts)_
+_See code: [src/commands/update.ts](https://github.com/cto.ai/ops/blob/v1.0.45/src/commands/update.ts)_
 <!-- commandsstop -->
