@@ -36,46 +36,36 @@ export default class Run extends Command {
     help: flags.help({ char: 'h' }),
   }
 
-  static args = [{ name: 'name' }]
+  // Used to specify variable length arguments
+  static strict = false
 
-  previousKey
-  isPublished
+  static args = [{ name: 'nameOrPath' }] // Specifies the arguments so that we can destructure it
+
+  previousKey: string
+  isPublished: boolean
   CTRL_P = '\u0010'
   CTRL_Q = '\u0011'
 
   async run(this: any) {
     const self = this
-    const { args } = this.parse(Run)
     self.isLoggedIn()
-    let opNameOrPath = args.name
-    if (!opNameOrPath) {
-      const answer = await ux.prompt({
-        type: 'input',
-        name: 'name',
-        message: 'What is the name or path of your op?',
-        validate: input => {
-          if (input === '') return 'Please enter the name or path of the op'
-          return true
-        },
-      })
-      opNameOrPath = answer.name
-    }
-    let op = await this._getOp(opNameOrPath)
 
+    // Obtain the op if exists, otherwise return
+    const { args, argv } = this.parse(Run)
+    if (!args.nameOrPath)
+      return this.log('Please enter the name or path of the op')
+
+    // Get the local image if exists
+    const opParams = argv.slice(Object.keys(args).length)
+    let op = await this._getOp(args.nameOrPath, opParams)
     const list = await self.docker.listImages().catch(err => console.log(err))
-    let found = false
-    for (let k of list) {
-      if (!k.RepoTags) {
-        continue
-      }
-      if (k.RepoTags.join('').indexOf(`${op.image}:latest`) > -1) {
-        found = true
-        break
-      }
-    }
+    const found = await self._findLocalImage(list, op)
+
+    // If local image doesn't exist, try to pull from registry
     if (!found) {
       await self._getImage(self, op, args.name)
     }
+
     self.log(`⚙️  Running ${ux.colors.dim(op.name)}...`)
     op = await self._setEnvs(self, op)
     op = await self._setBinds(op)
@@ -161,7 +151,26 @@ export default class Run extends Command {
       })
     }
   }
-  private async _getOp(opNameOrPath) {
+
+  /**
+   * Gets the local image if exists
+   * @param list The list of images
+   * @param op The desired op we want to run
+   * @returns Whether the image exists or not
+   */
+  private async _findLocalImage(list, op): Promise<boolean> {
+    for (let k of list) {
+      if (!k.RepoTags || !k.RepoTags.length) {
+        continue
+      }
+      if (k.RepoTags.find((n: string) => n.includes(`${op.name}:latest`))) {
+        return true
+      }
+    }
+    return false
+  }
+
+  private async _getOp(opNameOrPath, opParams) {
     let op
     const opPath = path.join(
       path.resolve(process.cwd(), `${opNameOrPath}`),
@@ -195,6 +204,7 @@ export default class Run extends Command {
       this.isPublished = true
     }
     op.run = op.run.split(' ')
+    op.run = [...op.run, ...opParams]
     return op
   }
 

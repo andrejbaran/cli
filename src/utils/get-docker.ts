@@ -236,6 +236,7 @@ export default async function getDocker(self: any, type: string) {
 
       // Return if user doesn't want to repeat
       if (!answer) process.exit(0) // Exit safely if there is no docker without an error
+
       numRepeats++ // Adds the number of errors the user has repeated
     }
   }
