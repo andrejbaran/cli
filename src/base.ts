@@ -7,6 +7,7 @@ import axios from 'axios'
 import Docker from 'dockerode'
 import { outputJson, readJson } from 'fs-extra'
 import * as path from 'path'
+
 import Config from './types/Config'
 import User from './types/User'
 import getDocker from './utils/get-docker'

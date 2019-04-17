@@ -1,8 +1,10 @@
 import {expect, test} from '@oclif/test'
+
 const {ux} = require('@cto.ai/sdk')
 const {SEGMENT_URL} = process.env
 
 import AccountSignup from '../../../src/commands/account/signup'
+import {baseTest} from '../../helpers/base-test'
 import {clearConfig, readConfig} from '../../helpers/manage-config'
 
 describe('account:signup', () => {
@@ -15,8 +17,10 @@ describe('account:signup', () => {
   const configFake: any = {}
   const signup = new AccountSignup([], configFake)
 
-  afterEach(async () => clearConfig())
-  test
+  afterEach(async () => {
+    await clearConfig()
+  })
+  baseTest
     .nock(SEGMENT_URL, api => api
       .post(uri => true)
       .reply(200)

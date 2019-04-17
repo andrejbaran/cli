@@ -2,7 +2,7 @@ import { ux } from '@cto.ai/sdk'
 import { expect, test } from '@oclif/test'
 import setupTest from '../helpers/setupTest'
 const { SEGMENT_URL } = process.env
-import { clearConfig, writeConfig } from '../helpers/manage-config'
+import { clearConfig } from '../helpers/manage-config'
 
 describe('search', () => {
   beforeEach(async () => {

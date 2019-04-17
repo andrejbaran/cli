@@ -1,7 +1,7 @@
 {
   "name": "@cto.ai/ops",
   "description": "💻 CTO.ai Ops - The CLI built for Teams 🚀",
-  "version": "1.0.42",
+  "version": "1.0.43",
   "author": "Brett Campbell",
   "bin": {
     "ops": "./bin/run"
@@ -72,7 +72,8 @@
     "hooks": {
       "build": "./lib/hooks/build",
       "validate": "./lib/hooks/validate",
-      "publish": "./lib/hooks/publish"
+      "publish": "./lib/hooks/publish",
+      "prerun": "./lib/hooks/prerun/check-version"
     },
     "bin": "ops",
     "plugins": [
