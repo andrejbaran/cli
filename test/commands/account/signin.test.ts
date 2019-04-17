@@ -1,17 +1,21 @@
 import {expect, test} from '@oclif/test'
-const {ux} = require('@cto.ai/sdk')
-const {SEGMENT_URL} = process.env
 
+import {baseTest} from '../../helpers/base-test'
 import {clearConfig, readConfig} from '../../helpers/manage-config'
+
+const {SEGMENT_URL} = process.env
+const {ux} = require('@cto.ai/sdk')
 
 describe('account:signin', () => {
   const email = 'test@test.com'
   const password = 'password'
   const username = 'test'
-  afterEach(async () => clearConfig())
-  test
+  afterEach(async () => {
+    await clearConfig()
+  })
+  baseTest
     .nock(SEGMENT_URL, api => api
-      .post(uri => true)
+      .post(() => true)
       .reply(200)
     )
     .nock(`${process.env.OPS_API_HOST}${process.env.OPS_API_PATH}`, api => api
@@ -32,7 +36,7 @@ describe('account:signin', () => {
       expect(config.user.email).to.equal(email)
     })
 
-  test
+  baseTest
     .nock(SEGMENT_URL, api => api
       .post(uri => true)
       .reply(200)
