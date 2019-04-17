@@ -9,7 +9,6 @@ export default async function setupTest() {
   return await writeConfig({
     accessToken,
     user,
-    teamName: team.name,
-    teamId: team.id,
+    team,
   })
 }

@@ -6,11 +6,11 @@
  * @copyright (c) 2019 Hack Capital
  */
 
+import Team from './Team'
 import User from './User'
 
 interface Config {
-  teamName: string
-  teamId: string
+  team: Team
   accessToken: string
   user: User
 }
