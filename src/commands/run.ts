@@ -34,6 +34,7 @@ export default class Run extends Command {
 
   static flags = {
     help: flags.help({ char: 'h' }),
+    build: flags.boolean(),
   }
 
   // Used to specify variable length arguments
@@ -51,7 +52,7 @@ export default class Run extends Command {
     self.isLoggedIn()
 
     // Obtain the op if exists, otherwise return
-    const { args, argv } = this.parse(Run)
+    const { args, argv, flags } = this.parse(Run)
     if (!args.nameOrPath)
       return this.log('Please enter the name or path of the op')
 
@@ -62,8 +63,8 @@ export default class Run extends Command {
     const found = await self._findLocalImage(list, op)
 
     // If local image doesn't exist, try to pull from registry
-    if (!found) {
-      await self._getImage(self, op, args.name)
+    if (!found || flags.build) {
+      await self._getImage(self, op, args.nameOrPath)
     }
 
     self.log(`⚙️  Running ${ux.colors.dim(op.name)}...`)
@@ -245,7 +246,13 @@ export default class Run extends Command {
     return op
   }
 
-  private async _getImage(self, op, opPath) {
+  /**
+   * Gets the image from the registry if it is published, otherwise from your local
+   * @param self The original 'this'
+   * @param op The desired op information that we want to run
+   * @param opPath The location of the op in the user's machine
+   */
+  private async _getImage(self: any, op: any, opPath: string) {
     if (self.isPublished) {
       await self._getImageFromRegistry(self, op)
     } else {
