@@ -6,8 +6,6 @@ import { Op } from '../types/Op'
 import * as fs from 'fs-extra'
 import * as yaml from 'yaml'
 
-const ops_registry_path = process.env.OPS_REGISTRY_PATH || 'registry.cto.ai'
-
 export default class Publish extends Command {
   static description = 'describe the command here'
 
@@ -44,14 +42,14 @@ export default class Publish extends Command {
 
     let op = await this.client.service('ops').create(pkg)
 
-    await this.client
-      .service('ops')
-      .patch(op._id, { image: `${ops_registry_path}/${op._id.toLowerCase()}` })
+    await this.client.service('ops').patch(op._id, {
+      image: `${this.ops_registry_host}/${op._id.toLowerCase()}`,
+    })
 
     await this.config.runHook('publish', {
-      tag: `${ops_registry_path}/${op._id.toLowerCase()}:latest`,
-      opPath,
       op,
+      ops_registry_host: this.ops_registry_host,
+      ops_registry_auth: this.ops_registry_auth,
     })
 
     this.analytics.track({
@@ -62,7 +60,7 @@ export default class Publish extends Command {
         username: this.user.username,
         name: op.name,
         description: op.description,
-        image: `${ops_registry_path}/${op._id.toLowerCase()}`,
+        image: `${this.ops_registry_host}/${op._id.toLowerCase()}`,
         tag: 'latest',
       },
     })
