@@ -11,6 +11,7 @@ import * as path from 'path'
 import Config from './types/Config'
 import User from './types/User'
 import getDocker from './utils/get-docker'
+import RegistryAuth from './types/RegistryAuth'
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'production'
 const ops_segment_key =
@@ -25,7 +26,13 @@ abstract class CTOCommand extends Command {
   accessToken = ''
   user: User = { email: '', _id: '', username: '' }
   api = api
-  docker: Docker
+  docker: Docker | undefined
+  ops_registry_host: string = process.env.OPS_REGISTRY_HOST || 'reg.cto.ai'
+  ops_registry_auth: RegistryAuth = {
+    username: 'admin',
+    password: 'UxvqKhAcRqrOgtscDUJC',
+    serveraddress: `https://${this.ops_registry_host}`,
+  }
 
   async init() {
     const { accessToken, user } = await this.readConfig()

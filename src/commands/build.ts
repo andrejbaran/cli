@@ -16,8 +16,6 @@ import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
 import * as yaml from 'yaml'
 
-const ops_registry_host = process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
-
 export default class Build extends Command {
   static description = 'Build your op for sharing.'
 
@@ -48,7 +46,7 @@ export default class Build extends Command {
       `🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`,
     )
     await this.config.runHook('build', {
-      tag: `${ops_registry_host}/${op.name}:latest`,
+      tag: `${this.ops_registry_host}/${op.name}:latest`,
       opPath,
       op,
     })
@@ -61,7 +59,7 @@ export default class Build extends Command {
         username: this.user.username,
         name: op.name,
         description: op.description,
-        image: `${ops_registry_host}/${op.name}`,
+        image: `${this.ops_registry_host}/${op.name}`,
       },
     })
   }

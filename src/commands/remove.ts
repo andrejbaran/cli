@@ -1,8 +1,6 @@
 import Command, { flags } from '../base'
 import { ux } from '@cto.ai/sdk'
 
-const ops_registry_host = process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
-
 export default class Remove extends Command {
   static description = 'describe the command here'
 
@@ -78,7 +76,7 @@ export default class Remove extends Command {
             id: op.desync._id,
             name: op.desync.name,
             description: op.desync.description,
-            image: `${ops_registry_host}/${op.desync.name}`,
+            image: `${this.ops_registry_host}/${op.desync.name}`,
           },
         })
       })

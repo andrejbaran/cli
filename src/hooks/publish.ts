@@ -12,27 +12,24 @@ import * as through from 'through2'
 import * as json from 'JSONStream'
 
 import Op from '../types/Op'
+import RegistryAuth from '../types/RegistryAuth'
 import getDocker from '../utils/get-docker'
-const ops_registry_path = process.env.OPS_REGISTRY_PATH || 'registry.cto.ai'
-const ops_registry_host =
-  process.env.OPS_REGISTRY_HOST || `https://${ops_registry_path}`
-const ops_registry_auth = {
-  username: 'admin',
-  password: 'UxvqKhAcRqrOgtscDUJC',
-  serveraddress: ops_registry_host,
-}
 
 export default async function publish(
   this: any,
-  options: { tag: string; opPath: string; op: Op },
+  options: {
+    op: Op
+    ops_registry_host: string
+    ops_registry_auth: RegistryAuth
+  },
 ) {
-  const { op } = options
+  const { op, ops_registry_host, ops_registry_auth } = options
   const self = this
   const docker = await getDocker(self, 'publish')
-  const image = docker.getImage(`${ops_registry_path}/${op.name}`)
+  const image = docker.getImage(`${ops_registry_host}/${op.name}`)
   this.log(
     `🔋 Creating release ${ux.colors.callOutCyan(
-      ops_registry_path + '/' + op._id.toLowerCase(),
+      ops_registry_host + '/' + op._id.toLowerCase(),
     )}... \n`,
   )
 
@@ -67,7 +64,7 @@ export default async function publish(
   }
 
   image.tag(
-    { repo: `${ops_registry_path}/${op._id.toLowerCase()}:latest` },
+    { repo: `${ops_registry_host}/${op._id.toLowerCase()}:latest` },
     (err: any, _data: any) => {
       if (err) return error(err.message, { exist: 2 })
       image.push(
@@ -93,7 +90,7 @@ export default async function publish(
               bar.stop()
               log(
                 `\n🙌 ${ux.colors.callOutCyan(
-                  `${ops_registry_path}/${op._id.toLowerCase()}:latest`,
+                  `${ops_registry_host}/${op._id.toLowerCase()}:latest`,
                 )} has been published! \n`,
               )
             })

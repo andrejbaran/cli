@@ -20,14 +20,6 @@ import * as json from 'JSONStream'
 
 const ops_api_host = process.env.OPS_API_HOST || 'https://cto.ai/'
 const ops_api_path = process.env.OPS_API_PATH || 'api/v1'
-const ops_registry_path = process.env.OPS_REGISTRY_PATH || 'registry.cto.ai'
-const ops_registry_host =
-  process.env.OPS_REGISTRY_HOST || `https://${ops_registry_path}`
-const ops_registry_auth = {
-  username: 'admin',
-  password: 'UxvqKhAcRqrOgtscDUJC',
-  serveraddress: ops_registry_host,
-}
 
 export default class Run extends Command {
   static description = 'Run an op from the registry.'
@@ -181,7 +173,7 @@ export default class Run extends Command {
     if (fs.existsSync(opPath)) {
       const manifest = await fs.readFile(opPath, 'utf8')
       op = yaml.parse(manifest)
-      op.image = `${ops_registry_path}/${op.name}`
+      op.image = `${this.ops_registry_host}/${op.name}`
     } else {
       let splitOpName = opNameOrPath.split(':')
       let query: any = {
@@ -193,7 +185,9 @@ export default class Run extends Command {
         },
       }
       if (splitOpName[1]) {
-        query.query.image = `${ops_registry_path}/${splitOpName[1].toLowerCase()}`
+        query.query.image = `${
+          this.ops_registry_host
+        }/${splitOpName[1].toLowerCase()}`
       }
       op = await this.client.service('ops').find(query)
       if (!op.total) {
@@ -270,9 +264,12 @@ export default class Run extends Command {
     let all = []
     let size = 100
     const { parser, bar } = await this._setParser(op)
-    const stream = await self.docker.pull(`${ops_registry_path}/${op.name}`, {
-      authconfig: ops_registry_auth,
-    })
+    const stream = await self.docker.pull(
+      `${this.ops_registry_host}/${op.name}`,
+      {
+        authconfig: this.ops_registry_auth,
+      },
+    )
     await new Promise((resolve, reject) => {
       stream
         .pipe(json.parse())
@@ -378,7 +375,7 @@ export default class Run extends Command {
       Env: op.env,
       Cmd: op.run,
       // WorkingDir: process.cwd().replace(process.env.HOME, '/root'),
-      Image: `${ops_registry_path}/${op.name}:latest`,
+      Image: `${this.ops_registry_host}/${op.name}:latest`,
       Volumes: {},
       VolumesFrom: [],
       WorkingDir: '',
