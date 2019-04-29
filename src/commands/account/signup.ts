@@ -80,29 +80,32 @@ export default class AccountSignup extends Command {
     ux.spinner.start(`${ux.colors.white('Creating account')}`)
 
     await this.client.service('users').create({ email, password, username })
-    const res = await this.localAuthenticate(email, password)
-    await this.writeConfig(res)
+    const config = await this.signinFlow({ email, password })
+
+    if (!config) {
+      throw new Error('could not authenticate')
+    }
 
     // This is wrapped in an if statement because it takes a while to finish executing.
     // The `nock` code that is supposed to intercept this call and counter it is not equipped
     // to handle this
     if (process.env.NODE_ENV !== 'test') {
       this.analytics.identify({
-        userId: res.user.email,
+        userId: config.user.email,
         traits: {
           beta: true,
-          email: res.user.email,
-          username: res.user.username,
+          email: config.user.email,
+          username: config.user.username,
         },
       })
     }
 
     this.analytics.track({
-      userId: res.user.email,
+      userId: config.user.email,
       event: 'Ops CLI Signup',
       properties: {
-        email: res.user.email,
-        username: res.user.username,
+        email: config.user.email,
+        username: config.user.username,
         os: this.config.platform,
         terminal: this.config.shell,
       },
@@ -121,34 +124,31 @@ export default class AccountSignup extends Command {
       )}\n`,
     )
   }
-  async _validateEmail(input) {
-    if (!/\S+@\S+\.\S+/.test(input)) return 'Invalid email format'
-    const response = await self.api({
-      method: 'get',
-      url: '/validate/users/unique',
-      params: {
-        email: input,
-      },
-    })
-    if (!response.data.unique) return 'Email is taken, please use another.'
-    return true
+  async _validateEmail(input: string) {
+    try {
+      if (!/\S+@\S+\.\S+/.test(input)) return 'Invalid email format'
+      const unique = await self.validateUniqueField({ email: input })
+      if (!unique) return 'Email is taken, please use another.'
+      return true
+    } catch (err) {
+      return 'Unable to validate Email'
+    }
   }
 
   async _validateUsername(input) {
-    const response = await self.api({
-      method: 'get',
-      url: '/validate/users/unique',
-      params: {
-        username: input,
-      },
-    })
-    if (!response.data.unique) return 'Username is taken, please use another.'
-    return true
+    try {
+      const unique = await self.validateUniqueField({ username: input })
+      if (!unique) return 'Username is taken, please use another.'
+      return true
+    } catch (err) {
+      return 'Unable to validate Username.'
+    }
   }
 
   _validateCpassword(input, answers) {
-    if (input !== answers.password)
+    if (input !== answers.password) {
       return "Password doesn't match, please try again."
+    }
     return true
   }
 }

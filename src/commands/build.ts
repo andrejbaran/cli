@@ -15,6 +15,7 @@ import { Op } from '../types/Op'
 import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
 import * as yaml from 'yaml'
+import { getOpUrl, getOpImageTag } from '../utils/getOpUrl'
 
 export default class Build extends Command {
   static description = 'Build your op for sharing.'
@@ -45,8 +46,10 @@ export default class Build extends Command {
     this.log(
       `🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`,
     )
+    const opImageTag = getOpImageTag(this.team.name, op.name)
+
     await this.config.runHook('build', {
-      tag: `${this.ops_registry_host}/${op.name}:latest`,
+      tag: getOpUrl(this.ops_registry_host, opImageTag),
       opPath,
       op,
     })

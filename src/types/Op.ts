@@ -29,6 +29,16 @@ export interface Op {
   _id: any
 }
 
+// response from ops/get
+// { id: 'b8bc6a05-5bba-4db0-9cbf-ce370b311833',
+//      version: 'v1',
+//      name: 'test-create',
+//      description: 'testing',
+//      run: 'test',
+//      teamID: '9e211160-a4f7-4306-a45a-aba911cb830d',
+//      createdAt: '2019-04-26T10:54:39.572834Z',
+//      updatedAt: '2019-04-26T10:54:39.572834Z' }
+
 interface Parameters {
   name: string
   shortname: string

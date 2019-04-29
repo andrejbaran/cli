@@ -1,13 +1,12 @@
-const { ux, sdk, log } = require('@cto.ai/sdk');
+const { ux, sdk, log } = require('@cto.ai/sdk')
 
 async function main() {
-  const { user } = await sdk.user().catch(err => console.log(err));
+  const { me: user } = await sdk.user().catch(err => console.log(err))
 
-  console.log(`👋 Hi, ${user.username}!`);
+  console.log(`👋 Hi, ${user.username}!`)
   console.log(`🏁 Here is a demo of the SDK...`)
 
-  require('./demo');
-
+  require('./demo')
 }
 
-main();
+main()

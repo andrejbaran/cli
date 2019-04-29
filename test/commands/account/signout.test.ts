@@ -3,7 +3,7 @@ import { ux } from '@cto.ai/sdk'
 import { clearConfig, writeConfig } from '../../helpers/manage-config'
 import setupTest from '../../helpers/setupTest'
 
-const { SEGMENT_URL } = process.env
+const { SEGMENT_URL = '' } = process.env
 
 describe('account:signout', () => {
   afterEach(async () => clearConfig())

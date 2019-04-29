@@ -20,12 +20,12 @@ export default class AccountSignout extends Command {
       )}`,
     )
 
-    await this.clearConfig()
+    await this.clearConfig(this)
 
     ux.spinner.stop(`${ux.colors.green('Done!')}`)
     this.log('')
 
-    const accessToken = (await this.readConfig()).accessToken
+    const { accessToken } = await this.readConfig()
 
     if (!accessToken) {
       this.log(

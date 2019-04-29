@@ -19,7 +19,11 @@ export default async function run(options: {
 }) {
   const { op } = options
   const self = this
+
   const docker = await getDocker(self, 'run')
+  if (!docker) {
+    throw new Error('Could not initialize Docker')
+  }
   docker.getImage(`${ops_registry_host}/${op.name}`)
   console.log(`${ops_registry_host}/${op.name}`)
 }

@@ -42,8 +42,8 @@ export default class Init extends Command {
 
   private _assignFlags() {
     const { flags } = this.parse(Init)
-    this.opName = flags.name
-    this.opDescription = flags.description
+    this.opName = flags.name || ''
+    this.opDescription = flags.description || ''
   }
 
   private async _askQuestions() {

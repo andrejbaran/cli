@@ -1,5 +1,5 @@
-const { ux, sdk, log } = require('@cto.ai/sdk');
-const fuzzy = require('fuzzy');
+const { ux, sdk, log } = require('@cto.ai/sdk')
+const fuzzy = require('fuzzy')
 const states = [
   'Alabama',
   'Alaska',
@@ -59,8 +59,8 @@ const states = [
   'Washington',
   'West Virginia',
   'Wisconsin',
-  'Wyoming'
-];
+  'Wyoming',
+]
 
 const users = [
   {
@@ -75,16 +75,16 @@ const users = [
       zipcode: '92998-3874',
       geo: {
         lat: '-37.3159',
-        lng: '81.1496'
-      }
+        lng: '81.1496',
+      },
     },
     phone: '1-770-736-8031 x56442',
     website: 'hildegard.org',
     company: {
       name: 'Romaguera-Crona',
       catchPhrase: 'Multi-layered client-server neural-net',
-      bs: 'harness real-time e-markets'
-    }
+      bs: 'harness real-time e-markets',
+    },
   },
   {
     id: 2,
@@ -98,16 +98,16 @@ const users = [
       zipcode: '90566-7771',
       geo: {
         lat: '-43.9509',
-        lng: '-34.4618'
-      }
+        lng: '-34.4618',
+      },
     },
     phone: '010-692-6593 x09125',
     website: 'anastasia.net',
     company: {
       name: 'Deckow-Crist',
       catchPhrase: 'Proactive didactic contingency',
-      bs: 'synergize scalable supply-chains'
-    }
+      bs: 'synergize scalable supply-chains',
+    },
   },
   {
     id: 3,
@@ -121,16 +121,16 @@ const users = [
       zipcode: '59590-4157',
       geo: {
         lat: '-68.6102',
-        lng: '-47.0653'
-      }
+        lng: '-47.0653',
+      },
     },
     phone: '1-463-123-4447',
     website: 'ramiro.info',
     company: {
       name: 'Romaguera-Jacobson',
       catchPhrase: 'Face to face bifurcated interface',
-      bs: 'e-enable strategic applications'
-    }
+      bs: 'e-enable strategic applications',
+    },
   },
   {
     id: 4,
@@ -144,16 +144,16 @@ const users = [
       zipcode: '53919-4257',
       geo: {
         lat: '29.4572',
-        lng: '-164.2990'
-      }
+        lng: '-164.2990',
+      },
     },
     phone: '493-170-9623 x156',
     website: 'kale.biz',
     company: {
       name: 'Robel-Corkery',
       catchPhrase: 'Multi-tiered zero tolerance productivity',
-      bs: 'transition cutting-edge web services'
-    }
+      bs: 'transition cutting-edge web services',
+    },
   },
   {
     id: 5,
@@ -167,16 +167,16 @@ const users = [
       zipcode: '33263',
       geo: {
         lat: '-31.8129',
-        lng: '62.5342'
-      }
+        lng: '62.5342',
+      },
     },
     phone: '(254)954-1289',
     website: 'demarco.info',
     company: {
       name: 'Keebler LLC',
       catchPhrase: 'User-centric fault-tolerant solution',
-      bs: 'revolutionize end-to-end systems'
-    }
+      bs: 'revolutionize end-to-end systems',
+    },
   },
   {
     id: 6,
@@ -190,16 +190,16 @@ const users = [
       zipcode: '23505-1337',
       geo: {
         lat: '-71.4197',
-        lng: '71.7478'
-      }
+        lng: '71.7478',
+      },
     },
     phone: '1-477-935-8478 x6430',
     website: 'ola.org',
     company: {
       name: 'Considine-Lockman',
       catchPhrase: 'Synchronised bottom-line interface',
-      bs: 'e-enable innovative applications'
-    }
+      bs: 'e-enable innovative applications',
+    },
   },
   {
     id: 7,
@@ -213,16 +213,16 @@ const users = [
       zipcode: '58804-1099',
       geo: {
         lat: '24.8918',
-        lng: '21.8984'
-      }
+        lng: '21.8984',
+      },
     },
     phone: '210.067.6132',
     website: 'elvis.io',
     company: {
       name: 'Johns Group',
       catchPhrase: 'Configurable multimedia task-force',
-      bs: 'generate enterprise e-tailers'
-    }
+      bs: 'generate enterprise e-tailers',
+    },
   },
   {
     id: 8,
@@ -236,16 +236,16 @@ const users = [
       zipcode: '45169',
       geo: {
         lat: '-14.3990',
-        lng: '-120.7677'
-      }
+        lng: '-120.7677',
+      },
     },
     phone: '586.493.6943 x140',
     website: 'jacynthe.com',
     company: {
       name: 'Abernathy Group',
       catchPhrase: 'Implemented secondary concept',
-      bs: 'e-enable extensible e-tailers'
-    }
+      bs: 'e-enable extensible e-tailers',
+    },
   },
   {
     id: 9,
@@ -259,16 +259,16 @@ const users = [
       zipcode: '76495-3109',
       geo: {
         lat: '24.6463',
-        lng: '-168.8889'
-      }
+        lng: '-168.8889',
+      },
     },
     phone: '(775)976-6794 x41206',
     website: 'conrad.com',
     company: {
       name: 'Yost and Sons',
       catchPhrase: 'Switchable contextually-based project',
-      bs: 'aggregate real-time technologies'
-    }
+      bs: 'aggregate real-time technologies',
+    },
   },
   {
     id: 10,
@@ -282,42 +282,42 @@ const users = [
       zipcode: '31428-2261',
       geo: {
         lat: '-38.2386',
-        lng: '57.2232'
-      }
+        lng: '57.2232',
+      },
     },
     phone: '024-648-3804',
     website: 'ambrose.net',
     company: {
       name: 'Hoeger LLC',
       catchPhrase: 'Centralized empowering task-force',
-      bs: 'target end-to-end models'
-    }
-  }
-];
+      bs: 'target end-to-end models',
+    },
+  },
+]
 const questions = [
   {
     type: 'input',
     name: 'email',
     message: `\nPlease enter your email ${ux.colors.reset.green(
-      '→'
+      '→',
     )}  \n${ux.colors.white('Enter Email')}`,
     afterMessage: `${ux.colors.reset.green('✓')} Email`,
-    afterMessageAppend: `${ux.colors.reset(' added!')}`
+    afterMessageAppend: `${ux.colors.reset(' added!')}`,
   },
   {
     type: 'password',
     name: 'password',
     mask: '*',
     message: `\nLet's create a password next ${ux.colors.reset.green(
-      '→'
+      '→',
     )}  \n${ux.colors.white('Enter your password')}`,
-    afterMessage: `${ux.colors.reset.green('✓')} Password added!`
+    afterMessage: `${ux.colors.reset.green('✓')} Password added!`,
   },
   {
     type: 'list',
     name: 'list',
     message: `\nWhat impact is the incident having ${ux.colors.reset.green(
-      '→'
+      '→',
     )}`,
     choices: [
       'All customers are affected.',
@@ -332,43 +332,43 @@ const questions = [
       'All customers are affected.',
       'Large segment of customers are affected.',
       'Small segment of customers are affected.',
-      'Site performance degraded for some customers.'
+      'Site performance degraded for some customers.',
     ],
-    afterMessage: `${ux.colors.reset.green('✓')} Incident added!`
+    afterMessage: `${ux.colors.reset.green('✓')} Incident added!`,
   },
   {
     type: 'confirm',
     name: 'confirm',
     message: `\nIs the incident closed ${ux.colors.reset.green('→')}`,
-    afterMessage: `${ux.colors.reset.green('✓')} Confirmation`
+    afterMessage: `${ux.colors.reset.green('✓')} Confirmation`,
   },
   {
     type: 'autocomplete',
     name: 'autocomplete',
     message: `\nSelect a state to travel from ${ux.colors.reset.green('→')}`,
     source: (answers, input) => {
-      input = input || '';
+      input = input || ''
       return new Promise(function(resolve) {
         setTimeout(function() {
-          var fuzzyResult = fuzzy.filter(input, states);
+          var fuzzyResult = fuzzy.filter(input, states)
           resolve(
             fuzzyResult.map(function(el) {
-              return el.original;
-            })
-          );
-        });
-      });
+              return el.original
+            }),
+          )
+        })
+      })
     },
-    afterMessage: `${ux.colors.reset.green('✓')} State selected!`
+    afterMessage: `${ux.colors.reset.green('✓')} State selected!`,
   },
   {
     type: 'datepicker',
     name: 'datepicker',
     message: `\nWhen are you going ${ux.colors.reset.green('→')}`,
     format: ['m', '/', 'd', '/', 'yy', ' ', 'h', ':', 'MM', ' ', 'TT'],
-    afterMessage: `${ux.colors.reset.green('✓')} Date Selected`
-  }
-];
+    afterMessage: `${ux.colors.reset.green('✓')} Date Selected`,
+  },
+]
 
 const allColors = [
   'green',
@@ -403,101 +403,101 @@ const allColors = [
   'bgCyanBright',
   'bgWhiteBright',
   'bold',
-  'underline'
-];
+  'underline',
+]
 
 const coloredTreeString = () => {
-  const treeString = 'Colored Tree';
-  let coloredString = '';
+  const treeString = 'Colored Tree'
+  let coloredString = ''
   for (let i = 0; i < treeString.length; i++) {
-    const char = treeString.charAt(i);
-    const color = randomColor();
-    coloredString += color(char);
+    const char = treeString.charAt(i)
+    const color = randomColor()
+    coloredString += color(char)
   }
-  return coloredString;
-};
+  return coloredString
+}
 const randomColor = () => {
-  return ux.colors[allColors[(allColors.length * Math.random()) << 0]];
-};
+  return ux.colors[allColors[(allColors.length * Math.random()) << 0]]
+}
 const getColorsColor = index => {
-  return ux.colors[allColors[index]](allColors[index]);
-};
+  return ux.colors[allColors[index]](allColors[index])
+}
 
 const main = async () => {
   // Trigger prompt
   // https://github.com/SBoudrias/Inquirer.js/#examples-run-it-and-see-it
-  console.log(ux.colors.bold.underline('\n Prompts \n'));
-  const answers = await ux.prompt(questions);
+  console.log(ux.colors.bold.underline('\n Prompts \n'))
+  const answers = await ux.prompt(questions)
 
-  console.log(ux.colors.bold.underline('\n Logs \n'));
-  answers.password = '*****';
-  log.debug({ answers }, 'New answers logged in as DEBUG');
-  log.info({ answers, tags: 'track' }, 'New answers logged in as INFO');
-  log.error({ answers }, 'New answers logged in as WARN');
+  console.log(ux.colors.bold.underline('\n Logs \n'))
+  answers.password = '*****'
+  log.debug({ answers }, 'New answers logged in as DEBUG')
+  log.info({ answers, tags: 'track' }, 'New answers logged in as INFO')
+  log.error({ answers }, 'New answers logged in as WARN')
 
-  await ux.wait(2000);
-  console.log(ux.colors.bold.underline('\n Current User \n'));
+  await ux.wait(2000)
+  console.log(ux.colors.bold.underline('\n Current User \n'))
   console.log(
     await sdk.user().catch(err => {
-      console.log('unable to retrieve current user');
-    })
-  );
+      console.log('unable to retrieve current user')
+    }),
+  )
 
   // Spinner Action
   // https://github.com/oclif/cli-ux#cliaction
-  await ux.wait(2000);
-  console.log(ux.colors.bold.underline('\n Spinner \n'));
-  ux.spinner.start(ux.colors.blue('Computing UX'));
+  await ux.wait(2000)
+  console.log(ux.colors.bold.underline('\n Spinner \n'))
+  ux.spinner.start(ux.colors.blue('Computing UX'))
   // Wait
   // https://github.com/oclif/cli-ux#clitable
-  await ux.wait(2000);
-  ux.spinner.stop(ux.colors.green('Done!'));
+  await ux.wait(2000)
+  ux.spinner.stop(ux.colors.green('Done!'))
 
   // Url
   // https://github.com/oclif/cli-ux#cliurltext-uri
-  await ux.wait(1000);
-  console.log(ux.colors.bold.underline('\n Url \n'));
-  console.log(ux.url('cto.ai', 'https://cto.ai'));
+  await ux.wait(1000)
+  console.log(ux.colors.bold.underline('\n Url \n'))
+  console.log(ux.url('cto.ai', 'https://cto.ai'))
 
   // Table
   // https://github.com/oclif/cli-ux#clitable
-  await ux.wait(2000);
-  console.log(ux.colors.bold.underline('\n Table \n'));
+  await ux.wait(2000)
+  console.log(ux.colors.bold.underline('\n Table \n'))
   ux.table(users, {
     name: { header: '🙎‍ Name' },
     company: {
       header: '🏢 Company',
-      get: row => row.company && row.company.name
+      get: row => row.company && row.company.name,
     },
-    id: { header: '🆔' }
-  });
+    id: { header: '🆔' },
+  })
 
   // Tree && Colors
   // https://github.com/chalk/chalk
   // https://github.com/oclif/cli-ux#clitree
-  let tree = ux.tree();
-  tree.insert(coloredTreeString());
+  let tree = ux.tree()
+  tree.insert(coloredTreeString())
   for (let i = 0; i < allColors.length; i++) {
-    tree.nodes[Object.keys(tree.nodes)[0]].insert(getColorsColor(i));
+    tree.nodes[Object.keys(tree.nodes)[0]].insert(getColorsColor(i))
   }
-  await ux.wait(2000);
-  console.log(ux.colors.bold.underline('\n Tree && Colors \n'));
-  tree.display();
+  await ux.wait(2000)
+  console.log(ux.colors.bold.underline('\n Tree && Colors \n'))
+  tree.display()
 
   // Progress Bar
   // https://github.com/AndiDittrich/Node.CLI-Progress#usage
-  await ux.wait(2000);
+  await ux.wait(2000)
   console.log(
     ux.colors.white('\n Downloading'),
-    ux.colors.callOutCyan('Ops CLI 0.1.5')
-  );
-  const bar1 = ux.progress.init();
-  bar1.start(200, 0);
+    ux.colors.callOutCyan('Ops CLI 0.1.5'),
+  )
+  const bar1 = ux.progress.init()
+  bar1.start(200, 0)
   for (let i = 0; i < 100; i++) {
-    bar1.update((i + 1) * 2);
-    await ux.wait(50);
+    bar1.update((i + 1) * 2)
+    await ux.wait(50)
   }
-  bar1.stop();
-};
+  bar1.stop()
+}
 
-main();
+main()
