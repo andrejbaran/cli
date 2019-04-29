@@ -61,6 +61,17 @@ export default class TeamInvite extends Command {
       .catch(() => {
         this.error(`Failed inviting ${inviteesArray.length} users to team`)
       })
+
+    this.analytics.track({
+      userId: this.user.email,
+      event: 'Ops CLI team:invite',
+      properties: {
+        email: this.user.email,
+        username: this.user.username,
+        invitees: inviteesArray,
+        activeTeam,
+      },
+    })
   }
 
   // Prints the invite responses
