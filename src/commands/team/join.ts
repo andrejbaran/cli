@@ -42,6 +42,16 @@ export default class TeamJoin extends Command {
         )}\n`,
       )
       this.log(`Try these commands to get started:\n\n$ ops list\n$ ops search`)
+
+      this.analytics.track({
+        userId: this.user.email,
+        event: 'Ops CLI team:join',
+        properties: {
+          email: this.user.email,
+          username: this.user.username,
+          team: { id, name },
+        },
+      })
       return
     }
 
