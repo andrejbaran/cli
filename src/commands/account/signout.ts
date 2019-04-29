@@ -1,8 +1,12 @@
-import Command from '../../base'
+import Command, { flags } from '../../base'
 import { ux } from '@cto.ai/sdk'
 
 export default class AccountSignout extends Command {
-  static description = 'Log out from your account'
+  static description = 'Log out from your account.'
+
+  static flags = {
+    help: flags.help({ char: 'h' }),
+  }
 
   async run() {
     if (!this.accessToken) {

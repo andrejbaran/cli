@@ -6,7 +6,7 @@ const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 
 export default class Update extends Command {
-  static description = 'Update the ops CLI'
+  static description = 'Update the ops CLI.'
 
   static flags = {
     help: flags.help({ char: 'h' }),

@@ -7,7 +7,7 @@ interface displayTeam extends Team {
 }
 
 export default class TeamSwitch extends Command {
-  static description = 'Shows the list of your teams'
+  static description = 'Shows the list of your teams.'
 
   static flags = {
     help: flags.help({ char: 'h' }),

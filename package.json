@@ -86,6 +86,9 @@
     "topics": {
       "account": {
         "description": "Manage your account settings."
+      },
+      "help": {
+        "description": "Display help for ops."
       }
     }
   },

@@ -38,12 +38,12 @@ class UserNotFound extends ErrorTemplate {
   }
 }
 export default class AccountSignin extends Command {
-  static description = 'Logs in to your account'
+  static description = 'Logs in to your account.'
 
   static flags = {
     help: flags.help({ char: 'h' }),
-    email: flags.string({ char: 'e' }),
-    password: flags.string({ char: 'p' }),
+    email: flags.string({ char: 'e', description: 'Email' }),
+    password: flags.string({ char: 'p', description: 'Password' }),
   }
 
   sendAnalytics = (ctx: AccountSignin) => (config: Config) => {

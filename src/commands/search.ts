@@ -7,7 +7,13 @@ let ops: Op[] = []
 export default class Search extends Command {
   static description = 'Search for ops in the registry.'
 
-  static args = [{ name: 'filter' }]
+  static args = [
+    {
+      name: 'filter',
+      description:
+        'Filters op results which include filter text in op name or description.',
+    },
+  ]
   static flags = {
     help: flags.help({ char: 'h' }),
   }

@@ -8,8 +8,11 @@ export default class Init extends Command {
   static description = 'Easily create a new op.'
   static flags = {
     help: flags.help({ char: 'h' }),
-    name: flags.string({ char: 'n', description: 'op name' }),
-    description: flags.string({ char: 'd', description: 'op description' }),
+    name: flags.string({ char: 'n', description: 'Name of the op.' }),
+    description: flags.string({
+      char: 'd',
+      description: 'Description of the op.',
+    }),
   }
   questions: object[] = []
 

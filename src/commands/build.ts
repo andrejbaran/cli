@@ -24,7 +24,9 @@ export default class Build extends Command {
     help: flags.help({ char: 'h' }),
   }
 
-  static args = [{ name: 'path' }]
+  static args = [
+    { name: 'path', description: 'Path to the op you want to build.' },
+  ]
 
   async run(this: any) {
     const { args } = this.parse(Build)

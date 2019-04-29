@@ -32,12 +32,12 @@ USAGE
 * [`ops account:signin`](#ops-accountsignin)
 * [`ops account:signout`](#ops-accountsignout)
 * [`ops account:signup`](#ops-accountsignup)
-* [`ops account:support [FILE]`](#ops-accountsupport-file)
+* [`ops account:support`](#ops-accountsupport)
 * [`ops build [PATH]`](#ops-build-path)
 * [`ops help [COMMAND]`](#ops-help-command)
 * [`ops init`](#ops-init)
 * [`ops publish [PATH]`](#ops-publish-path)
-* [`ops remove [OPNAME]`](#ops-remove-opname)
+* [`ops remove [OP]`](#ops-remove-op)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
 * [`ops team:create`](#ops-teamcreate)
@@ -59,34 +59,37 @@ _See code: [src/commands/account/reset.ts](https://github.com/cto.ai/ops/blob/v1
 
 ## `ops account:signin`
 
-Logs in to your account
+Logs in to your account.
 
 ```
 USAGE
   $ ops account:signin
 
 OPTIONS
-  -e, --email=email
+  -e, --email=email        Email
   -h, --help               show CLI help
-  -p, --password=password
+  -p, --password=password  Password
 ```
 
 _See code: [src/commands/account/signin.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/account/signin.ts)_
 
 ## `ops account:signout`
 
-Log out from your account
+Log out from your account.
 
 ```
 USAGE
   $ ops account:signout
+
+OPTIONS
+  -h, --help  show CLI help
 ```
 
 _See code: [src/commands/account/signout.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/account/signout.ts)_
 
 ## `ops account:signup`
 
-Creates an account to use with ops CLI
+Creates an account to use with ops CLI.
 
 ```
 USAGE
@@ -98,18 +101,16 @@ OPTIONS
 
 _See code: [src/commands/account/signup.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/account/signup.ts)_
 
-## `ops account:support [FILE]`
+## `ops account:support`
 
 Contact our support team with questions.
 
 ```
 USAGE
-  $ ops account:support [FILE]
+  $ ops account:support
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -h, --help  show CLI help
 ```
 
 _See code: [src/commands/account/support.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/account/support.ts)_
@@ -121,6 +122,9 @@ Build your op for sharing.
 ```
 USAGE
   $ ops build [PATH]
+
+ARGUMENTS
+  PATH  Path to the op you want to build.
 
 OPTIONS
   -h, --help  show CLI help
@@ -154,20 +158,23 @@ USAGE
   $ ops init
 
 OPTIONS
-  -d, --description=description  op description
+  -d, --description=description  Description of the op.
   -h, --help                     show CLI help
-  -n, --name=name                op name
+  -n, --name=name                Name of the op.
 ```
 
 _See code: [src/commands/init.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/init.ts)_
 
 ## `ops publish [PATH]`
 
-describe the command here
+Publish an op to a team.
 
 ```
 USAGE
   $ ops publish [PATH]
+
+ARGUMENTS
+  PATH  Path to the op you want to publish.
 
 OPTIONS
   -h, --help  show CLI help
@@ -175,13 +182,16 @@ OPTIONS
 
 _See code: [src/commands/publish.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/publish.ts)_
 
-## `ops remove [OPNAME]`
+## `ops remove [OP]`
 
-describe the command here
+Remove an op from a team.
 
 ```
 USAGE
-  $ ops remove [OPNAME]
+  $ ops remove [OP]
+
+ARGUMENTS
+  OP  Name of the op you want to remove.
 
 OPTIONS
   -h, --help  show CLI help
@@ -197,9 +207,12 @@ Run an op from the registry.
 USAGE
   $ ops run [NAMEORPATH]
 
+ARGUMENTS
+  NAMEORPATH  Name or path of the op you want to run.
+
 OPTIONS
-  -h, --help  show CLI help
-  --build
+  -b, --build  Builds the op before running. Must provide a path to the op.
+  -h, --help   show CLI help
 ```
 
 _See code: [src/commands/run.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/run.ts)_
@@ -211,6 +224,9 @@ Search for ops in the registry.
 ```
 USAGE
   $ ops search [FILTER]
+
+ARGUMENTS
+  FILTER  Filters op results which include filter text in op name or description.
 
 OPTIONS
   -h, --help  show CLI help
@@ -277,7 +293,7 @@ _See code: [src/commands/team/switch.ts](https://github.com/cto.ai/ops/blob/v1.0
 
 ## `ops update`
 
-Update the ops CLI
+Update the ops CLI.
 
 ```
 USAGE
