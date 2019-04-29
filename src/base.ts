@@ -7,41 +7,76 @@ import axios from 'axios'
 import Docker from 'dockerode'
 import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
+import * as url from 'url'
+
+import getDocker from './utils/get-docker'
+import { asyncPipe, _trace } from './utils/asyncPipe'
 
 import Config from './types/Config'
 import User from './types/User'
-import getDocker from './utils/get-docker'
+import UserCredentials from './types/UserCredentials'
+import ValidationFields from './types/ValidationFields'
+import AccessToken from './types/AccessToken'
+import MeResponse from './types/MeResponse'
+import Team from './types/Team'
 import RegistryAuth from './types/RegistryAuth'
+import SigninPipeline from './types/SigninPipeline'
+import Partial from './types/Partial'
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'production'
 const ops_segment_key =
   process.env.OPS_SEGMENT_KEY || 'sRsuG18Rh9IHgr9bK7GsrB7BfLfNmhCG'
 const ops_host = process.env.OPS_API_HOST || 'https://cto.ai/'
 const ops_path = process.env.OPS_API_PATH || 'api/v1'
-const api = axios.create({ baseURL: ops_host + ops_path })
+
+export const apiUrl = url.resolve(ops_host, ops_path)
 
 abstract class CTOCommand extends Command {
-  client = feathers().configure(rest(ops_host + ops_path).axios(axios))
+  client = feathers().configure(rest(apiUrl).axios(axios))
   analytics = new Analytics(ops_segment_key)
-  accessToken = ''
+  accessToken: string = ''
   user: User = { email: '', _id: '', username: '' }
-  api = api
+  team: Team
   docker: Docker | undefined
-  ops_registry_host: string = process.env.OPS_REGISTRY_HOST || 'reg.cto.ai'
-  ops_registry_auth: RegistryAuth = {
-    username: 'admin',
-    password: 'UxvqKhAcRqrOgtscDUJC',
-    serveraddress: `https://${this.ops_registry_host}`,
+  ops_registry_host: string = process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
+  ops_registry_auth: RegistryAuth
+
+  getOpsRegistryAuth = async (accessToken: string): Promise<RegistryAuth> => {
+    const registryResponse = await this.client.service('registry/token').find({
+      query: {
+        registryProject: this.team.name,
+      },
+      headers: { Authorization: accessToken },
+    })
+
+    const {
+      registryProject = '',
+      registryUser = '',
+      registryPass = '',
+    } = registryResponse.data.registry_tokens[0]
+
+    const registryAuth: RegistryAuth = {
+      username: registryUser,
+      password: registryPass,
+      serveraddress: `${this.ops_registry_host}/${registryProject}`,
+    }
+
+    return registryAuth
   }
 
   async init() {
-    const { accessToken, user } = await this.readConfig()
-    this.user = user
-    this.accessToken = accessToken
+    const { user, accessToken, team } = await this.readConfig()
+    if (user) {
+      this.user = user
+    }
+    if (accessToken) {
+      this.accessToken = accessToken
+    }
+    this.team = team
     this.docker = await this._getDocker()
   }
 
-  public isLoggedIn() {
+  isLoggedIn() {
     if (!this.user) {
       this.log('')
       this.log('✋ Sorry you need to be loggedin to do that.')
@@ -70,42 +105,140 @@ abstract class CTOCommand extends Command {
     }
   }
 
-  public async readConfig(): Promise<Config> {
-    return Promise.resolve(
-      await readJson(path.join(this.config.configDir, 'config.json')).catch(
-        () => {
-          return {}
-        },
-      ),
-    )
+  readConfig = async (): Promise<Config> =>
+    readJson(path.join(this.config.configDir, 'config.json')).catch(() => ({}))
+
+  handleTeamNotFound = () => {
+    this.error('team not found')
+    return {
+      id: '',
+      name: 'not found',
+    }
   }
 
-  public async writeConfig(newConfig: object): Promise<void> {
-    const oldConfig = await this.readConfig()
-    return Promise.resolve(
-      await outputJson(path.join(this.config.configDir, 'config.json'), {
-        ...oldConfig,
-        ...newConfig,
-      }),
-    )
+  getTeam = (username: string, teams: Team[]) => {
+    const team = teams.find(({ name }) => name === username)
+    return team || this.handleTeamNotFound()
   }
 
-  public async clearConfig(): Promise<void> {
+  formatConfigObject = (signinData: SigninPipeline) => {
+    const {
+      accessToken,
+      meResponse: {
+        teams,
+        me: { id, emails, username },
+      },
+    } = signinData
+
+    const configObj: Config = {
+      team: this.getTeam(username, teams),
+      accessToken,
+      user: {
+        _id: id,
+        email: emails[0].address,
+        username: username,
+      },
+    }
+    return configObj
+  }
+
+  writeConfig = async (newConfigObj: Partial<Config>): Promise<Config> => {
+    const oldConfigObj = await this.readConfig()
+    const mergedConfigObj = {
+      ...oldConfigObj,
+      ...newConfigObj,
+    }
+
+    await outputJson(
+      path.join(this.config.configDir, 'config.json'),
+      mergedConfigObj,
+    )
+    return mergedConfigObj
+  }
+
+  clearConfig = async (args: unknown) => {
     const configPath = path.join(this.config.configDir, 'config.json')
-    return Promise.resolve(await remove(configPath))
+    await remove(configPath)
+    return args
   }
 
-  public async localAuthenticate(email: string, password: string) {
-    return Promise.resolve(
-      await this.client
-        .service('auth')
-        .create({ strategy: 'local', email, password }),
-    )
+  authenticateUser = async ({ credentials }: SigninPipeline) => {
+    const { data: accessToken } = (await this.client
+      .service('login')
+      .create(credentials)) as AccessToken
+
+    return { accessToken, credentials }
   }
+
+  fetchUserInfo = async (args: SigninPipeline) => {
+    if (!args) {
+      ux.spinner.stop(`failed`)
+      this.log('missing parameter')
+      this.exit()
+    }
+
+    const { accessToken } = args
+    if (!accessToken) {
+      ux.spinner.stop(`❗️\n`)
+      this.log(
+        `🤔 Sorry, we couldn’t find an account with that email or password.\nForgot your password? Run ${ux.colors.bold(
+          'ops account:reset',
+        )}.\n`,
+      )
+      this.exit()
+    }
+
+    try {
+      const { data: meResponse } = (await this.client
+        .service('me')
+        .find({ headers: { Authorization: accessToken } })) as {
+        data: MeResponse
+      }
+      return { meResponse, accessToken }
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async signinFlow(credentials: UserCredentials) {
+    const signinFlowPipeline = asyncPipe(
+      this.authenticateUser,
+      this.fetchUserInfo,
+      this.clearConfig,
+      this.formatConfigObject,
+      this.writeConfig,
+      this.readConfig,
+    )
+
+    const config: Config = await signinFlowPipeline({ credentials })
+    return config
+  }
+
+  async validateUniqueField(query: ValidationFields): Promise<boolean> {
+    const response = await this.client.service('validate').find({
+      query,
+    })
+    return response.data
+  }
+
   private async _getDocker() {
     if (process.env.NODE_ENV === 'test') return
     const self = this
     return getDocker(self, 'base')
+  }
+
+  async createToken(email: string) {
+    return this.client.service('reset').create({ email })
+  }
+
+  async resetPassword(token: string, password: string) {
+    return this.client.service('reset').patch(token, { password })
+  }
+
+  async joinTeam(inviteCode: string) {
+    return this.client
+      .service('teams/accept')
+      .create({ inviteCode }, { headers: { Authorization: this.accessToken } })
   }
 }
 

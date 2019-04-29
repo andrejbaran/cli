@@ -17,6 +17,8 @@ import * as fs from 'fs-extra'
 import * as yaml from 'yaml'
 import * as through from 'through2'
 import * as json from 'JSONStream'
+import Op from '../types/Op'
+import { getOpUrl, getOpImageTag } from '../utils/getOpUrl'
 
 const ops_api_host = process.env.OPS_API_HOST || 'https://cto.ai/'
 const ops_api_path = process.env.OPS_API_PATH || 'api/v1'
@@ -49,9 +51,12 @@ export default class Run extends Command {
       return this.log('Please enter the name or path of the op')
 
     // Get the local image if exists
-    const opParams = argv.slice(Object.keys(args).length)
+    const opParams: string[] = argv.slice(Object.keys(args).length)
+
     let op = await this._getOp(args.nameOrPath, opParams)
+
     const list = await self.docker.listImages().catch(err => console.log(err))
+
     const found = await self._findLocalImage(list, op)
 
     // If local image doesn't exist, try to pull from registry
@@ -60,10 +65,14 @@ export default class Run extends Command {
     }
 
     self.log(`⚙️  Running ${ux.colors.dim(op.name)}...`)
-    op = await self._setEnvs(self, op)
-    op = await self._setBinds(op)
-    const options = await this._getOptions(op)
-    self.docker.createContainer(options, handler)
+    try {
+      op = await self._setEnvs(self, op)
+      op = await self._setBinds(op)
+      const options = await this._getOptions(op)
+      self.docker.createContainer(options, handler)
+    } catch (error) {
+      console.error(error)
+    }
 
     function handler(err: any, container: any) {
       if (err) {
@@ -77,6 +86,7 @@ export default class Run extends Command {
         stderr: true,
       }
       ux.spinner.stop(ux.colors.green('Done!'))
+
       container.attach(attach_opts, function(_err: any, stream: any) {
         // Show outputs
         stream.pipe(process.stdout)
@@ -85,7 +95,7 @@ export default class Run extends Command {
         let isRaw = false
         stdin.resume()
         stdin.setEncoding('utf8')
-        stdin.setRawMode(true)
+        stdin.setRawMode && stdin.setRawMode(true)
         stdin.pipe(stream)
         stdin.on('data', function(this: any, key: any) {
           // Detects it is detaching a running container
@@ -135,7 +145,7 @@ export default class Run extends Command {
       const stdin = process.stdin
       stdout.removeListener('resize', resize)
       stdin.removeAllListeners()
-      stdin.setRawMode(isRaw)
+      stdin.setRawMode && stdin.setRawMode(isRaw)
       stdin.resume()
       stream.end()
       container.remove(() => {
@@ -151,19 +161,28 @@ export default class Run extends Command {
    * @param op The desired op we want to run
    * @returns Whether the image exists or not
    */
-  private async _findLocalImage(list, op): Promise<boolean> {
+  private async _findLocalImage(list, op: Op): Promise<boolean> {
     for (let k of list) {
       if (!k.RepoTags || !k.RepoTags.length) {
         continue
       }
-      if (k.RepoTags.find((n: string) => n.includes(`${op.name}:latest`))) {
+      const opIdentifier = this.isPublished ? op.id : op.name
+      if (
+        k.RepoTags.find((n: string) =>
+          n.includes(
+            `${this.ops_registry_host}/${
+              this.team.name
+            }/${opIdentifier}:latest`,
+          ),
+        )
+      ) {
         return true
       }
     }
     return false
   }
 
-  private async _getOp(opNameOrPath, opParams) {
+  private async _getOp(opNameOrPath: string, opParams: string[]) {
     let op
     const opPath = path.join(
       path.resolve(process.cwd(), `${opNameOrPath}`),
@@ -173,29 +192,28 @@ export default class Run extends Command {
     if (fs.existsSync(opPath)) {
       const manifest = await fs.readFile(opPath, 'utf8')
       op = yaml.parse(manifest)
-      op.image = `${this.ops_registry_host}/${op.name}`
+      op.image = `${this.ops_registry_host}/${this.team.name}/${op.name}`
     } else {
       let splitOpName = opNameOrPath.split(':')
-      let query: any = {
-        query: {
-          name: splitOpName[0],
-          $sort: {
-            created_at: -1,
+
+      try {
+        const res = await this.client.service('ops').find({
+          query: {
+            team_id: this.team.id,
+            search: splitOpName[0],
           },
-        },
+          headers: { Authorization: this.accessToken },
+        })
+        if (!res.data) {
+          return this.log(
+            '‼️  No op was found with this name or ID. Please try again',
+          )
+        }
+        op = res.data[0]
+      } catch (error) {
+        throw new Error(error)
       }
-      if (splitOpName[1]) {
-        query.query.image = `${
-          this.ops_registry_host
-        }/${splitOpName[1].toLowerCase()}`
-      }
-      op = await this.client.service('ops').find(query)
-      if (!op.total) {
-        return this.log(
-          '‼️  No op was found with this name or ID. Please try again',
-        )
-      }
-      op = op.data[0]
+
       this.isPublished = true
     }
     op.run = op.run.split(' ')
@@ -261,20 +279,25 @@ export default class Run extends Command {
 
   private async _getImageFromRegistry(self, op) {
     this.log(`🔋 Pulling ${ux.colors.dim(op.name)} from registry...\n`)
-    let all = []
+    let all: any[] = []
     let size = 100
     const { parser, bar } = await this._setParser(op)
-    const stream = await self.docker.pull(
-      `${this.ops_registry_host}/${op.name}`,
-      {
-        authconfig: this.ops_registry_auth,
-      },
-    )
+
+    const ops_registry_auth = await this.getOpsRegistryAuth(this.accessToken)
+    const opIdentifier = this.isPublished ? op.id : op.name
+    const opImageTag = getOpImageTag(this.team.name, opIdentifier)
+
+    const opUrl = getOpUrl(this.ops_registry_host, opImageTag)
+
+    const stream = await self.docker.pull(opUrl, {
+      authconfig: ops_registry_auth,
+    })
+
     await new Promise((resolve, reject) => {
       stream
         .pipe(json.parse())
         .pipe(parser)
-        .on('data', d => {
+        .on('data', (d: any) => {
           all.push(d)
         })
         .on('end', async function(err) {
@@ -365,6 +388,7 @@ export default class Run extends Command {
   }
 
   private async _getOptions(op) {
+    const opIdentifier = this.isPublished ? op.id : op.name
     let options = {
       AttachStdin: true,
       AttachStdout: true,
@@ -375,7 +399,10 @@ export default class Run extends Command {
       Env: op.env,
       Cmd: op.run,
       // WorkingDir: process.cwd().replace(process.env.HOME, '/root'),
-      Image: `${this.ops_registry_host}/${op.name}:latest`,
+      Image: getOpUrl(
+        this.ops_registry_host,
+        getOpImageTag(this.team.name, opIdentifier),
+      ),
       Volumes: {},
       VolumesFrom: [],
       WorkingDir: '',
@@ -384,7 +411,7 @@ export default class Run extends Command {
         NetworkMode: op.network,
       },
     }
-    if (op.workdir) {
+    if (op.workdir && process.env.HOME) {
       options.WorkingDir = process.cwd().replace(process.env.HOME, op.workdir)
     }
     return options

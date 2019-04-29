@@ -1,84 +1,106 @@
 import Command, { flags } from '../base'
-import { ux } from '@cto.ai/sdk'
+import { ux, log } from '@cto.ai/sdk'
 
 export default class Remove extends Command {
   static description = 'describe the command here'
 
-  static args = [{ name: 'op' }]
+  static args = [{ name: 'opName' }]
 
   static flags = {
     help: flags.help({ char: 'h' }),
   }
 
   async run(this: any) {
-    const self = this
+    try {
+      const self = this
+      this.isLoggedIn()
 
-    this.isLoggedIn()
+      const { opName } = this.parse(Remove).args
+      const query = opName
+        ? { search: opName, team_id: self.team.id }
+        : { team_id: self.team.id }
 
-    this.log('')
-    await this.client
-      .service('ops')
-      .find({
-        query: {
-          $sort: {
-            created_at: -1,
+      const opsResponse = await this.client
+        .service('ops')
+        .find({
+          query,
+          headers: {
+            Authorization: this.accessToken,
           },
-          'owner._id': this.user._id,
-          $limit: 1000,
-        },
-      })
-      .then(async function(o) {
-        if (!o.data.length) {
-          self.log(
-            '✋Nothing found in the registry. Please try again later. \n',
-          )
-          self.exit()
-        }
+        })
+        .catch(err => {
+          throw new Error(err)
+        })
 
-        let op = await ux.prompt({
+      if (!opsResponse.data) {
+        self.log(
+          '\n ✋  Nothing found in the registry. Please try again later. \n',
+        )
+        process.exit()
+      }
+
+      let op
+      if (!opName) {
+        const data = await ux.prompt({
           type: 'list',
-          name: 'desync',
+          name: 'selected',
           pageSize: 100,
-          message: '🗑  Which op would you like to remove?',
-          choices: o.data.map(l => {
+          message: '\n 🗑  Which op would you like to remove?',
+          choices: opsResponse.data.map(l => {
             return {
               name: `${ux.colors.callOutCyan(l.name)} ${ux.colors.white(
                 l.description,
-              )} | id: ${ux.colors.white(l._id.toLowerCase())}`,
+              )} | id: ${ux.colors.white(l.id.toLowerCase())}`,
               value: l,
             }
           }),
         })
-        self.log('\n 🗑 Removing from registry...')
-        await self.client.service('ops').remove(op.desync._id)
+        op = data.selected
+      } else {
+        op = opsResponse.data[0]
+      }
 
-        self.log('')
-        let msg = ux.colors.bold(`${op.desync.name}:${op.desync._id}`)
-        self.log(
-          `⚡️ ${msg} has been ${ux.colors.green(
-            'removed',
-          )} from the registry!`,
-        )
-        self.log('')
-        self.log(
-          `To publish again run: ${ux.colors.green('$')} ${ux.colors.dim(
-            'ops publish <path>',
-          )}`,
-        )
-        self.log('')
+      self.log('\n 🗑  Removing from registry...')
 
-        self.analytics.track({
-          userId: self.user.email,
-          event: 'Ops CLI Remove',
-          properties: {
-            email: self.user.email,
-            username: self.user.username,
-            id: op.desync._id,
-            name: op.desync.name,
-            description: op.desync.description,
-            image: `${this.ops_registry_host}/${op.desync.name}`,
-          },
+      const { id, name, description } = op
+
+      await self.client
+        .service('ops')
+        .remove(id, { headers: { Authorization: this.accessToken } })
+        .catch(err => {
+          throw new Error(err)
         })
+
+      self.log(
+        `\n ⚡️ ${ux.colors.bold(`${name}:${id}`)} has been ${ux.colors.green(
+          'removed',
+        )} from the registry!`,
+      )
+
+      self.log(
+        `\n To publish again run: ${ux.colors.green('$')} ${ux.colors.dim(
+          'ops publish <path>',
+        )}\n`,
+      )
+
+      self.analytics.track({
+        userId: self.user.email,
+        event: 'Ops CLI Remove',
+        properties: {
+          email: self.user.email,
+          username: self.user.username,
+          id,
+          name,
+          description,
+          image: `${this.ops_registry_host}/${name}`,
+        },
       })
+    } catch (err) {
+      // TODO: Update when error handling issue gets merged
+      this.log(
+        `😰 We've encountered a problem. Please try again or contact support@cto.ai and we'll do our best to help.`,
+      )
+      log.debug('Remove command failed', err)
+    }
   }
 }

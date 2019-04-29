@@ -186,7 +186,7 @@ async function confirmReadyContinue() {
  * @param type Is the context of the caller, so we know which error to log
  */
 export default async function getDocker(self: any, type: string) {
-  // Point to the docke socket
+  // Point to the docker socket
   const socket = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
 
   /**
@@ -219,7 +219,7 @@ export default async function getDocker(self: any, type: string) {
    */
   numRepeats = 0 // Re-initialize the flag for repeat
   let isDockerRunning = false // Flag to indicate whether docker is running or not
-  let docker: Docker // Initialize return variable
+  let docker: Docker | undefined // Initialize return variable
 
   while (!isDockerRunning) {
     // Instantiate a new docker client

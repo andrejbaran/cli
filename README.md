@@ -28,6 +28,7 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
+* [`ops account:reset`](#ops-accountreset)
 * [`ops account:signin`](#ops-accountsignin)
 * [`ops account:signout`](#ops-accountsignout)
 * [`ops account:signup`](#ops-accountsignup)
@@ -36,10 +37,25 @@ USAGE
 * [`ops help [COMMAND]`](#ops-help-command)
 * [`ops init`](#ops-init)
 * [`ops publish [PATH]`](#ops-publish-path)
-* [`ops remove [OP]`](#ops-remove-op)
+* [`ops remove [OPNAME]`](#ops-remove-opname)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
+* [`ops team:create`](#ops-teamcreate)
+* [`ops team:invite`](#ops-teaminvite)
+* [`ops team:join`](#ops-teamjoin)
+* [`ops team:switch`](#ops-teamswitch)
 * [`ops update`](#ops-update)
+
+## `ops account:reset`
+
+Reset your password
+
+```
+USAGE
+  $ ops account:reset
+```
+
+_See code: [src/commands/account/reset.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/account/reset.ts)_
 
 ## `ops account:signin`
 
@@ -159,13 +175,13 @@ OPTIONS
 
 _See code: [src/commands/publish.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/publish.ts)_
 
-## `ops remove [OP]`
+## `ops remove [OPNAME]`
 
 describe the command here
 
 ```
 USAGE
-  $ ops remove [OP]
+  $ ops remove [OPNAME]
 
 OPTIONS
   -h, --help  show CLI help
@@ -201,6 +217,63 @@ OPTIONS
 ```
 
 _See code: [src/commands/search.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/search.ts)_
+
+## `ops team:create`
+
+Create your team.
+
+```
+USAGE
+  $ ops team:create
+
+OPTIONS
+  -h, --help       show CLI help
+  -n, --name=name
+```
+
+_See code: [src/commands/team/create.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/team/create.ts)_
+
+## `ops team:invite`
+
+Invite your team members.
+
+```
+USAGE
+  $ ops team:invite
+
+OPTIONS
+  -h, --help                         show CLI help
+
+  -i, --inviteesInput=inviteesInput  A comma-separated string of usernames/emails we want to invite. E.g. ("user1,
+                                     user2@gmail.com, user3@something")
+```
+
+_See code: [src/commands/team/invite.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/team/invite.ts)_
+
+## `ops team:join`
+
+Accept an invite to join a team
+
+```
+USAGE
+  $ ops team:join
+```
+
+_See code: [src/commands/team/join.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/team/join.ts)_
+
+## `ops team:switch`
+
+Shows the list of your teams
+
+```
+USAGE
+  $ ops team:switch
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+_See code: [src/commands/team/switch.ts](https://github.com/cto.ai/ops/blob/v1.0.47/src/commands/team/switch.ts)_
 
 ## `ops update`
 

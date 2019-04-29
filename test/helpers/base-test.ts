@@ -7,12 +7,10 @@
  * DESCRIPTION
  *
  */
-import {test} from '@oclif/test'
+import { test } from '@oclif/test'
 
 export const latest = '0.0.0'
 
-export const baseTest = test
-  .nock('https://registry.npmjs.org', api => api
-    .get('/@cto.ai/ops')
-    .reply(200, {'dist-tags': {latest}})
-  )
+export const baseTest = test.nock('https://registry.npmjs.org', api =>
+  api.get('/@cto.ai/ops').reply(200, { 'dist-tags': { latest } }),
+)

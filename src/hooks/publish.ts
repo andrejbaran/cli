@@ -26,14 +26,17 @@ export default async function publish(
   const { op, ops_registry_host, ops_registry_auth } = options
   const self = this
   const docker = await getDocker(self, 'publish')
+  if (!docker) {
+    throw new Error('Could not initialize Docker.')
+  }
   const image = docker.getImage(`${ops_registry_host}/${op.name}`)
   this.log(
     `🔋 Creating release ${ux.colors.callOutCyan(
-      ops_registry_host + '/' + op._id.toLowerCase(),
+      ops_registry_host + '/' + op.id.toLowerCase(),
     )}... \n`,
   )
 
-  const all = []
+  const all: any[] = []
   const log = this.log
   const error = this.error
   let size = 0
@@ -64,11 +67,17 @@ export default async function publish(
   }
 
   image.tag(
-    { repo: `${ops_registry_host}/${op._id.toLowerCase()}:latest` },
+    { repo: `${ops_registry_host}/${op.id.toLowerCase()}` },
     (err: any, _data: any) => {
       if (err) return error(err.message, { exist: 2 })
+      const image = docker.getImage(
+        `${ops_registry_host}/${op.id.toLowerCase()}`,
+      )
       image.push(
-        { tag: op.tag, authconfig: ops_registry_auth },
+        {
+          tag: 'latest',
+          authconfig: ops_registry_auth,
+        },
         (err: any, stream: any) => {
           if (err) return error(err.message, { exist: 2 })
           stream
@@ -90,7 +99,7 @@ export default async function publish(
               bar.stop()
               log(
                 `\n🙌 ${ux.colors.callOutCyan(
-                  `${ops_registry_host}/${op._id.toLowerCase()}:latest`,
+                  `${ops_registry_host}/${op.id.toLowerCase()}:latest`,
                 )} has been published! \n`,
               )
             })
