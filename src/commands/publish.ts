@@ -7,13 +7,15 @@ import * as fs from 'fs-extra'
 import * as yaml from 'yaml'
 
 export default class Publish extends Command {
-  static description = 'describe the command here'
+  static description = 'Publish an op to a team.'
 
   static flags = {
     help: flags.help({ char: 'h' }),
   }
 
-  static args = [{ name: 'path' }]
+  static args = [
+    { name: 'path', description: 'Path to the op you want to publish.' },
+  ]
 
   async run(this: any) {
     try {

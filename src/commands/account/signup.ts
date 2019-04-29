@@ -3,7 +3,7 @@ import { ux } from '@cto.ai/sdk'
 
 let self
 export default class AccountSignup extends Command {
-  static description = 'Creates an account to use with ops CLI'
+  static description = 'Creates an account to use with ops CLI.'
 
   static flags = {
     help: flags.help({ char: 'h' }),

@@ -44,7 +44,7 @@ const tokenErr = {
 }
 
 export default class AccountReset extends Command {
-  static description = 'Reset your password'
+  static description = 'Reset your password.'
 
   startSpinner() {
     this.log('')

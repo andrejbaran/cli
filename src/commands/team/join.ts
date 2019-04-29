@@ -10,7 +10,7 @@ const inviteCodePrompt = {
 }
 
 export default class TeamJoin extends Command {
-  static description = 'Accept an invite to join a team'
+  static description = 'Accept an invite to join a team.'
 
   startSpinner() {
     this.log('')

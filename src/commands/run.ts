@@ -28,13 +28,22 @@ export default class Run extends Command {
 
   static flags = {
     help: flags.help({ char: 'h' }),
-    build: flags.boolean(),
+    build: flags.boolean({
+      char: 'b',
+      description:
+        'Builds the op before running. Must provide a path to the op.',
+    }),
   }
 
   // Used to specify variable length arguments
   static strict = false
 
-  static args = [{ name: 'nameOrPath' }] // Specifies the arguments so that we can destructure it
+  static args = [
+    {
+      name: 'nameOrPath',
+      description: 'Name or path of the op you want to run.',
+    },
+  ] // Specifies the arguments so that we can destructure it
 
   previousKey: string
   isPublished: boolean

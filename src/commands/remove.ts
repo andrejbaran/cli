@@ -2,9 +2,11 @@ import Command, { flags } from '../base'
 import { ux, log } from '@cto.ai/sdk'
 
 export default class Remove extends Command {
-  static description = 'describe the command here'
+  static description = 'Remove an op from a team.'
 
-  static args = [{ name: 'opName' }]
+  static args = [
+    { name: 'op', description: 'Name of the op you want to remove.' },
+  ]
 
   static flags = {
     help: flags.help({ char: 'h' }),
