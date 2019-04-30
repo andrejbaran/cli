@@ -35,7 +35,7 @@ abstract class CTOCommand extends Command {
   client = feathers().configure(rest(apiUrl).axios(axios))
   analytics = new Analytics(ops_segment_key)
   accessToken: string = ''
-  user: User = { email: '', _id: '', username: '' }
+  user: User
   team: Team
   docker: Docker | undefined
   ops_registry_host: string = process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
