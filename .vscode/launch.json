@@ -20,8 +20,7 @@
       "program": "${workspaceFolder}/bin/run",
       "console": "integratedTerminal",
       "args": [
-        "run",
-        "../ops/demo"
+        "init"
       ]
     }
   ]

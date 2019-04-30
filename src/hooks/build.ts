@@ -13,6 +13,7 @@ import json from 'JSONStream'
 
 import Op from '../types/Op'
 import getDocker from '../utils/get-docker'
+import { ReadFileError, DockerBuildImageError } from '../errors'
 import Docker from 'dockerode'
 
 async function build(
@@ -23,14 +24,13 @@ async function build(
 
   const all: any[] = []
   const log = this.log
-  const error = this.error
   let parser = through.obj(function(this: any, chunk: any, _enc: any, cb: any) {
     if (chunk.stream && chunk.stream !== '\n') {
       this.push(chunk.stream.replace('\n', ''))
       log(chunk.stream.replace('\n', ''))
       all.push(chunk)
     } else if (chunk.errorDetail) {
-      return error(new Error(chunk.errorDetail.message), { exit: 2 })
+      throw new ReadFileError(chunk.errorDetail.message)
     }
     cb()
   })
@@ -47,7 +47,7 @@ async function build(
       const stream = await docker
         .buildImage({ context: opPath, src: op.src }, { t: tag })
         .catch(err => {
-          console.error('surprise', err)
+          throw new DockerBuildImageError(err)
           reject()
           return null
         })

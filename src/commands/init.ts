@@ -3,6 +3,7 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
 import Command, { flags } from '../base'
+import { CopyTemplateFilesError } from '../errors'
 
 export default class Init extends Command {
   static description = 'Easily create a new op.'
@@ -94,7 +95,7 @@ export default class Init extends Command {
       this._customizePackageJson()
       this._customizeOpsYaml()
     } catch (err) {
-      console.error(err)
+      throw new CopyTemplateFilesError(err)
     }
   }
 
@@ -150,11 +151,15 @@ export default class Init extends Command {
   }
 
   async run() {
-    this.isLoggedIn()
-    this._assignFlags()
-    await this._askQuestions()
-    await this._copyTemplateFiles()
-    this._logMessages()
-    this._trackAnalytics()
+    try {
+      this.isLoggedIn()
+      this._assignFlags()
+      await this._askQuestions()
+      await this._copyTemplateFiles()
+      this._logMessages()
+      this._trackAnalytics()
+    } catch (err) {
+      this.config.runHook('error', { err })
+    }
   }
 }
