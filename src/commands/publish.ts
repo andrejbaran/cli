@@ -30,7 +30,7 @@ export default class Publish extends Command {
         .readFile(path.join(opPath, '/ops.yml'), 'utf8')
         .catch((err: any) => {
           this.log(`Unable to locate ops.yml at ${err.path}`)
-          this.exit()
+          process.exit()
         })
 
       const pkg: Op = manifest && yaml.parse(manifest)
