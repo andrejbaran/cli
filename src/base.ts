@@ -79,11 +79,11 @@ abstract class CTOCommand extends Command {
   isLoggedIn() {
     if (!this.user) {
       this.log('')
-      this.log('✋ Sorry you need to be loggedin to do that.')
+      this.log('✋ Sorry you need to be logged in to do that.')
       this.log(
-        `🎳 You can sign up with ${ux.colors.green('$')} ${ux.colors.dim(
-          'ops account:signup',
-        )}`,
+        `🎳 You can sign up with ${ux.colors.green(
+          '$',
+        )} ${ux.colors.callOutCyan('ops account:signup')}`,
       )
       this.log('')
       this.log('❔ Please reach out to us with questions anytime!')
