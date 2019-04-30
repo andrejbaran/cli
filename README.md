@@ -48,7 +48,7 @@ USAGE
 
 ## `ops account:reset`
 
-Reset your password
+Reset your password.
 
 ```
 USAGE
@@ -268,7 +268,7 @@ _See code: [src/commands/team/invite.ts](https://github.com/cto.ai/ops/blob/v1.0
 
 ## `ops team:join`
 
-Accept an invite to join a team
+Accept an invite to join a team.
 
 ```
 USAGE
@@ -279,7 +279,7 @@ _See code: [src/commands/team/join.ts](https://github.com/cto.ai/ops/blob/v1.0.4
 
 ## `ops team:switch`
 
-Shows the list of your teams
+Shows the list of your teams.
 
 ```
 USAGE

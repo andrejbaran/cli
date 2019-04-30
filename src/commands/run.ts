@@ -320,7 +320,7 @@ export default class Run extends Command {
         })
     })
     ux.spinner.stop(ux.colors.green('Done!'))
-    let msg = ux.colors.italic.bold(`${op.name}:${op._id}`)
+    let msg = ux.colors.italic.bold(`${op.name}:${op.id}`)
     this.log(`\n🙌 Saved ${msg} locally! \n`)
   }
 
