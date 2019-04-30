@@ -79,8 +79,8 @@ export default class Publish extends Command {
         properties: {
           email: this.user.email,
           username: this.user.username,
-          name: op.name,
-          description: op.description,
+          name: op.data.name,
+          description: op.data.description,
           image: `${this.ops_registry_host}/${op.data.id.toLowerCase()}`,
           tag: 'latest',
         },
@@ -90,7 +90,7 @@ export default class Publish extends Command {
       this.log(
         `😰 We've encountered a problem. Please try again or contact support@cto.ai and we'll do our best to help.`,
       )
-      log.debug('Remove command failed', err)
+      log.debug('Publish command failed', err)
     }
   }
 }
