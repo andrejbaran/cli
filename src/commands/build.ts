@@ -15,6 +15,7 @@ import { Op } from '../types/Op'
 import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
 import * as yaml from 'yaml'
+import { FileNotFoundError } from '../errors'
 import { getOpUrl, getOpImageTag } from '../utils/getOpUrl'
 
 export default class Build extends Command {
@@ -29,43 +30,47 @@ export default class Build extends Command {
   ]
 
   async run(this: any) {
-    const { args } = this.parse(Build)
-    const opPath = args.path
-      ? path.resolve(process.cwd(), args.path)
-      : process.cwd()
+    try {
+      const { args } = this.parse(Build)
+      const opPath: string = args.path
+        ? path.resolve(process.cwd(), args.path)
+        : process.cwd()
 
-    this.isLoggedIn()
+      this.isLoggedIn()
 
-    const manifest = await fs
-      .readFile(path.join(opPath, '/ops.yml'), 'utf8')
-      .catch((err: any) => {
-        this.log(`Unable to locate ops.yml at ${err.path}`)
-        this.exit()
+      const manifest = await fs
+        .readFile(path.join(opPath, '/ops.yml'), 'utf8')
+        .catch(err => {
+          throw new FileNotFoundError(opPath)
+        })
+
+      const op: Op = manifest && yaml.parse(manifest)
+      await this.config.runHook('validate', op)
+
+      this.log(
+        `🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`,
+      )
+      const opImageTag = getOpImageTag(this.team.name, op.name)
+
+      await this.config.runHook('build', {
+        tag: getOpUrl(this.ops_registry_host, opImageTag),
+        opPath,
+        op,
       })
-    const op: Op = manifest && yaml.parse(manifest)
-    await this.config.runHook('validate', op)
 
-    this.log(
-      `🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`,
-    )
-    const opImageTag = getOpImageTag(this.team.name, op.name)
-
-    await this.config.runHook('build', {
-      tag: getOpUrl(this.ops_registry_host, opImageTag),
-      opPath,
-      op,
-    })
-
-    this.analytics.track({
-      userId: this.user.email,
-      event: 'Ops CLI Build',
-      properties: {
-        email: this.user.email,
-        username: this.user.username,
-        name: op.name,
-        description: op.description,
-        image: `${this.ops_registry_host}/${op.name}`,
-      },
-    })
+      this.analytics.track({
+        userId: this.user.email,
+        event: 'Ops CLI Build',
+        properties: {
+          email: this.user.email,
+          username: this.user.username,
+          name: op.name,
+          description: op.description,
+          image: `${this.ops_registry_host}/${op.name}`,
+        },
+      })
+    } catch (err) {
+      this.config.runHook('error', { err })
+    }
   }
 }

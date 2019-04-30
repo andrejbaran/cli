@@ -3,8 +3,8 @@ import * as faker from 'faker'
 
 function generateTeam(teamName?: string, teamId?: string): Team {
   return {
-    id: teamName || faker.random.word(),
-    name: teamId || faker.random.uuid(),
+    id: teamName || faker.random.uuid(),
+    name: teamId || faker.random.word(),
   }
 }
 
