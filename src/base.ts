@@ -101,7 +101,7 @@ abstract class CTOCommand extends Command {
       this.log("🖖 We'll get back to you as soon as we possibly can.")
       this.log('')
 
-      this.exit()
+      process.exit()
     }
   }
 
@@ -174,7 +174,7 @@ abstract class CTOCommand extends Command {
     if (!args) {
       ux.spinner.stop(`failed`)
       this.log('missing parameter')
-      this.exit()
+      process.exit()
     }
 
     const { accessToken } = args
@@ -185,7 +185,7 @@ abstract class CTOCommand extends Command {
           'ops account:reset',
         )}.\n`,
       )
-      this.exit()
+      process.exit()
     }
 
     try {
