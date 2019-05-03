@@ -27,7 +27,8 @@ export default class TeamJoin extends Command {
     // On success
     if (res.data) {
       const { id, name } = res.data
-      await this.writeConfig({ team: { name, id } })
+      const oldConfig = await this.readConfig()
+      await this.writeConfig(oldConfig, { team: { name, id } })
 
       ux.spinner.stop(`${ux.colors.successGreen('✔︎')}\n`)
 
@@ -61,5 +62,13 @@ export default class TeamJoin extends Command {
       `😞  Uh-oh, the invite code doesn't seem to be valid. Please check the code and try again.\n`,
     )
     return this.run()
+  }
+
+  async joinTeam(inviteCode: string) {
+    return this.api.create(
+      'teams/accept',
+      { inviteCode },
+      { headers: { Authorization: this.accessToken } },
+    )
   }
 }

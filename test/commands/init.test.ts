@@ -6,7 +6,8 @@ import * as yaml from 'yaml'
 import { clearConfig } from '../helpers/manage-config'
 import setupTest from '../helpers/setupTest'
 
-const { SEGMENT_URL = '' } = process.env
+import { SEGMENT_URL } from '../../src/constants/env'
+
 const DESIRED_OP_NAME = 'testOpName'
 const DESIRED_OP_DESCRIPTION = 'testOpDescription'
 

@@ -1,79 +1,120 @@
-import { ux } from '@cto.ai/sdk'
-import feathers from '@feathersjs/feathers'
-import rest from '@feathersjs/rest-client'
+/**
+ * @author: Brett Campbell (brett@hackcapital.com)
+ * @date: Friday, 5th April 2019 12:06:07 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Friday, 3rd May 2019 12:17:21 pm
+ * @copyright (c) 2019 CTO.ai
+ *
+ */
+
+import { ux as _ux } from '@cto.ai/sdk'
 import Command, { flags } from '@oclif/command'
 import Analytics from 'analytics-node'
-import axios from 'axios'
 import Docker from 'dockerode'
 import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
-import * as url from 'url'
-
 import getDocker from './utils/get-docker'
 import { asyncPipe, _trace } from './utils/asyncPipe'
+import { handleMandatory, handleUndefined } from './utils/guards'
 
-import Config from './types/Config'
-import User from './types/User'
-import UserCredentials from './types/UserCredentials'
-import ValidationFields from './types/ValidationFields'
-import AccessToken from './types/AccessToken'
-import MeResponse from './types/MeResponse'
-import Team from './types/Team'
-import RegistryAuth from './types/RegistryAuth'
-import SigninPipeline from './types/SigninPipeline'
-import Partial from './types/Partial'
+import * as OClifConfig from '@oclif/config'
 
-process.env.NODE_ENV = process.env.NODE_ENV || 'production'
-const ops_segment_key =
-  process.env.OPS_SEGMENT_KEY || 'sRsuG18Rh9IHgr9bK7GsrB7BfLfNmhCG'
-const ops_host = process.env.OPS_API_HOST || 'https://cto.ai/'
-const ops_path = process.env.OPS_API_PATH || 'api/v1'
+import {
+  Config,
+  User,
+  Team,
+  UserCredentials,
+  ValidationFields,
+  AccessToken,
+  MeResponse,
+  RegistryAuth,
+  SigninPipeline,
+  RegistryResponse,
+  ApiService,
+} from './types'
 
-export const apiUrl = url.resolve(ops_host, ops_path)
+import {
+  NODE_ENV,
+  OPS_REGISTRY_HOST,
+  OPS_SEGMENT_KEY,
+  INTERCOM_EMAIL,
+} from './constants/env'
+
+import { FeathersClient } from './services/feathers'
+import { catchClause } from '@babel/types'
+import { UserUnauthorized } from './errors'
 
 abstract class CTOCommand extends Command {
-  client = feathers().configure(rest(apiUrl).axios(axios))
-  analytics = new Analytics(ops_segment_key)
-  accessToken: string = ''
-  user: User
-  team: Team
-  docker: Docker | undefined
-  ops_registry_host: string = process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
-  ops_registry_auth: RegistryAuth
+  analytics = new Analytics(OPS_SEGMENT_KEY)
+  docker!: Docker | undefined
 
-  getOpsRegistryAuth = async (accessToken: string): Promise<RegistryAuth> => {
-    const registryResponse = await this.client.service('registry/token').find({
-      query: {
-        registryProject: this.team.name,
-      },
-      headers: { Authorization: accessToken },
-    })
+  accessToken!: string
+  user!: User
+  team!: Team
+  state!: { user: User; team: Team; accessToken: string }
 
-    const {
-      registryProject = '',
-      registryUser = '',
-      registryPass = '',
-    } = registryResponse.data.registry_tokens[0]
+  ux = _ux
 
-    const registryAuth: RegistryAuth = {
-      username: registryUser,
-      password: registryPass,
-      serveraddress: `${this.ops_registry_host}/${registryProject}`,
-    }
-
-    return registryAuth
+  constructor(
+    argv: string[],
+    config: OClifConfig.IConfig,
+    protected api: ApiService = new FeathersClient(),
+  ) {
+    super(argv, config)
   }
 
   async init() {
     const { user, accessToken, team } = await this.readConfig()
-    if (user) {
-      this.user = user
-    }
-    if (accessToken) {
-      this.accessToken = accessToken
-    }
+    this.accessToken = accessToken
+    this.user = user
     this.team = team
+    this.state = {
+      accessToken: accessToken,
+      user: user,
+      team: team,
+    }
     this.docker = await this._getDocker()
+  }
+
+  getRegistryAuth = async (
+    accessToken: string,
+  ): Promise<RegistryAuth | undefined> => {
+    try {
+      const registryResponse: RegistryResponse = await this.api.find(
+        'registry/token',
+        {
+          query: {
+            registryProject: this.team.name,
+          },
+          headers: { Authorization: accessToken },
+        },
+      )
+      if (!registryResponse.data) {
+        throw new UserUnauthorized(this.state)
+      }
+
+      const {
+        registryProject = '',
+        registryUser = '',
+        registryPass = '',
+      } = registryResponse.data.registry_tokens[0]
+
+      const projectFullName = `${OPS_REGISTRY_HOST}/${registryProject}`
+      const projectUrl = `https://${projectFullName}`
+
+      const registryAuth: RegistryAuth = {
+        authconfig: {
+          username: registryUser,
+          password: registryPass,
+          serveraddress: projectUrl,
+        },
+        projectFullName,
+      }
+
+      return registryAuth
+    } catch (err) {
+      this.config.runHook('error', { err })
+    }
   }
 
   isLoggedIn() {
@@ -81,22 +122,22 @@ abstract class CTOCommand extends Command {
       this.log('')
       this.log('✋ Sorry you need to be logged in to do that.')
       this.log(
-        `🎳 You can sign up with ${ux.colors.green(
+        `🎳 You can sign up with ${this.ux.colors.green(
           '$',
-        )} ${ux.colors.callOutCyan('ops account:signup')}`,
+        )} ${this.ux.colors.callOutCyan('ops account:signup')}`,
       )
       this.log('')
       this.log('❔ Please reach out to us with questions anytime!')
       this.log(
-        `⌚️ We are typically available ${ux.colors.white(
+        `⌚️ We are typically available ${this.ux.colors.white(
           'Monday-Friday 9am-5pm PT',
         )}.`,
       )
       this.log(
-        `📬 You can always reach us by ${ux.url(
+        `📬 You can always reach us by ${this.ux.url(
           'email',
-          'mailto:h1gw0mit@ctoai.intercom-mail.com',
-        )} ${ux.colors.dim('(h1gw0mit@ctoai.intercom-mail.com)')}.\n`,
+          `mailto:${INTERCOM_EMAIL}`,
+        )} ${this.ux.colors.dim(`(${INTERCOM_EMAIL})`)}.\n`,
       )
       this.log("🖖 We'll get back to you as soon as we possibly can.")
       this.log('')
@@ -142,8 +183,10 @@ abstract class CTOCommand extends Command {
     return configObj
   }
 
-  writeConfig = async (newConfigObj: Partial<Config>): Promise<Config> => {
-    const oldConfigObj = await this.readConfig()
+  writeConfig = async (
+    oldConfigObj: Partial<Config> | null = {},
+    newConfigObj: Partial<Config>,
+  ): Promise<Partial<Config>> => {
     const mergedConfigObj = {
       ...oldConfigObj,
       ...newConfigObj,
@@ -162,38 +205,47 @@ abstract class CTOCommand extends Command {
     return args
   }
 
-  authenticateUser = async ({ credentials }: SigninPipeline) => {
-    const { data: accessToken } = (await this.client
-      .service('login')
-      .create(credentials)) as AccessToken
+  authenticateUser = async ({
+    credentials = handleMandatory('credentials'),
+  }: Partial<SigninPipeline>) => {
+    try {
+      if (!credentials || !credentials.password || !credentials.email) {
+        throw 'invalid user credentials'
+      }
 
-    return { accessToken, credentials }
+      const res: AccessToken = await this.api.get('login', credentials)
+      const { data: accessToken = handleUndefined('accessToken') } = res
+      return { accessToken, credentials }
+    } catch (err) {
+      throw new Error(err)
+    }
   }
 
   fetchUserInfo = async (args: SigninPipeline) => {
     if (!args) {
-      ux.spinner.stop(`failed`)
+      this.ux.spinner.stop(`failed`)
       this.log('missing parameter')
       process.exit()
     }
 
     const { accessToken } = args
     if (!accessToken) {
-      ux.spinner.stop(`❗️\n`)
+      this.ux.spinner.stop(`❗️\n`)
       this.log(
-        `🤔 Sorry, we couldn’t find an account with that email or password.\nForgot your password? Run ${ux.colors.bold(
+        `🤔 Sorry, we couldn’t find an account with that email or password.\nForgot your password? Run ${this.ux.colors.bold(
           'ops account:reset',
         )}.\n`,
       )
       process.exit()
     }
-
     try {
-      const { data: meResponse } = (await this.client
-        .service('me')
-        .find({ headers: { Authorization: accessToken } })) as {
+      const {
+        data: meResponse,
+      }: {
         data: MeResponse
-      }
+      } = await this.api.find('me', {
+        headers: { Authorization: accessToken },
+      })
       return { meResponse, accessToken }
     } catch (error) {
       throw new Error(error)
@@ -215,30 +267,23 @@ abstract class CTOCommand extends Command {
   }
 
   async validateUniqueField(query: ValidationFields): Promise<boolean> {
-    const response = await this.client.service('validate').find({
+    const response = await this.api.find('validate', {
       query,
     })
     return response.data
   }
 
   private async _getDocker() {
-    if (process.env.NODE_ENV === 'test') return
-    const self = this
-    return getDocker(self, 'base')
+    if (NODE_ENV === 'test') return
+    return getDocker(this, 'base')
   }
 
   async createToken(email: string) {
-    return this.client.service('reset').create({ email })
+    return this.api.create('reset', { email })
   }
 
   async resetPassword(token: string, password: string) {
-    return this.client.service('reset').patch(token, { password })
-  }
-
-  async joinTeam(inviteCode: string) {
-    return this.client
-      .service('teams/accept')
-      .create({ inviteCode }, { headers: { Authorization: this.accessToken } })
+    return this.api.patch('reset', token, { password })
   }
 }
 

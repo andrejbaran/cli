@@ -1,4 +1,4 @@
-export default interface Invites {
+export interface Invites {
   inviteCode: string
   email: string
   sentStatus: string

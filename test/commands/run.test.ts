@@ -1,7 +1,6 @@
 import { expect, test } from '@oclif/test'
 
-import Team from '../../src/types/Team'
-import User from '../../src/types/User'
+import { Team, User } from '../../src/types'
 import { accessTokenFactory, userFactory, teamFactory } from '../factories/'
 import { clearConfig, writeConfig } from '../helpers/manage-config'
 

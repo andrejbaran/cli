@@ -2,17 +2,14 @@
  * @author: JP Lew (jp@hackcapital.com)
  * @date: Monday, 15th April 2019 2:29:03 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Thursday, 25th April 2019 4:42:54 pm
+ * @lastModifiedTime: Wednesday, 1st May 2019 3:04:16 pm
  * @copyright (c) 2019 Hack Capital
  */
 
-import Team from './Team'
-import User from './User'
+import { Team, User } from '.'
 
-interface Config {
+export interface Config {
   accessToken: string
   team: Team
   user: User
 }
-
-export default Config

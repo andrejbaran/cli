@@ -1,6 +1,6 @@
 import Command, { flags } from '../../base'
 import { ux } from '@cto.ai/sdk'
-
+import { INTERCOM_EMAIL } from '../../constants/env'
 export default class AccountSupport extends Command {
   static description = 'Contact our support team with questions.'
 
@@ -17,10 +17,10 @@ export default class AccountSupport extends Command {
       )}.`,
     )
     this.log(
-      `📬 You can always reach us by ${ux.url(
+      `📬 You can always reach us by ${this.ux.url(
         'email',
-        'mailto:h1gw0mit@ctoai.intercom-mail.com',
-      )} ${ux.colors.dim('(h1gw0mit@ctoai.intercom-mail.com)')}.\n`,
+        `mailto:${INTERCOM_EMAIL}`,
+      )} ${this.ux.colors.dim(`(${INTERCOM_EMAIL})`)}.\n`,
     )
     this.log("🖖 We'll get back to you as soon as we possibly can.")
     this.log('')

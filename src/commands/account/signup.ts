@@ -1,5 +1,6 @@
 import Command, { flags } from '../../base'
 import { ux } from '@cto.ai/sdk'
+import { INTERCOM_EMAIL } from '../..//constants/env'
 
 let self
 export default class AccountSignup extends Command {
@@ -65,11 +66,12 @@ export default class AccountSignup extends Command {
       )}! \n`,
     )
     this.log('❔ Let us know if you have questions...')
+
     this.log(
-      `📬 You can always reach us by ${ux.url(
+      `📬 You can always reach us by ${this.ux.url(
         'email',
-        'mailto:h1gw0mit@ctoai.intercom-mail.com',
-      )}.\n`,
+        `mailto:${INTERCOM_EMAIL}`,
+      )} ${this.ux.colors.dim(`(${INTERCOM_EMAIL})`)}.\n`,
     )
 
     this.log(`⚡️ Let's get you ${ux.colors.callOutCyan('started')}...`)
@@ -79,13 +81,12 @@ export default class AccountSignup extends Command {
     this.log('')
     ux.spinner.start(`${ux.colors.white('Creating account')}`)
 
-    await this.client.service('users').create({ email, password, username })
+    await this.api.create('users', { email, password, username })
     const config = await this.signinFlow({ email, password })
 
     if (!config) {
       throw new Error('could not authenticate')
     }
-
     // This is wrapped in an if statement because it takes a while to finish executing.
     // The `nock` code that is supposed to intercept this call and counter it is not equipped
     // to handle this

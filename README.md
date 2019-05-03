@@ -1,5 +1,4 @@
-ops
-===
+# ops
 
 💻 CTO.ai Ops - The CLI built for Teams 🚀
 
@@ -9,10 +8,13 @@ ops
 [![License](https://img.shields.io/npm/l/ops.svg)](https://github.com/cto.ai/ops/blob/master/package.json)
 
 <!-- toc -->
+* [ops](#ops)
 * [Usage](#usage)
 * [Commands](#commands)
 <!-- tocstop -->
+
 # Usage
+
 <!-- usage -->
 ```sh-session
 $ npm install -g @cto.ai/ops
@@ -26,7 +28,9 @@ USAGE
 ...
 ```
 <!-- usagestop -->
+
 # Commands
+
 <!-- commands -->
 * [`ops account:reset`](#ops-accountreset)
 * [`ops account:signin`](#ops-accountsignin)

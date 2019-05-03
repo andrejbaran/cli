@@ -6,6 +6,7 @@
 /logs
 /tmp
 /yarn.lock
+/test/config.json
 node_modules
 oclif.manifest.json
 .DS_store

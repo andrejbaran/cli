@@ -1,11 +1,14 @@
 import { Hook } from '@oclif/config'
 
+import { NODE_ENV } from '../../constants/env'
+
 import getLatestVersion from '../../utils/get-latest-version'
 
-const { ux } = require('@cto.ai/sdk')
+import { ux } from '@cto.ai/sdk'
 
 const hook: Hook<'prerun'> = async function(opts) {
   if (opts.Command.id === 'update') return
+
   const latest = await getLatestVersion()
   if (latest !== this.config.version) {
     this.log(

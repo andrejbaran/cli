@@ -1,16 +1,19 @@
-import ErrorTemplate from '@hackcapital/errors'
-import Command, { flags } from '../../base'
-import { ux } from '@cto.ai/sdk'
-import UserCredentials from '../../types/UserCredentials'
+/**
+ * @author: JP Lew (jp@cto.ai)
+ * @date: Tuesday, 30th April 2019 12:07:49 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Thursday, 2nd May 2019 4:29:37 pm
+ * @copyright (c) 2019 CTO.ai
+ */
+
 import { Question } from 'inquirer'
-import Container from '../../types/Container'
-
 import cloneDeep from 'lodash/cloneDeep'
+import Command, { flags } from '../../base'
+import { NODE_ENV } from '../../constants/env'
+import { Config, Container, UserCredentials } from '../../types'
+import { asyncPipe } from '../../utils/asyncPipe'
 
-import { asyncPipe, _trace } from '../../utils/asyncPipe'
-import Config from '../../types/Config'
-
-const signinPrompts: Container<Question> = {
+export const signinPrompts: Container<Question> = {
   email: {
     type: 'input',
     name: 'email',
@@ -24,19 +27,6 @@ const signinPrompts: Container<Question> = {
   },
 }
 
-class UserNotFound extends ErrorTemplate {
-  /**
-   * @constructor
-   */
-  constructor(user, note) {
-    super('User not found!', {
-      extra: user,
-      errorCode: 'US0001',
-      statusCode: 404,
-      note: note,
-    })
-  }
-}
 export default class AccountSignin extends Command {
   static description = 'Logs in to your account.'
 
@@ -46,12 +36,12 @@ export default class AccountSignin extends Command {
     password: flags.string({ char: 'p', description: 'Password' }),
   }
 
-  sendAnalytics = (ctx: AccountSignin) => (config: Config) => {
+  sendAnalytics = (config: Config) => {
     // This is wrapped in an if statement because it takes a while to finish executing.
     // The `nock` code that is supposed to intercept this call and counter it is not equipped
     // to handle this
-    if (process.env.NODE_ENV !== 'test') {
-      ctx.analytics.identify({
+    if (NODE_ENV !== 'test') {
+      this.analytics.identify({
         userId: config.user.email,
         traits: {
           beta: true,
@@ -60,7 +50,7 @@ export default class AccountSignin extends Command {
         },
       })
     }
-    ctx.analytics.track({
+    this.analytics.track({
       userId: config.user.email,
       event: 'Ops CLI Signin',
       properties: {
@@ -71,17 +61,17 @@ export default class AccountSignin extends Command {
     return cloneDeep(config)
   }
 
-  showWelcomeMessage = (ctx: AccountSignin) => (config: Config) => {
-    ux.spinner.stop(`${ux.colors.green('Done!')}`)
-    ctx.log(
-      `\n👋 ${ux.colors.white('Welcome back')} ${ux.colors.italic.dim(
+  showWelcomeMessage = (config: Config) => {
+    this.ux.spinner.stop(`${this.ux.colors.green('Done!')}`)
+    this.log(
+      `\n👋 ${this.ux.colors.white('Welcome back')} ${this.ux.colors.italic.dim(
         config.user.username,
       )}!`,
     )
-    ctx.log(
-      `\n👉 Type ${ux.colors.italic.dim(
+    this.log(
+      `\n👉 Type ${this.ux.colors.italic.dim(
         'ops search',
-      )} to find ops or ${ux.colors.italic.dim(
+      )} to find ops or ${this.ux.colors.italic.dim(
         'ops init',
       )} to create your own! \n`,
     )
@@ -89,10 +79,10 @@ export default class AccountSignin extends Command {
     return cloneDeep(config)
   }
 
-  signin = (ctx: AccountSignin) => async (credentials: UserCredentials) => {
-    ctx.log('')
-    ux.spinner.start(`${ux.colors.white('Authenticating')}`)
-    return await ctx.signinFlow(credentials)
+  signin = async (credentials: UserCredentials) => {
+    this.log('')
+    this.ux.spinner.start(`${this.ux.colors.white('Authenticating')}`)
+    return this.signinFlow(credentials)
   }
 
   determineQuestions = (prompts: Container<Question>) => (
@@ -110,30 +100,32 @@ export default class AccountSignin extends Command {
     return questions
   }
 
-  askQuestions = (ctx: AccountSignin) => async (questions: Question[]) => {
+  askQuestions = async (
+    questions: Question[],
+  ): Promise<UserCredentials | {}> => {
     if (!questions.length) {
-      return await {}
+      return {}
     }
-    ctx.log(`${ux.colors.white('Please login to get started.')}\n`)
-    return (await ux.prompt(questions)) as UserCredentials
+    this.log(`${this.ux.colors.white('Please login to get started.')}\n`)
+    return this.ux.prompt(questions)
   }
 
-  determineUserCredentials = (flags: UserCredentials) => (
-    answers: UserCredentials,
-  ): UserCredentials => ({ ...flags, ...answers })
+  determineUserCredentials = (flags: Partial<UserCredentials>) => (
+    answers: Partial<UserCredentials>,
+  ): Partial<UserCredentials> => ({ ...flags, ...answers })
 
-  logMessages = (ctx: AccountSignin) => (input: UserCredentials) => {
-    ctx.log('')
-    ctx.log(
-      `💻 ${ux.colors.multiBlue('CTO.ai Ops')} - ${ux.colors.actionBlue(
-        'The CLI built for Teams',
-      )} 🚀`,
+  logMessages = (input: UserCredentials) => {
+    this.log('')
+    this.log(
+      `💻 ${this.ux.colors.multiBlue(
+        'CTO.ai Ops',
+      )} - ${this.ux.colors.actionBlue('The CLI built for Teams')} 🚀`,
     )
-    ctx.log('')
-    ctx.log(
-      `👋 ${ux.colors.white('Welcome to the')} ${ux.colors.callOutCyan(
-        'Ops CLI beta',
-      )}! \n`,
+    this.log('')
+    this.log(
+      `👋 ${this.ux.colors.white(
+        'Welcome to the',
+      )} ${this.ux.colors.callOutCyan('Ops CLI beta')}! \n`,
     )
     return { ...input }
   }
@@ -142,13 +134,13 @@ export default class AccountSignin extends Command {
     const { flags } = this.parse(AccountSignin)
 
     const signinPipeline = asyncPipe(
-      this.logMessages(this),
+      this.logMessages,
       this.determineQuestions(signinPrompts),
-      this.askQuestions(this),
+      this.askQuestions,
       this.determineUserCredentials(flags),
-      this.signin(this),
-      this.showWelcomeMessage(this),
-      this.sendAnalytics(this),
+      this.signin,
+      this.showWelcomeMessage,
+      this.sendAnalytics,
     )
 
     await signinPipeline(flags)

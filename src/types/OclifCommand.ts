@@ -1,4 +1,4 @@
-export default interface OclifCommand {
+export interface OclifCommand {
   type: string
   name: string
   message: string

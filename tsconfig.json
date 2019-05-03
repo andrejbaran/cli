@@ -1,5 +1,19 @@
+/*
+ * Author: JP Lew (jp@cto.ai)
+ * Date: Wednesday, 1st May 2019 7:54:31 am
+ * Last Modified By: JP Lew (jp@cto.ai)
+ * Last Modified Time: Wednesday, 1st May 2019 7:54:34 am
+ *
+ * DESCRIPTION
+ *
+ * Copyright (c) 2019 CTO.ai
+ */
+
 {
   "compilerOptions": {
+    "skipLibCheck": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./lib/tsconfig.tsbuildinfo",
     "declaration": true,
     "importHelpers": true,
     "module": "commonjs",
@@ -10,7 +24,8 @@
     "composite": true,
     "checkJs": false,
     "esModuleInterop": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true
   },
   "include": [
     "src/**/*"

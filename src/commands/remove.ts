@@ -1,5 +1,6 @@
 import Command, { flags } from '../base'
 import { ux, log } from '@cto.ai/sdk'
+import { OPS_REGISTRY_HOST } from '../constants/env'
 
 export default class Remove extends Command {
   static description = 'Remove an op from a team.'
@@ -12,19 +13,21 @@ export default class Remove extends Command {
     help: flags.help({ char: 'h' }),
   }
 
-  async run(this: any) {
+  async run() {
     try {
       const self = this
       this.isLoggedIn()
 
-      const { opName } = this.parse(Remove).args
+      const {
+        args: { opName },
+      } = this.parse(Remove)
+
       const query = opName
         ? { search: opName, team_id: self.team.id }
         : { team_id: self.team.id }
 
-      const opsResponse = await this.client
-        .service('ops')
-        .find({
+      const opsResponse = await this.api
+        .find('ops', {
           query,
           headers: {
             Authorization: this.accessToken,
@@ -66,9 +69,8 @@ export default class Remove extends Command {
 
       const { id, name, description } = op
 
-      await self.client
-        .service('ops')
-        .remove(id, { headers: { Authorization: this.accessToken } })
+      await this.api
+        .remove('ops', id, { headers: { Authorization: this.accessToken } })
         .catch(err => {
           throw new Error(err)
         })
@@ -94,7 +96,7 @@ export default class Remove extends Command {
           id,
           name,
           description,
-          image: `${this.ops_registry_host}/${name}`,
+          image: `${OPS_REGISTRY_HOST}/${name}`,
         },
       })
     } catch (err) {
