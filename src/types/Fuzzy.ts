@@ -8,6 +8,11 @@
  *
  */
 
+import { Op } from './Op'
+
 export interface Fuzzy {
-  original: object
+  original: {
+    value: Op
+    name: string
+  }
 }
