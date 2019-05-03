@@ -1,4 +1,4 @@
-import Team from '../../src/types/Team'
+import { Team } from '../../src/types'
 import * as faker from 'faker'
 
 function generateTeam(teamName?: string, teamId?: string): Team {

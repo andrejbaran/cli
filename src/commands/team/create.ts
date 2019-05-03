@@ -1,5 +1,5 @@
 import Command, { flags } from '../../base'
-const { ux } = require('@cto.ai/sdk')
+import { ux } from '@cto.ai/sdk'
 
 let self
 export default class TeamCreate extends Command {
@@ -38,17 +38,17 @@ export default class TeamCreate extends Command {
       }
     }
 
-    // REQUEST TO FEATHERS API
-    const res = await this.client
-      .service('teams')
-      .create(
-        { name: teamName },
-        { headers: { Authorization: this.accessToken } },
-      )
+    const res = await this.api.create(
+      'teams',
+      { name: teamName },
+      { headers: { Authorization: this.accessToken } },
+    )
     const team = { id: res.data.id, name: res.data.name }
 
     this.log(`\n ${ux.colors.white('🙌 Your team has been created!')}`)
-    await this.writeConfig({ team })
+
+    const oldConfig = await this.readConfig()
+    await this.writeConfig(oldConfig, { team })
 
     this.analytics.track({
       userId: this.user.email,

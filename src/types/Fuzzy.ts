@@ -11,5 +11,3 @@
 export interface Fuzzy {
   original: string
 }
-
-export default Fuzzy

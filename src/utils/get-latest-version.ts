@@ -10,12 +10,16 @@
 
 import axios from 'axios'
 
-export default async function getLatestVersion(): Promise<string> {
-  const { data } = await axios({
-    method: 'GET',
-    url: '/@cto.ai/ops',
-    baseURL: 'https://registry.npmjs.org/',
-  })
-  const { latest } = data['dist-tags']
-  return latest
+export default async function getLatestVersion(): Promise<string | undefined> {
+  try {
+    const { data } = await axios({
+      method: 'GET',
+      url: '/@cto.ai/ops',
+      baseURL: 'https://registry.npmjs.org/',
+    })
+    const { latest } = data['dist-tags']
+    return latest
+  } catch (err) {
+    console.log(err)
+  }
 }

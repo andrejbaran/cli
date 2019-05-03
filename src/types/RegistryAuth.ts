@@ -1,17 +1,16 @@
 /**
- * Author: Brett Campbell (brett@hackcapital.com)
- * Date: Thursday, 4th April 2019 2:15:49 pm
- * Last Modified By: Brett Campbell (brett@hackcapital.com)
- * Last Modified Time: Thursday, 4th April 2019 2:16:00 pm
- *
- * DESCRIPTION
- *
+ * @author: JP Lew (jp@cto.ai)
+ * @date: Wednesday, 1st May 2019 5:35:37 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Thursday, 2nd May 2019 12:15:50 pm
+ * @copyright (c) 2019 CTO.ai
  */
 
 export interface RegistryAuth {
-  username: string
-  password: string
-  serveraddress: string
+  authconfig: {
+    username: string
+    password: string
+    serveraddress: string // https://reg.local.hc.ai/jplew
+  }
+  projectFullName: string // reg.local.hc.ai/jplew
 }
-
-export default RegistryAuth

@@ -1,8 +1,8 @@
 /**
  * @author: Prachi Singh (prachi@hackcapital.com)
  * @date: Tuesday, 23rd April 2019 10:55:23 am
- * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Tuesday, 30th April 2019 2:58:10 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Wednesday, 1st May 2019 5:28:25 pm
  *
  * DESCRIPTION: This hook is used for error handling
  *
@@ -10,7 +10,7 @@
  */
 
 import { log } from '@cto.ai/sdk'
-import { Error } from '../types/Error'
+import { Error } from '../types'
 
 /**
  * Error hook to handle the errors
@@ -21,6 +21,7 @@ import { Error } from '../types/Error'
  */
 export default async function error(this: any, options: { err: Error }) {
   log.error(options.err.stack)
+
   if (options.err.source === 'UNEXPECTED') {
     this.log(
       `\n 😰 We've encountered a problem. Please try again or contact support@cto.ai and we'll do our best to help. \n`,

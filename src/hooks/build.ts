@@ -1,20 +1,18 @@
 /**
- * Author: Brett Campbell (brett@hackcapital.com)
- * Date: Friday, 5th April 2019 12:06:07 pm
- * Last Modified By: Brett Campbell (brett@hackcapital.com)
- * Last Modified Time: Friday, 5th April 2019 12:06:08 pm
- *
- * DESCRIPTION
- *
+ * @author: Brett Campbell (brett@hackcapital.com)
+ * @date: Friday, 5th April 2019 12:06:07 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Wednesday, 1st May 2019 3:17:31 pm
+ * @copyright (c) 2019 CTO.ai
  */
+
 import { ux } from '@cto.ai/sdk'
 import through from 'through2'
 import json from 'JSONStream'
 
-import Op from '../types/Op'
+import { Op } from '../types'
 import getDocker from '../utils/get-docker'
 import { ReadFileError, DockerBuildImageError } from '../errors'
-import Docker from 'dockerode'
 
 async function build(
   this: any,
@@ -35,9 +33,9 @@ async function build(
     cb()
   })
 
-  parser._pipe = parser.pipe
+  const _pipe = parser.pipe
   parser.pipe = function(dest: any) {
-    return parser._pipe(dest)
+    return _pipe(dest)
   }
   await new Promise(async function(resolve, reject) {
     const self = this

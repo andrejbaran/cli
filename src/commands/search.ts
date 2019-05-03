@@ -1,5 +1,5 @@
 import Command, { flags } from '../base'
-import { Op } from '../types/Op'
+import { Op } from '../types'
 import { ux, log } from '@cto.ai/sdk'
 
 let ops: Op[] = []
@@ -100,7 +100,7 @@ export default class Search extends Command {
       ? { search: filter, team_id: this.team.id }
       : { team_id: this.team.id }
 
-    const { data } = await this.client.service('ops').find({
+    const { data } = await this.api.find('ops', {
       query,
       headers: {
         Authorization: this.accessToken,

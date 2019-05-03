@@ -45,5 +45,3 @@ interface Parameters {
   description: string
   default: string
 }
-
-export default Op

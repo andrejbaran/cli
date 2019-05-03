@@ -1,8 +1,8 @@
 import { expect, test } from '@oclif/test'
 
-const { ux } = require('@cto.ai/sdk')
-const { SEGMENT_URL = '' } = process.env
+import { ux } from '@cto.ai/sdk'
 
+import { SEGMENT_URL } from '../../../src/constants/env'
 import AccountSignup from '../../../src/commands/account/signup'
 import { baseTest } from '../../helpers/base-test'
 import { clearConfig, readConfig } from '../../helpers/manage-config'

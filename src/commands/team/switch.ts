@@ -1,5 +1,5 @@
 import Command, { flags } from '../../base'
-import Team from '../../types/Team'
+import { Team } from '../../types'
 import { ux } from '@cto.ai/sdk'
 
 interface displayTeam extends Team {
@@ -26,9 +26,9 @@ export default class TeamSwitch extends Command {
         }
 
     // Gets the list of teams from the backend
-    const response = await this.client
-      .service('teams')
-      .find({ headers: { Authorization: this.accessToken } })
+    const response = await this.api.find('teams', {
+      headers: { Authorization: this.accessToken },
+    })
     const teams: Team[] = response.data
 
     // Adds necessary variables (e.g. displaynName) to each team
@@ -57,7 +57,9 @@ export default class TeamSwitch extends Command {
     this.log(`\n⏱ Switching teams`)
 
     // Writes the desired team into the config
-    await this.writeConfig({ team: { name: team.name, id: team.id } })
+    await this.writeConfig(configData, {
+      team: { name: team.name, id: team.id },
+    })
 
     this.log(
       `\n🚀 Huzzah! ${ux.colors.callOutCyan(

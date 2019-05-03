@@ -7,7 +7,7 @@
  * DESCRIPTION
  *
  */
-import Op from '../types/Op'
+import { Op } from '../types'
 import getDocker from '../utils/get-docker'
 
 const ops_registry_host = process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'

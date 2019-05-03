@@ -9,8 +9,7 @@ import {
   readConfig,
 } from '../../helpers/manage-config'
 import { baseTest } from '../../helpers/base-test'
-import Team from '../../../src/types/Team'
-import User from '../../../src/types/User'
+import { Team, User } from '../../../src/types'
 import { teamFactory, userFactory, accessTokenFactory } from '../../factories'
 
 let team: Team

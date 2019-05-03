@@ -1,40 +1,52 @@
 /**
- * Author: Brett Campbell (brett@hackcapital.com)
- * Date: Friday, 5th April 2019 12:06:07 pm
- * Last Modified By: Brett Campbell (brett@hackcapital.com)
- * Last Modified Time: Friday, 5th April 2019 12:06:08 pm
- *
- * DESCRIPTION
+ * @author: Brett Campbell (brett@hackcapital.com)
+ * @date: Friday, 5th April 2019 12:06:07 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Friday, 3rd May 2019 12:02:37 pm
+ * @copyright (c) 2019 CTO.ai
  *
  */
+
 import { ux } from '@cto.ai/sdk'
 import * as through from 'through2'
 import * as json from 'JSONStream'
 
-import Op from '../types/Op'
-import RegistryAuth from '../types/RegistryAuth'
+import { Op, RegistryAuth } from '../types'
 import getDocker from '../utils/get-docker'
+import Dockerode from 'dockerode'
 
 export default async function publish(
   this: any,
   options: {
     op: Op
-    ops_registry_host: string
-    ops_registry_auth: RegistryAuth
+    registryAuth: RegistryAuth
   },
 ) {
-  const { op, ops_registry_host, ops_registry_auth } = options
+  const {
+    op,
+    registryAuth: { authconfig, projectFullName },
+  } = options
+
+  const imageUniqueId = `${projectFullName}/${op.id.toLowerCase()}`
+  // reg.local.hc.ai/jplew/ae2f60b1-4edd-4660-a087-7b530869df0f
+
+  const imageName = `${projectFullName}/${op.name}`
+  // reg.local.hc.ai/jplew/banana
+
   const self = this
   const docker = await getDocker(self, 'publish')
+
   if (!docker) {
     throw new Error('Could not initialize Docker.')
   }
-  const image = docker.getImage(`${ops_registry_host}/${op.name}`)
-  this.log(
-    `🔋 Creating release ${ux.colors.callOutCyan(
-      ops_registry_host + '/' + op.id.toLowerCase(),
-    )}... \n`,
-  )
+
+  const image: Dockerode.Image | undefined = docker.getImage(imageName)
+
+  if (!image) {
+    throw new Error('Could not get a docker image.')
+  }
+
+  this.log(`🔋 Creating release ${ux.colors.callOutCyan(imageUniqueId)}... \n`)
 
   const all: any[] = []
   const log = this.log
@@ -61,50 +73,45 @@ export default async function publish(
     cb()
   })
 
-  parser._pipe = parser.pipe
+  const _pipe = parser.pipe
   parser.pipe = function(dest: any) {
-    return parser._pipe(dest)
+    return _pipe(dest)
   }
 
-  image.tag(
-    { repo: `${ops_registry_host}/${op.id.toLowerCase()}` },
-    (err: any, _data: any) => {
-      if (err) return error(err.message, { exist: 2 })
-      const image = docker.getImage(
-        `${ops_registry_host}/${op.id.toLowerCase()}`,
-      )
-      image.push(
-        {
-          tag: 'latest',
-          authconfig: ops_registry_auth,
-        },
-        (err: any, stream: any) => {
-          if (err) return error(err.message, { exist: 2 })
-          stream
-            .pipe(json.parse())
-            .pipe(parser)
-            .on('data', (d: any) => {
-              all.push(d)
-            })
-            .on('end', async function() {
-              const bar = ux.progress.init()
-              bar.start(100, 0)
+  image.tag({ repo: imageUniqueId }, (err: any, _data: any) => {
+    if (err) return error(err.message, { exist: 2 })
+    const image = docker.getImage(imageUniqueId)
+    image.push(
+      {
+        tag: 'latest',
+        authconfig,
+      },
+      (err: any, stream: any) => {
+        if (err) return error(err.message, { exist: 2 })
+        stream
+          .pipe(json.parse())
+          .pipe(parser)
+          .on('data', (d: any) => {
+            all.push(d)
+          })
+          .on('end', async function() {
+            const bar = ux.progress.init()
+            bar.start(100, 0)
 
-              for (let i = 0; i < size; i++) {
-                bar.update(100 - size / i)
-                await ux.wait(5)
-              }
+            for (let i = 0; i < size; i++) {
+              bar.update(100 - size / i)
+              await ux.wait(5)
+            }
 
-              bar.update(100)
-              bar.stop()
-              log(
-                `\n🙌 ${ux.colors.callOutCyan(
-                  `${ops_registry_host}/${op.id.toLowerCase()}:latest`,
-                )} has been published! \n`,
-              )
-            })
-        },
-      )
-    },
-  )
+            bar.update(100)
+            bar.stop()
+            log(
+              `\n🙌 ${ux.colors.callOutCyan(
+                imageUniqueId,
+              )} has been published! \n`,
+            )
+          })
+      },
+    )
+  })
 }

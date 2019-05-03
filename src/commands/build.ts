@@ -10,13 +10,14 @@
 import * as path from 'path'
 
 import Command, { flags } from '../base'
-import { Op } from '../types/Op'
+import { Op } from '../types'
 
 import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
 import * as yaml from 'yaml'
 import { FileNotFoundError } from '../errors'
 import { getOpUrl, getOpImageTag } from '../utils/getOpUrl'
+import { OPS_REGISTRY_HOST } from '../constants/env'
 
 export default class Build extends Command {
   static description = 'Build your op for sharing.'
@@ -53,7 +54,7 @@ export default class Build extends Command {
       const opImageTag = getOpImageTag(this.team.name, op.name)
 
       await this.config.runHook('build', {
-        tag: getOpUrl(this.ops_registry_host, opImageTag),
+        tag: getOpUrl(OPS_REGISTRY_HOST, opImageTag),
         opPath,
         op,
       })
@@ -66,7 +67,7 @@ export default class Build extends Command {
           username: this.user.username,
           name: op.name,
           description: op.description,
-          image: `${this.ops_registry_host}/${op.name}`,
+          image: `${OPS_REGISTRY_HOST}/${op.name}`,
         },
       })
     } catch (err) {

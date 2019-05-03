@@ -1,8 +1,6 @@
 import Command, { flags } from '../../base'
-import Team from '../../types/Team'
-import InvitesResponse from '../../types/Invites'
-import OclifCommand from '../../types/OclifCommand'
-const { ux } = require('@cto.ai/sdk')
+import { Team, Invites, OclifCommand } from '../../types'
+import { ux } from '@cto.ai/sdk'
 
 const SENT_SUCCESSFULLY = 'sent successfully!'
 const SENT_FAILURE = 'failed to send'
@@ -75,7 +73,7 @@ export default class TeamInvite extends Command {
   }
 
   // Prints the invite responses
-  private _printInviteResponses(inviteResponses: InvitesResponse[]) {
+  private _printInviteResponses(inviteResponses: Invites[]) {
     let numSuccess = 0
     inviteResponses.forEach(inviteResponse => {
       this.log('') // Gives and empty line
@@ -161,13 +159,12 @@ export default class TeamInvite extends Command {
   private async _inviteUserToTeam(
     desiredTeam: Team,
     userNameOrEmail: string[],
-  ): Promise<InvitesResponse[]> {
-    const response = await this.client
-      .service(`teams/${desiredTeam.id}/invites`)
-      .create(
-        { UserOrEmail: userNameOrEmail },
-        { headers: { Authorization: this.accessToken } },
-      )
+  ): Promise<Invites[]> {
+    const response = await this.api.create(
+      `teams/${desiredTeam.id}/invites`,
+      { UserOrEmail: userNameOrEmail },
+      { headers: { Authorization: this.accessToken } },
+    )
     if (response && response.data) {
       return response.data
     }

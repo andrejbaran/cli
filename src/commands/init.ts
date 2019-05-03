@@ -19,8 +19,8 @@ export default class Init extends Command {
 
   srcDir = path.resolve(__dirname, '../template')
   destDir = path.resolve(process.cwd())
-  opName: string
-  opDescription: string
+  opName = ''
+  opDescription = ''
 
   namePrompt = {
     type: 'input',

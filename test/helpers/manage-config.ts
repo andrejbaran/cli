@@ -1,7 +1,7 @@
 import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
 
-import Config from '../../src/types/Config'
+import { Config } from '../../src/types'
 
 const configPath = path.resolve(__dirname, '../')
 

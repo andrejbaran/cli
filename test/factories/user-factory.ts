@@ -1,4 +1,4 @@
-import User from '../../src/types/User'
+import { User } from '../../src/types'
 import * as faker from 'faker'
 
 function generateUser(username?: string, email?: string, id?: any): User {

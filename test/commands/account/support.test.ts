@@ -1,5 +1,5 @@
 import { expect, test } from '@oclif/test'
-const { SEGMENT_URL = '' } = process.env
+import { SEGMENT_URL } from '../../../src/constants/env'
 import setupTest from '../../helpers/setupTest'
 
 import { clearConfig } from '../../helpers/manage-config'

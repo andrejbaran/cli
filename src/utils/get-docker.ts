@@ -2,6 +2,8 @@ import { ux } from '@cto.ai/sdk'
 import Docker from 'dockerode'
 import * as fs from 'fs-extra'
 
+import { DOCKER_SOCKET } from '../constants/env'
+
 /**
  * Helper function to display appropriate error message to the user
  * @param self Is the instance of 'this'
@@ -187,7 +189,6 @@ async function confirmReadyContinue() {
  */
 export default async function getDocker(self: any, type: string) {
   // Point to the docker socket
-  const socket = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
 
   /**
    * Checks whether docker is installed on the machine
@@ -197,7 +198,7 @@ export default async function getDocker(self: any, type: string) {
   let isDockerInstalled = false // Flag to indicate whether docker is installed or not
   while (!isDockerInstalled) {
     try {
-      const stats = fs.statSync(socket) // Resets the status of the socket
+      const stats = fs.statSync(DOCKER_SOCKET) // Resets the status of the socket
       // Check the validity of the socket, which is only available if docker is installed
       isDockerInstalled = stats.isSocket()
     } catch {
@@ -223,7 +224,7 @@ export default async function getDocker(self: any, type: string) {
 
   while (!isDockerRunning) {
     // Instantiate a new docker client
-    docker = new Docker({ socketPath: socket })
+    docker = new Docker({ socketPath: DOCKER_SOCKET })
     try {
       await docker.ping() // Try to ping the docker daemon
       // If successful, set flag to true to exit the while loop

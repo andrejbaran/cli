@@ -8,15 +8,14 @@ import {
   writeConfig,
 } from '../../helpers/manage-config'
 import { baseTest } from '../../helpers/base-test'
-import Team from '../../../src/types/Team'
-import User from '../../../src/types/User'
+import { Team, User } from '../../../src/types'
 import { teamFactory, accessTokenFactory, userFactory } from '../../factories'
 
 // TeamCreate extends from oclif Command class which expects arguments in certain shape (see Iconfig in @oclif/config)
 // thus created a configFake to bypass typescript type checking for required args for TeamCreate class
 const configFake: any = {}
 const teamCreate = new TeamCreate([], configFake)
-const { SEGMENT_URL = '' } = process.env
+import { SEGMENT_URL } from '../../../src/constants/env'
 
 let accessToken: string
 let team: Team

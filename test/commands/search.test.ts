@@ -1,7 +1,7 @@
 import { ux } from '@cto.ai/sdk'
 import { expect, test } from '@oclif/test'
 import setupTest from '../helpers/setupTest'
-const { SEGMENT_URL = '' } = process.env
+import { SEGMENT_URL } from '../../src/constants/env'
 import { clearConfig } from '../helpers/manage-config'
 
 // TO-DO: restore tests

@@ -1,12 +1,10 @@
 /**
  * @author: JP Lew (jp@cto.ai)
  * @date: Friday, 26th April 2019 4:03:30 pm
- * @lastModifiedBy: Brett Campbell
- * @lastModifiedTime: Fri Apr 26 2019
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Monday, 29th April 2019 9:59:13 am
  * @copyright (c) 2019 CTO.ai
  */
-
-import * as url from 'url'
 
 export const getOpUrl = (registryHost: string, opImageTag: string) => {
   const host = registryHost.replace(/https:\/\//, '')

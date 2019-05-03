@@ -1,10 +1,20 @@
-import * as path from 'path'
-import { log } from '@cto.ai/sdk'
-import Command, { flags } from '../base'
-import { Op } from '../types/Op'
+/**
+ * @author: Brett Campbell (brett@hackcapital.com)
+ * @date: Friday, 5th April 2019 12:06:07 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Friday, 3rd May 2019 11:41:50 am
+ * @copyright (c) 2019 CTO.ai
+ *
+ */
 
+import { log } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
+import * as path from 'path'
 import * as yaml from 'yaml'
+import Command, { flags } from '../base'
+import { OPS_REGISTRY_HOST } from '../constants/env'
+import { Op, RegistryAuth } from '../types'
+import { CouldNotCreateOp } from '../errors'
 
 export default class Publish extends Command {
   static description = 'Publish an op to a team.'
@@ -17,7 +27,7 @@ export default class Publish extends Command {
     { name: 'path', description: 'Path to the op you want to publish.' },
   ]
 
-  async run(this: any) {
+  async run() {
     try {
       const { args } = this.parse(Publish)
       const opPath = args.path
@@ -37,7 +47,8 @@ export default class Publish extends Command {
 
       await this.config.runHook('validate', pkg)
 
-      let op = await this.client.service('ops').create(
+      let publishOpResponse = await this.api.create(
+        'ops',
         { ...pkg, teamID: this.team.id },
         {
           headers: {
@@ -45,32 +56,26 @@ export default class Publish extends Command {
           },
         },
       )
+      if (!publishOpResponse || !publishOpResponse.data) {
+        throw new CouldNotCreateOp(
+          `There might be a duplicate key violation in the ops table. Also check that you are signed-in correctly. ${
+            publishOpResponse.message
+          }`,
+        )
+      }
+      const { data: op }: { data: Op } = publishOpResponse
 
-      const res = await this.client.service('registry/token').find({
-        query: {
-          registryProject: this.team.name,
-        },
-        headers: {
-          Authorization: this.accessToken,
-        },
-      })
+      const registryAuth: RegistryAuth | undefined = await this.getRegistryAuth(
+        this.accessToken,
+      )
 
-      const {
-        registryProject,
-        registryUser,
-        registryPass,
-      } = res.data.registry_tokens[0]
-      const ops_registry_auth = {
-        username: registryUser,
-        password: registryPass,
-        serveraddress: `https://${this.ops_registry_host}/${registryProject}`,
+      if (!registryAuth) {
+        throw new Error('could not get registry auth')
       }
 
       await this.config.runHook('publish', {
-        op: op.data,
-        registryProject,
-        ops_registry_host: `${this.ops_registry_host}/${registryProject}`,
-        ops_registry_auth: ops_registry_auth,
+        op,
+        registryAuth,
       })
 
       this.analytics.track({
@@ -79,18 +84,14 @@ export default class Publish extends Command {
         properties: {
           email: this.user.email,
           username: this.user.username,
-          name: op.data.name,
-          description: op.data.description,
-          image: `${this.ops_registry_host}/${op.data.id.toLowerCase()}`,
+          name: op.name,
+          description: op.description,
+          image: `${OPS_REGISTRY_HOST}/${op.id.toLowerCase()}`,
           tag: 'latest',
         },
       })
     } catch (err) {
-      // TODO: Update when error handling issue gets merged
-      this.log(
-        `😰 We've encountered a problem. Please try again or contact support@cto.ai and we'll do our best to help.`,
-      )
-      log.debug('Publish command failed', err)
+      this.config.runHook('error', { err })
     }
   }
 }

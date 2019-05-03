@@ -2,10 +2,10 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Wednesday, 24th April 2019 11:31:59 am
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Wednesday, 24th April 2019 11:33:12 am
+ * @lastModifiedTime: Wednesday, 1st May 2019 3:06:03 pm
  * @copyright (c) 2019 CTO.ai
  */
 
-export default interface Container<T> {
+export interface Container<T> {
   [key: string]: T
 }
