@@ -25,8 +25,7 @@ export interface Op {
   parameters: Parameters[] | null
   tag: string
   src: string[]
-  owner: any
-  _id: any
+  teamID: string
 }
 
 // response from ops/get
