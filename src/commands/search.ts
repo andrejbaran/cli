@@ -1,8 +1,11 @@
 import Command, { flags } from '../base'
 import { Op } from '../types'
 import { ux, log } from '@cto.ai/sdk'
+import { Fuzzy } from '../types/Fuzzy'
+import fuzzy from 'fuzzy'
 
 let ops: Op[] = []
+let self
 
 export default class Search extends Command {
   static description = 'Search for ops in the registry.'
@@ -22,7 +25,7 @@ export default class Search extends Command {
     try {
       const { args } = this.parse(Search)
       const { filter } = args
-
+      self = this
       this.isLoggedIn()
 
       this.log(
@@ -44,13 +47,13 @@ export default class Search extends Command {
       }
 
       const { runOp } = await ux.prompt({
-        type: 'list',
+        type: 'autocomplete',
         name: 'runOp',
         pageSize: 5,
         message: `\nSelect a team or public ${ux.colors.multiBlue(
           '\u2749',
         )} op to run ${ux.colors.reset.green('→')}`,
-        choices: this._formatPromptChoices(),
+        source: this._autocompleteSearch,
         bottomContent: `\n \n${ux.colors.white(
           `Or, run ${ux.colors.callOutCyan('ops help')} for usage information.`,
         )}`,
@@ -80,24 +83,22 @@ export default class Search extends Command {
     }
   }
 
-  // private _autocompleteSearch(_: any, input = ''): Promise<string[]> {
-  //   return new Promise(resolve => {
-  //     const fuzzyResult: Fuzzy[] = fuzzy.filter(input, ops.map(op => {
-  //       return `${ux.colors.callOutCyan(op.name)} ${ux.colors.white(op.description)}`
-  //     }))
-  //     resolve(fuzzyResult.map(result => result.original)
-  //     )
-  //   })
-  // }
+  private async _autocompleteSearch(_: any, input = ''): Promise<object[]> {
+    const { list, options } = self.fuzzyFilterParams()
+    const fuzzyResult: Fuzzy[] = fuzzy.filter(input, list, options)
+    return fuzzyResult.map(result => result.original)
+  }
 
-  private _formatPromptChoices = () => {
-    return ops.map((op: Op) => {
+  private fuzzyFilterParams = () => {
+    const list = ops.map(op => {
       const opName = this._formatOpName(op)
       return {
         name: `${opName} - ${op.description}`,
         value: op,
       }
     })
+    const options = { extract: el => el.name }
+    return { list, options }
   }
 
   private _formatOpName = (op: Op) => {

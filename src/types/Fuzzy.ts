@@ -9,5 +9,5 @@
  */
 
 export interface Fuzzy {
-  original: string
+  original: object
 }
