@@ -1,7 +1,7 @@
 {
   "name": "@cto.ai/ops",
   "description": "💻 CTO.ai Ops - The CLI built for Teams 🚀",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "author": "Brett Campbell",
   "bin": {
     "ops": "./bin/run"
