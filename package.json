@@ -101,6 +101,8 @@
   },
   "repository": "cto.ai/ops",
   "scripts": {
+    "postinstall": "node ./postInstall.js",
+    "postversion": "git push",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "prettier --check 'src/**/*.ts' --check 'test/**/*.ts'",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme && cp -R src/template lib/template",
