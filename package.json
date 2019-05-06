@@ -69,7 +69,8 @@
     "/bin",
     "/lib",
     "/npm-shrinkwrap.json",
-    "/oclif.manifest.json"
+    "/oclif.manifest.json",
+    "/postinstall.js"
   ],
   "homepage": "https://cto.ai/ops",
   "keywords": [
