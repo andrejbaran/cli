@@ -2,18 +2,24 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Wednesday, 24th April 2019 4:29:42 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Thursday, 2nd May 2019 4:58:12 pm
+ * @lastModifiedTime: Monday, 6th May 2019 1:34:04 pm
  * @copyright (c) 2019 CTO.ai
  */
 
 // import { ux } from '@cto.ai/sdk'
+import { test } from '@oclif/test'
 import * as Config from '@oclif/config'
-import { expect, test } from '@oclif/test'
-import AccountSignin from '../../../src/commands/account/signin'
-import { fakeToken } from '../../../src/constants/test'
-import { MockBadApiService } from '../../../src/services/mockBadApi'
-import { MockGoodApiService } from '../../../src/services/mockGoodApi'
-import { clearConfig } from '../../helpers/manage-config'
+import { expect } from 'chai'
+
+import { clearConfig, readConfig } from '../../helpers/manage-config'
+
+import AccountSignin from '~/commands/account/signin'
+
+import { MockGoodApiService } from '~/services/mockGoodApi'
+
+import { MockBadApiService } from '~/services/mockBadApi'
+
+import { fakeToken } from '~/constants/test'
 
 // import { SEGMENT_URL } from '../../../src/constants/env'
 
@@ -98,11 +104,9 @@ describe('account:signin', () => {
       const expectation = 'credentials'
 
       // @ts-ignore
-      return signin.authenticateUser({ accessToken: 'abc123' }).catch(err =>
-        expect(err)
-          .to.be.an('error')
-          .with.property('message', expectation),
-      )
+      return signin.authenticateUser({ accessToken: 'abc123' }).catch(err => {
+        expect(err).to.be.an('error')
+      })
     })
     .it('throws an error if no credentials property exists in passed args')
 

@@ -2,13 +2,14 @@
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Friday, 5th April 2019 12:06:07 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 3rd May 2019 12:17:21 pm
+ * @lastModifiedTime: Monday, 6th May 2019 1:47:48 pm
  * @copyright (c) 2019 CTO.ai
  *
  */
 
 import { ux as _ux } from '@cto.ai/sdk'
 import Command, { flags } from '@oclif/command'
+import * as OClifConfig from '@oclif/config'
 import Analytics from 'analytics-node'
 import Docker from 'dockerode'
 import { outputJson, readJson, remove } from 'fs-extra'
@@ -16,8 +17,6 @@ import * as path from 'path'
 import getDocker from './utils/get-docker'
 import { asyncPipe, _trace } from './utils/asyncPipe'
 import { handleMandatory, handleUndefined } from './utils/guards'
-
-import * as OClifConfig from '@oclif/config'
 
 import {
   Config,
@@ -41,7 +40,6 @@ import {
 } from './constants/env'
 
 import { FeathersClient } from './services/feathers'
-import { catchClause } from '@babel/types'
 import { UserUnauthorized } from './errors'
 
 abstract class CTOCommand extends Command {
@@ -89,7 +87,10 @@ abstract class CTOCommand extends Command {
           headers: { Authorization: accessToken },
         },
       )
-      if (!registryResponse.data) {
+      if (
+        !registryResponse.data ||
+        !registryResponse.data.registry_tokens.length
+      ) {
         throw new UserUnauthorized(this.state)
       }
 
