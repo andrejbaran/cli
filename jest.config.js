@@ -1,8 +1,12 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  testMatch: ['**/*.spec.ts'],
-  coverageDirectory: 'coverage',
+  testMatch: ['<rootDir>/test/**/*.spec.ts'],
+  coverageDirectory: '<rootDir>/test/coverage',
+  moduleNameMapper: {
+    'test/(.*)': '<rootDir>/test/$1',
+    '~/(.*)': '<rootDir>/src/$1',
+  },
 }
 
 // For a detailed explanation regarding each configuration property, visit:

@@ -1,11 +1,19 @@
-import { MockGoodApiService } from '../../../src/services/mockGoodApi'
-import { FeathersClient } from '../../../src/services/feathers'
-import AccountSignin from '../../../src/commands/account/signin'
+/**
+ * @author: JP Lew (jp@cto.ai)
+ * @date: Monday, 6th May 2019 11:06:29 am
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Monday, 6th May 2019 1:45:45 pm
+ * @copyright (c) 2019 CTO.ai
+ */
+
 import * as Config from '@oclif/config'
+import { MockGoodApiService } from '~/services/mockGoodApi'
+// import { FeathersClient } from '~/services/feathers'
+import AccountSignin from '~/commands/account/signin'
 
-import { fakeToken } from '../../../src/constants/test'
+import { fakeToken } from '~/constants/test'
 
-let signin: AccountSignin
+let cmd: AccountSignin
 
 beforeAll(async () => {
   // reference https://github.com/oclif/command/blob/master/src/command.ts
@@ -13,7 +21,8 @@ beforeAll(async () => {
 
   const config = await Config.load()
   // signin = new AccountSignin([], config, new FeathersClient())
-  signin = new AccountSignin([], config, new MockGoodApiService())
+  cmd = new AccountSignin([], config, new MockGoodApiService())
+
   // signinBad = new AccountSignIn([], config, new MockBadApiService())
 })
 
@@ -22,6 +31,8 @@ test('should accept valid credentials and return an access token', async () => {
     email: 'test@test.com',
     password: 'password',
   }
-  const res = await signin.authenticateUser({ credentials })
+  const res = await cmd.authenticateUser({ credentials })
   expect(res.accessToken).toBe(fakeToken)
 })
+
+describe('mock the feathers client using jest mocks', () => {})

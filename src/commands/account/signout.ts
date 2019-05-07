@@ -1,4 +1,4 @@
-import Command, { flags } from '../../base'
+import Command, { flags } from '~/base'
 import { ux } from '@cto.ai/sdk'
 
 export default class AccountSignout extends Command {
