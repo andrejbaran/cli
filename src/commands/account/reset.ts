@@ -1,10 +1,14 @@
 import Command from '../../base'
 import { ux } from '@cto.ai/sdk'
 import commander from 'commander'
+import { validateEmail } from '../../utils/validate'
 
-const validEmail = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-
-const validateEmail = (input: string) => validEmail.test(input)
+const checkEmail = (input: string) => {
+  return (
+    validateEmail(input) ||
+    '🤔 That email format is invalid. Please check your email and try again.'
+  )
+}
 
 const validatePassword = (input: string, answers: { password: string }) => {
   return (
@@ -16,7 +20,7 @@ const emailPrompt = {
   type: 'input',
   name: 'email',
   message: 'Enter an email address to reset your password: ',
-  validate: validateEmail,
+  validate: checkEmail,
 }
 
 const passwordPrompts = [

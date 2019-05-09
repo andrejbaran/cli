@@ -423,7 +423,26 @@ const getColorsColor = index => {
   return ux.colors[allColors[index]](allColors[index])
 }
 
+const getArgs = argv => {
+  return argv.slice(2, argv.length - 1).filter(arg => !arg.startsWith('-'))
+}
+
+const getFlags = argv => {
+  return argv.filter(arg => arg.startsWith('-'))
+}
+
 const main = async () => {
+
+  const argv = process.argv
+  const arguments = (argv && argv.length) ? getArgs(argv) : []
+  const flags = (argv && argv.length) ? getFlags(argv) : []
+
+  if (arguments.length && arguments[0]) console.log('The username is ', arguments[0])
+  if (arguments.length && arguments[1]) console.log('The email is ', arguments[1])
+
+  if (flags.length) console.log('Received flags of: ', flags)
+
+
   // Trigger prompt
   // https://github.com/SBoudrias/Inquirer.js/#examples-run-it-and-see-it
   console.log(ux.colors.bold.underline('\n Prompts \n'))

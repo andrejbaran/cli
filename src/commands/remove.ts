@@ -1,12 +1,13 @@
 import Command, { flags } from '../base'
 import { ux, log } from '@cto.ai/sdk'
 import { OPS_REGISTRY_HOST } from '../constants/env'
+import { NoOpFoundForDeletion } from '../errors/customErrors'
 
 export default class Remove extends Command {
   static description = 'Remove an op from a team.'
 
   static args = [
-    { name: 'op', description: 'Name of the op you want to remove.' },
+    { name: 'opName', description: 'Name of the op you want to remove.' },
   ]
 
   static flags = {
@@ -37,11 +38,8 @@ export default class Remove extends Command {
           throw new Error(err)
         })
 
-      if (!opsResponse.data) {
-        self.log(
-          '\n ✋  Nothing found in the registry. Please try again later. \n',
-        )
-        process.exit()
+      if (!opsResponse.data.length) {
+        throw new NoOpFoundForDeletion()
       }
 
       let op
@@ -100,11 +98,7 @@ export default class Remove extends Command {
         },
       })
     } catch (err) {
-      // TODO: Update when error handling issue gets merged
-      this.log(
-        `😰 We've encountered a problem. Please try again or contact support@cto.ai and we'll do our best to help.`,
-      )
-      log.debug('Remove command failed', err)
+      this.config.runHook('error', { err })
     }
   }
 }

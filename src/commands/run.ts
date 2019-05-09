@@ -1,14 +1,3 @@
-/**
- * @author: Brett Campbell (brett@hackcapital.com)
- * @date: Saturday, 6th April 2019 10:39:58 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 3rd May 2019 12:50:47 pm
- * @copyright (c) 2019 CTO.ai
- *
- * DESCRIPTION
- *
- */
-
 import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
 import * as json from 'JSONStream'
@@ -25,17 +14,21 @@ import {
 } from '../constants/env'
 import { Op, RegistryAuth } from '../types'
 import { getOpImageTag, getOpUrl } from '../utils/getOpUrl'
-import { CouldNotGetRegistryToken } from '../errors'
+import { CouldNotGetRegistryToken } from '../errors/customErrors'
 
 export default class Run extends Command {
   static description = 'Run an op from the registry.'
 
   static flags = {
-    help: flags.help({ char: 'h' }),
+    help: flags.boolean({
+      char: 'h',
+      description: 'show CLI help',
+    }),
     build: flags.boolean({
       char: 'b',
       description:
         'Builds the op before running. Must provide a path to the op.',
+      default: false,
     }),
   }
 
@@ -55,20 +48,39 @@ export default class Run extends Command {
   CTRL_P = '\u0010'
   CTRL_Q = '\u0011'
 
+  parse(options, argv = this.argv) {
+    if (!options) options = this.constructor
+    var value = require('@oclif/parser').parse(argv, {
+      context: this,
+      ...options,
+    })
+    argv.shift()
+    value.opParams = argv
+    return value
+  }
+
   async run() {
     const self = this
     this.isLoggedIn()
 
     // Obtain the op if exists, otherwise return
-    const { args, argv, flags } = this.parse(Run)
+    const { args, opParams, flags } = this.parse(Run)
     if (!args.nameOrPath) {
+      // If run is not supplied any arguments, and the help flag is given,
+      // Use the default help functionality
+      if (flags.help) {
+        this._help()
+      }
       throw new Error('Please enter the name or path of the op')
     }
 
     // Get the local image if exists
-    const opParams: string[] = argv.slice(Object.keys(args).length)
-
     let op = await this._getOp(args.nameOrPath, opParams)
+
+    if (flags.help) {
+      this._printCustomHelp(op)
+      return
+    }
 
     if (!this.docker) {
       throw new Error('no docker')
@@ -176,6 +188,60 @@ export default class Run extends Command {
   }
 
   /**
+   * Prints the custom help function as defined in the ops.yml
+   * @param op The found op to destructure the help function
+   */
+  private _printCustomHelp(op: Op): void {
+    // Handles edge case if there is no op
+    if (!op) {
+      this.log("Sorry, we couldn't find the op you're looking for")
+      return
+    }
+
+    if (op.description) this.log(`${op.description}\n`)
+
+    // Handles the edge case if there is an ops.yml, but no help section is defined
+    if (!op.help) {
+      this.log('Custom help message can be defined in the ops.yml\n')
+      return
+    }
+
+    // Prints the help usage of the op if exists
+    if (op.help.usage) {
+      this.log(`${ux.colors.bold('USAGE')}`)
+      this.log(`  ${op.help.usage}\n`)
+    }
+    // Loops through the help arguments if exists and display them one by one
+    // e.g.
+    // ARGUMENTS
+    //   argument1 Test argument 1
+    //   argument2 Test argument 2
+    //   argument3 Test argument 3
+    if (op.help.arguments) {
+      this.log(`${ux.colors.bold('ARGUMENTS')}`)
+      Object.keys(op.help.arguments).forEach(a => {
+        this.log(`  ${a} ${ux.colors.dim(op.help.arguments[a])}`)
+      })
+    }
+    // Loops through the help options if exists and display them one by one
+    // e.g.
+    // OPTIONS
+    //   -b, --build Testing the build
+    //   -c, --clear Testing the clear
+    //   -d, --delete Testing the delete
+    if (op.help.options) {
+      this.log(`${ux.colors.bold('OPTIONS')}`)
+      Object.keys(op.help.options).forEach(o => {
+        this.log(
+          `  -${o.substring(0, 1)}, --${o} ${ux.colors.dim(
+            op.help.options[o],
+          )}`,
+        )
+      })
+    }
+  }
+
+  /**
    * Gets the local image if exists
    * @param list The list of images
    * @param op The desired op we want to run
@@ -206,7 +272,6 @@ export default class Run extends Command {
       path.resolve(process.cwd(), `${opNameOrPath}`),
       '/ops.yml',
     )
-
     if (fs.existsSync(opPath)) {
       const manifest = await fs.readFile(opPath, 'utf8')
       op = yaml.parse(manifest)
@@ -222,10 +287,9 @@ export default class Run extends Command {
           },
           headers: { Authorization: this.accessToken },
         })
-        if (!res.data) {
-          return this.log(
-            '‼️  No op was found with this name or ID. Please try again',
-          )
+        if (!res.data.length) {
+          this.log('‼️  No op was found with this name or ID. Please try again')
+          process.exit()
         }
         op = res.data[0]
       } catch (error) {
@@ -304,7 +368,7 @@ export default class Run extends Command {
     )
 
     if (!registryAuth || !registryAuth.authconfig) {
-      throw new CouldNotGetRegistryToken(this.state)
+      throw new CouldNotGetRegistryToken()
     }
 
     const opIdentifier = this.isPublished ? op.id : op.name

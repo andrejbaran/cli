@@ -1,8 +1,8 @@
 /**
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Friday, 5th April 2019 12:06:07 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Wednesday, 1st May 2019 3:17:31 pm
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Friday, 3rd May 2019 4:57:32 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -12,7 +12,7 @@ import json from 'JSONStream'
 
 import { Op } from '../types'
 import getDocker from '../utils/get-docker'
-import { ReadFileError, DockerBuildImageError } from '../errors'
+import { ReadFileError, DockerBuildImageError } from '../errors/customErrors'
 
 async function build(
   this: any,

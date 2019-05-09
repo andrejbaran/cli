@@ -3,7 +3,7 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
 import Command, { flags } from '../base'
-import { CopyTemplateFilesError } from '../errors'
+import { CopyTemplateFilesError } from '../errors/customErrors'
 
 export default class Init extends Command {
   static description = 'Easily create a new op.'
@@ -138,15 +138,16 @@ export default class Init extends Command {
   }
 
   _validateName(input: string) {
-    if (input === '') return 'Please provide a op name'
+    if (input === '') return 'You need name your op before you can continue'
     if (!input.match('^[a-z0-9_-]*$')) {
-      return 'Op Name must only contain numbers, letters, -, or _'
+      return 'Sorry, please name the Op using only numbers, letters, -, or _'
     }
     return true
   }
 
   _validateDescription(input: string) {
-    if (input === '') return 'Please provide a op description'
+    if (input === '')
+      return 'You need to provide a description of your op before continuing'
     return true
   }
 

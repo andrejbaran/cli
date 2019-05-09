@@ -38,10 +38,11 @@ USAGE
 * [`ops account:signup`](#ops-accountsignup)
 * [`ops account:support`](#ops-accountsupport)
 * [`ops build [PATH]`](#ops-build-path)
+* [`ops cleanup [OPNAME]`](#ops-cleanup-opname)
 * [`ops help [COMMAND]`](#ops-help-command)
 * [`ops init`](#ops-init)
 * [`ops publish [PATH]`](#ops-publish-path)
-* [`ops remove [OP]`](#ops-remove-op)
+* [`ops remove [OPNAME]`](#ops-remove-opname)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
 * [`ops team:create`](#ops-teamcreate)
@@ -136,6 +137,23 @@ OPTIONS
 
 _See code: [src/commands/build.ts](https://github.com/cto.ai/ops/blob/v1.3.4/src/commands/build.ts)_
 
+## `ops cleanup [OPNAME]`
+
+Clean up locally cached docker images.
+
+```
+USAGE
+  $ ops cleanup [OPNAME]
+
+ARGUMENTS
+  OPNAME  Name of the op to be cleaned up
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+_See code: [src/commands/cleanup.ts](https://github.com/cto.ai/ops/blob/v1.3.4/src/commands/cleanup.ts)_
+
 ## `ops help [COMMAND]`
 
 display help for ops
@@ -186,16 +204,16 @@ OPTIONS
 
 _See code: [src/commands/publish.ts](https://github.com/cto.ai/ops/blob/v1.3.4/src/commands/publish.ts)_
 
-## `ops remove [OP]`
+## `ops remove [OPNAME]`
 
 Remove an op from a team.
 
 ```
 USAGE
-  $ ops remove [OP]
+  $ ops remove [OPNAME]
 
 ARGUMENTS
-  OP  Name of the op you want to remove.
+  OPNAME  Name of the op you want to remove.
 
 OPTIONS
   -h, --help  show CLI help

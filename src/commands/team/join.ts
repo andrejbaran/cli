@@ -1,5 +1,6 @@
 import Command from '../../base'
 import { ux } from '@cto.ai/sdk'
+import { InviteCodeInvalid } from '../../errors/customErrors'
 
 const inviteCodePrompt = {
   type: 'input',
@@ -22,46 +23,42 @@ export default class TeamJoin extends Command {
       inviteCodePrompt,
     ])
     this.startSpinner()
-    const res = await this.joinTeam(inviteCode)
-
-    // On success
-    if (res.data) {
-      const { id, name } = res.data
-      const oldConfig = await this.readConfig()
-      await this.writeConfig(oldConfig, { team: { name, id } })
-
-      ux.spinner.stop(`${ux.colors.successGreen('✔︎')}\n`)
-
-      this.log(
-        `${ux.colors.primary(
-          "Success! You've been added to team, ",
-        )}${ux.colors.callOutCyan(name)} ${ux.colors.secondary('(Active)')}`,
-      )
-      this.log(
-        `${ux.colors.secondary(
-          "You've been automatically switched to this team.",
-        )}\n`,
-      )
-      this.log(`Try these commands to get started:\n\n$ ops list\n$ ops search`)
-
-      this.analytics.track({
-        userId: this.user.email,
-        event: 'Ops CLI team:join',
-        properties: {
-          email: this.user.email,
-          username: this.user.username,
-          team: { id, name },
-        },
-      })
-      return
-    }
+    const res = await this.joinTeam(inviteCode).catch(err => {
+      throw new InviteCodeInvalid(err)
+    })
 
     // On failure
-    ux.spinner.stop(`${ux.colors.green('❗️\n')}`)
+    if (!res || !res.data) throw new InviteCodeInvalid(null)
+
+    // On success
+    const { id, name } = res.data
+    const oldConfig = await this.readConfig()
+    await this.writeConfig(oldConfig, { team: { name, id } })
+
+    ux.spinner.stop(`${ux.colors.successGreen('✔︎')}\n`)
+
     this.log(
-      `😞  Uh-oh, the invite code doesn't seem to be valid. Please check the code and try again.\n`,
+      `${ux.colors.primary(
+        "Success! You've been added to team, ",
+      )}${ux.colors.callOutCyan(name)} ${ux.colors.secondary('(Active)')}`,
     )
-    return this.run()
+    this.log(
+      `${ux.colors.secondary(
+        "You've been automatically switched to this team.",
+      )}\n`,
+    )
+    this.log(`Try these commands to get started:\n\n$ ops list\n$ ops search`)
+
+    this.analytics.track({
+      userId: this.user.email,
+      event: 'Ops CLI team:join',
+      properties: {
+        email: this.user.email,
+        username: this.user.username,
+        team: { id, name },
+      },
+    })
+    return
   }
 
   async joinTeam(inviteCode: string) {

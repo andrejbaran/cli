@@ -15,9 +15,15 @@ import { Op } from '../types'
 import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
 import * as yaml from 'yaml'
-import { FileNotFoundError } from '../errors'
+import {
+  FileNotFoundError,
+  InvalidInputCharacter,
+  MissingRequiredArgument,
+} from '../errors/customErrors'
 import { getOpUrl, getOpImageTag } from '../utils/getOpUrl'
 import { OPS_REGISTRY_HOST } from '../constants/env'
+import { OP_FILE } from '../constants/opConfig'
+import { isValidOpName } from '../utils/validate'
 
 export default class Build extends Command {
   static description = 'Build your op for sharing.'
@@ -33,6 +39,8 @@ export default class Build extends Command {
   async run(this: any) {
     try {
       const { args } = this.parse(Build)
+      if (!args.path) throw new MissingRequiredArgument('ops [command]')
+
       const opPath: string = args.path
         ? path.resolve(process.cwd(), args.path)
         : process.cwd()
@@ -40,13 +48,14 @@ export default class Build extends Command {
       this.isLoggedIn()
 
       const manifest = await fs
-        .readFile(path.join(opPath, '/ops.yml'), 'utf8')
+        .readFile(path.join(opPath, OP_FILE), 'utf8')
         .catch(err => {
-          throw new FileNotFoundError(opPath)
+          throw new FileNotFoundError(err, opPath, OP_FILE)
         })
-
       const op: Op = manifest && yaml.parse(manifest)
-      await this.config.runHook('validate', op)
+
+      // await this.config.runHook('validate', op)
+      if (!isValidOpName(op)) throw new InvalidInputCharacter('Op Name')
 
       this.log(
         `🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`,

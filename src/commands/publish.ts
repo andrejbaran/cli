@@ -1,8 +1,8 @@
 /**
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Friday, 5th April 2019 12:06:07 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 3rd May 2019 11:41:50 am
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Friday, 3rd May 2019 4:57:28 pm
  * @copyright (c) 2019 CTO.ai
  *
  */
@@ -13,8 +13,15 @@ import * as path from 'path'
 import * as yaml from 'yaml'
 import Command, { flags } from '../base'
 import { OPS_REGISTRY_HOST } from '../constants/env'
+import { OP_FILE } from '../constants/opConfig'
 import { Op, RegistryAuth } from '../types'
-import { CouldNotCreateOp } from '../errors'
+import {
+  CouldNotCreateOp,
+  MissingRequiredArgument,
+  FileNotFoundError,
+  InvalidInputCharacter,
+} from '../errors/customErrors'
+import { isValidOpName } from '../utils/validate'
 
 export default class Publish extends Command {
   static description = 'Publish an op to a team.'
@@ -30,6 +37,8 @@ export default class Publish extends Command {
   async run() {
     try {
       const { args } = this.parse(Publish)
+      if (!args.path) throw new MissingRequiredArgument('ops publish')
+
       const opPath = args.path
         ? path.resolve(process.cwd(), args.path)
         : process.cwd()
@@ -37,16 +46,17 @@ export default class Publish extends Command {
       this.isLoggedIn()
 
       const manifest = await fs
-        .readFile(path.join(opPath, '/ops.yml'), 'utf8')
+        .readFile(path.join(opPath, OP_FILE), 'utf8')
         .catch((err: any) => {
-          this.log(`Unable to locate ops.yml at ${err.path}`)
-          process.exit()
+          throw new FileNotFoundError(err, opPath, OP_FILE)
         })
 
       const pkg: Op = manifest && yaml.parse(manifest)
 
-      await this.config.runHook('validate', pkg)
+      // await this.config.runHook('validate', pkg)
+      if (!isValidOpName(pkg)) throw new InvalidInputCharacter('Op Name')
 
+      // TODO: Handle removal of image from database if publish doesn't work
       let publishOpResponse = await this.api.create(
         'ops',
         { ...pkg, teamID: this.team.id },

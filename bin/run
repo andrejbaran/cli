@@ -1,4 +1,5 @@
-#!/usr/bin/env node --preserve-symlinks
+#!/usr/bin/env node -r tsconfig-paths/register --preserve-symlinks
+
 const fs = require('fs')
 const dotenv = require('dotenv-safe')
 

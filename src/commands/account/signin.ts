@@ -1,8 +1,8 @@
 /**
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 30th April 2019 12:07:49 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Monday, 6th May 2019 12:16:35 pm
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Tuesday, 7th May 2019 6:04:59 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -12,6 +12,7 @@ import Command, { flags } from '~/base'
 import { NODE_ENV } from '~/constants/env'
 import { Config, Container, UserCredentials } from '~/types'
 import { asyncPipe } from '~/utils/asyncPipe'
+import { AnalyticsError } from '../../errors/customErrors'
 
 export const signinPrompts: Container<Question> = {
   email: {
@@ -40,24 +41,28 @@ export default class AccountSignin extends Command {
     // This is wrapped in an if statement because it takes a while to finish executing.
     // The `nock` code that is supposed to intercept this call and counter it is not equipped
     // to handle this
-    if (NODE_ENV !== 'test') {
-      this.analytics.identify({
+    try {
+      if (NODE_ENV !== 'test') {
+        this.analytics.identify({
+          userId: config.user.email,
+          traits: {
+            beta: true,
+            email: config.user.email,
+            username: config.user.username,
+          },
+        })
+      }
+      this.analytics.track({
         userId: config.user.email,
-        traits: {
-          beta: true,
+        event: 'Ops CLI Signin',
+        properties: {
           email: config.user.email,
           username: config.user.username,
         },
       })
+    } catch (err) {
+      throw new AnalyticsError(err)
     }
-    this.analytics.track({
-      userId: config.user.email,
-      event: 'Ops CLI Signin',
-      properties: {
-        email: config.user.email,
-        username: config.user.username,
-      },
-    })
     return cloneDeep(config)
   }
 
@@ -131,18 +136,22 @@ export default class AccountSignin extends Command {
   }
 
   async run() {
-    const { flags } = this.parse(AccountSignin)
+    try {
+      const { flags } = this.parse(AccountSignin)
 
-    const signinPipeline = asyncPipe(
-      this.logMessages,
-      this.determineQuestions(signinPrompts),
-      this.askQuestions,
-      this.determineUserCredentials(flags),
-      this.signin,
-      this.showWelcomeMessage,
-      this.sendAnalytics,
-    )
+      const signinPipeline = asyncPipe(
+        this.logMessages,
+        this.determineQuestions(signinPrompts),
+        this.askQuestions,
+        this.determineUserCredentials(flags),
+        this.signin,
+        this.showWelcomeMessage,
+        this.sendAnalytics,
+      )
 
-    await signinPipeline(flags)
+      await signinPipeline(flags)
+    } catch (err) {
+      this.config.runHook('error', { err })
+    }
   }
 }

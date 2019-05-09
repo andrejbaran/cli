@@ -2,13 +2,14 @@
  * @author: Prachi Singh (prachi@hackcapital.com)
  * @date: Wednesday, 24th April 2019 9:50:37 am
  * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Tuesday, 30th April 2019 2:57:57 pm
+ * @lastModifiedTime: Monday, 6th May 2019 2:08:21 pm
  *
  * DESCRIPTION: Error type
  *
  * @copyright (c) 2019 Hack Capital
  */
 
+import { IUNEXPECTED, IEXPECTED } from '../constants/errorSource'
 /*
  * Currently, we have just two categories of errors
  * 1. UNEXPECTED
@@ -18,9 +19,10 @@
  *     When the input provided by the user is not valid.
  *     This is an expected error and we want the user to take the provided action in the message to eliminate the error
  */
-enum ErrorSource {
-  unexpected = 'UNEXPECTED',
-  expected = 'EXPECTED',
+
+export interface IExtra {
+  exit?: boolean
+  source?: IUNEXPECTED | IEXPECTED
 }
 
 /**
@@ -32,12 +34,12 @@ enum ErrorSource {
  *  note: string
  * }
  */
-export interface Error {
+
+export interface IError {
   name: string
   message: string
   stack: string
-  errorCode: string
-  statusCode: string
-  source: ErrorSource
-  exit: boolean
+  errorCode?: string
+  statusCode?: string
+  extra: IExtra
 }

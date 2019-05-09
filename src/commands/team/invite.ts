@@ -1,6 +1,7 @@
 import Command, { flags } from '../../base'
 import { Team, Invites, OclifCommand } from '../../types'
 import { ux } from '@cto.ai/sdk'
+import { validateEmail } from '../../utils/validate'
 
 const SENT_SUCCESSFULLY = 'sent successfully!'
 const SENT_FAILURE = 'failed to send'
@@ -54,7 +55,7 @@ export default class TeamInvite extends Command {
     // Invites the users to the team
     await this._inviteUserToTeam(activeTeam, inviteesArray)
       .then(inviteResponses => {
-        this._printInviteResponses(inviteResponses)
+        this._printInviteResponses(inviteesArray, inviteResponses)
       })
       .catch(() => {
         this.error(`Failed inviting ${inviteesArray.length} users to team`)
@@ -73,12 +74,21 @@ export default class TeamInvite extends Command {
   }
 
   // Prints the invite responses
-  private _printInviteResponses(inviteResponses: Invites[]) {
+  private _printInviteResponses(
+    inviteesArray: string[],
+    inviteResponses: Invites[],
+  ) {
     let numSuccess = 0
-    inviteResponses.forEach(inviteResponse => {
+    inviteResponses.forEach((inviteResponse, i) => {
       this.log('') // Gives and empty line
       // Logs succesful invite
-      if (inviteResponse.sentStatus === SENT_SUCCESSFULLY) {
+      if (!validateEmail(inviteesArray[i])) {
+        this.log(
+          `❗ The format of ${ux.colors.red(
+            inviteesArray[i],
+          )} is invalid, please check that it is correct and try again.`,
+        )
+      } else if (inviteResponse.sentStatus === SENT_SUCCESSFULLY) {
         numSuccess++
         this.log(
           `${ux.colors.green('✔')} ${ux.colors.white(
@@ -88,18 +98,22 @@ export default class TeamInvite extends Command {
         // Logs unsuccessful invite
       } else {
         this.log(
-          `😞 ${ux.colors.white('Invite Failed!')} ${ux.colors.red(
-            `❌ ${inviteResponse.email}`,
-          )}`,
+          `😞 Sorry, we weren't able to complete your invite to ${ux.colors.red(
+            inviteResponse.email,
+          )}. Please try again.`,
         )
       }
     })
     // Logs the summary of invites
-    this.log(
-      `\n ${ux.colors.white(
-        `🙌 Invited ${numSuccess} team member${numSuccess > 1 ? 's' : ''}!`,
-      )}`,
-    )
+    if (!numSuccess) {
+      this.log(`\n ${ux.colors.white(`❌ Invited ${numSuccess} team members`)}`)
+    } else {
+      this.log(
+        `\n ${ux.colors.white(
+          `🙌 Invited ${numSuccess} team member${numSuccess > 1 ? 's' : ''}!`,
+        )}`,
+      )
+    }
   }
 
   // Gets the question to ask for to the user

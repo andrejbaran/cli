@@ -20,7 +20,7 @@
       "program": "${workspaceFolder}/bin/run",
       "console": "integratedTerminal",
       "args": [
-        "init"
+        "cleanup"
       ]
     }
   ]

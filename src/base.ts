@@ -1,12 +1,3 @@
-/**
- * @author: Brett Campbell (brett@hackcapital.com)
- * @date: Friday, 5th April 2019 12:06:07 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Monday, 6th May 2019 1:47:48 pm
- * @copyright (c) 2019 CTO.ai
- *
- */
-
 import { ux as _ux } from '@cto.ai/sdk'
 import Command, { flags } from '@oclif/command'
 import * as OClifConfig from '@oclif/config'
@@ -14,6 +5,7 @@ import Analytics from 'analytics-node'
 import Docker from 'dockerode'
 import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
+import * as fs from 'fs'
 import getDocker from './utils/get-docker'
 import { asyncPipe, _trace } from './utils/asyncPipe'
 import { handleMandatory, handleUndefined } from './utils/guards'
@@ -40,7 +32,11 @@ import {
 } from './constants/env'
 
 import { FeathersClient } from './services/feathers'
-import { UserUnauthorized } from './errors'
+import {
+  UserUnauthorized,
+  APIError,
+  PermissionsError,
+} from './errors/customErrors'
 
 abstract class CTOCommand extends Command {
   analytics = new Analytics(OPS_SEGMENT_KEY)
@@ -62,16 +58,20 @@ abstract class CTOCommand extends Command {
   }
 
   async init() {
-    const { user, accessToken, team } = await this.readConfig()
-    this.accessToken = accessToken
-    this.user = user
-    this.team = team
-    this.state = {
-      accessToken: accessToken,
-      user: user,
-      team: team,
+    try {
+      const { user, accessToken, team } = await this.readConfig()
+      this.accessToken = accessToken
+      this.user = user
+      this.team = team
+      this.state = {
+        accessToken: accessToken,
+        user: user,
+        team: team,
+      }
+      this.docker = await this._getDocker()
+    } catch (err) {
+      this.config.runHook('error', { err })
     }
-    this.docker = await this._getDocker()
   }
 
   getRegistryAuth = async (
@@ -147,8 +147,13 @@ abstract class CTOCommand extends Command {
     }
   }
 
-  readConfig = async (): Promise<Config> =>
-    readJson(path.join(this.config.configDir, 'config.json')).catch(() => ({}))
+  readConfig = async (): Promise<Config> => {
+    return readJson(path.join(this.config.configDir, 'config.json')).catch(
+      () => {
+        return {}
+      },
+    )
+  }
 
   handleTeamNotFound = () => {
     this.error('team not found')
@@ -192,7 +197,6 @@ abstract class CTOCommand extends Command {
       ...oldConfigObj,
       ...newConfigObj,
     }
-
     await outputJson(
       path.join(this.config.configDir, 'config.json'),
       mergedConfigObj,
@@ -209,17 +213,17 @@ abstract class CTOCommand extends Command {
   authenticateUser = async ({
     credentials = handleMandatory('credentials'),
   }: Partial<SigninPipeline>) => {
-    try {
-      if (!credentials || !credentials.password || !credentials.email) {
-        throw 'invalid user credentials'
-      }
-
-      const res: AccessToken = await this.api.get('login', credentials)
-      const { data: accessToken = handleUndefined('accessToken') } = res
-      return { accessToken, credentials }
-    } catch (err) {
-      throw new Error(err)
+    if (!credentials || !credentials.password || !credentials.email) {
+      throw 'invalid user credentials'
     }
+
+    const res: AccessToken = await this.api
+      .get('login', credentials)
+      .catch(err => {
+        throw new APIError(err)
+      })
+    const { data: accessToken = handleUndefined('accessToken') } = res
+    return { accessToken, credentials }
   }
 
   fetchUserInfo = async (args: SigninPipeline) => {
@@ -239,18 +243,18 @@ abstract class CTOCommand extends Command {
       )
       process.exit()
     }
-    try {
-      const {
-        data: meResponse,
-      }: {
-        data: MeResponse
-      } = await this.api.find('me', {
+    const {
+      data: meResponse,
+    }: {
+      data: MeResponse
+    } = await this.api
+      .find('me', {
         headers: { Authorization: accessToken },
       })
-      return { meResponse, accessToken }
-    } catch (error) {
-      throw new Error(error)
-    }
+      .catch(err => {
+        throw new APIError(err)
+      })
+    return { meResponse, accessToken }
   }
 
   async signinFlow(credentials: UserCredentials) {
@@ -268,9 +272,13 @@ abstract class CTOCommand extends Command {
   }
 
   async validateUniqueField(query: ValidationFields): Promise<boolean> {
-    const response = await this.api.find('validate', {
-      query,
-    })
+    const response = await this.api
+      .find('validate', {
+        query,
+      })
+      .catch(err => {
+        throw new APIError(err)
+      })
     return response.data
   }
 

@@ -12,7 +12,7 @@ export default class AccountSignout extends Command {
     try {
       if (!this.accessToken) {
         return this.log(
-          `\nYou are already signed out. Type \'${ux.colors.actionBlue(
+          `\n🤷‍♂️ You are already signed out. Type \'${ux.colors.actionBlue(
             'ops account:signin',
           )}\' to sign back into your account.`,
         )

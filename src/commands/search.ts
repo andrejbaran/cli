@@ -39,9 +39,9 @@ export default class Search extends Command {
 
       if (!ops.length) {
         this.log(
-          `\n ✋  No ops found for your team. Run ${ux.colors.callOutCyan(
+          `\n 😞 No ops found in your team or public registry. Try again or run ${ux.colors.callOutCyan(
             'ops publish',
-          )} to create an op \n`,
+          )} to create an op. \n`,
         )
         process.exit()
       }

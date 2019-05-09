@@ -9,6 +9,7 @@
  */
 
 import axios from 'axios'
+import { CouldNotGetLatestVersion } from '~/errors/customErrors'
 
 export default async function getLatestVersion(): Promise<string | undefined> {
   try {
@@ -20,6 +21,6 @@ export default async function getLatestVersion(): Promise<string | undefined> {
     const { latest } = data['dist-tags']
     return latest
   } catch (err) {
-    console.log(err)
+    throw new CouldNotGetLatestVersion(err)
   }
 }

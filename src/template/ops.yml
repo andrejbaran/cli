@@ -17,3 +17,11 @@ src:
   - demo.js
   - package.json
   - .dockerignore
+help:
+  usage: 'Your first hello-world op'
+  arguments:
+    username: 'Your username'
+    email: 'Your email'
+  options:
+    build: 'Build flag'
+    clear: 'Clears'

@@ -26,6 +26,11 @@ export interface Op {
   tag: string
   src: string[]
   teamID: string
+  help: {
+    usage: string
+    arguments: { [key: string]: string }
+    options: { [key: string]: string }
+  }
 }
 
 // response from ops/get

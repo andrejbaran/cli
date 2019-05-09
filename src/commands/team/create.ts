@@ -1,4 +1,5 @@
 import Command, { flags } from '../../base'
+import { InvalidTeamNameFormat } from '../../errors/customErrors'
 import { ux } from '@cto.ai/sdk'
 
 let self
@@ -33,16 +34,19 @@ export default class TeamCreate extends Command {
     } else {
       const validName = name && (await this.validateTeamName(name))
       if (!validName || typeof validName === 'string') {
-        this.log('Sorry that name is invalid, Please try a different name')
-        process.exit()
+        throw new InvalidTeamNameFormat(null)
       }
     }
 
-    const res = await this.api.create(
-      'teams',
-      { name: teamName },
-      { headers: { Authorization: this.accessToken } },
-    )
+    const res = await this.api
+      .create(
+        'teams',
+        { name: teamName },
+        { headers: { Authorization: this.accessToken } },
+      )
+      .catch(err => {
+        throw new InvalidTeamNameFormat(err)
+      })
     const team = { id: res.data.id, name: res.data.name }
 
     this.log(`\n ${ux.colors.white('🙌 Your team has been created!')}`)
@@ -61,12 +65,14 @@ export default class TeamCreate extends Command {
 
   async validateTeamName(input: string): Promise<boolean | string> {
     try {
-      if (!/^[a-zA-Z0-9-_]+$/.test(input)) return 'Invalid name format'
+      if (!/^[a-zA-Z0-9-_]+$/.test(input))
+        return `❗Sorry, the team name must use letters (case sensitive), numbers (0-9), and underscore (_).`
       const unique = await self.validateUniqueField({ username: input })
-      if (!unique) return 'Name already taken'
+      if (!unique)
+        return `😞 Sorry this name has already been taken. Try again with a different name.`
       return true
     } catch (err) {
-      return 'Unable to validate team name.'
+      throw new InvalidTeamNameFormat(err)
     }
   }
 }

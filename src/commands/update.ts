@@ -1,9 +1,12 @@
-import Command, { flags } from '../base'
-import getLatestVersion from '../utils/get-latest-version'
-
 import { ux } from '@cto.ai/sdk'
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
+
+import Command, { flags } from '~/base'
+import getLatestVersion from '~/utils/get-latest-version'
+import { PermissionsError } from '~/errors/customErrors'
+
+let self
 
 export default class Update extends Command {
   static description = 'Update the ops CLI.'
@@ -13,20 +16,28 @@ export default class Update extends Command {
   }
 
   async run() {
-    const self = this
-    const latest = await getLatestVersion()
+    try {
+      self = this
+      const latestVersion = await getLatestVersion()
+      await this._logUpdateMessage(latestVersion)
+      await this._askQuestion()
+      await this._updateVersion()
+      this._trackAnalytics(latestVersion)
+    } catch (err) {
+      this.config.runHook('error', { err })
+    }
+  }
+
+  private _logUpdateMessage(latestVersion: string | undefined) {
     self.log(
       `${ux.colors.white(
         `\n📦 ${ux.colors.actionBlue(
           'INSTALL UPDATE?',
         )} - You're about to update to ${ux.colors.callOutCyan(
-          `CTO.ai Ops CLI ${latest}`,
+          `CTO.ai Ops CLI ${latestVersion}`,
         )} ${ux.colors.reset.green('→')}`,
       )}`,
     )
-    await this._askQuestion()
-    await this._updateVersion()
-    this._trackAnalytics(latest)
   }
 
   private _trackAnalytics(newVersion) {
@@ -58,16 +69,13 @@ export default class Update extends Command {
   }
 
   private async _updateVersion() {
-    ux.spinner.start('Updating version')
-    await exec('npm install -g @cto.ai/ops').catch(() => {
+    try {
+      ux.spinner.start('Updating version')
+      await exec('npm install -g @cto.ai/ops')
+      ux.spinner.stop('Done!')
+    } catch (err) {
       ux.spinner.stop('Failed')
-      this.log(
-        `${ux.colors.white(
-          'Could not install. Please check your permissions',
-        )}`,
-      )
-      process.exit()
-    })
-    ux.spinner.stop('Done!')
+      throw new PermissionsError(err)
+    }
   }
 }
