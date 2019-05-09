@@ -102,7 +102,7 @@
   },
   "repository": "cto.ai/ops",
   "scripts": {
-    "postinstall": "node ./postInstall.js && tsc -b && link-module-alias",
+    "postinstall": "node ./postInstall.js && link-module-alias",
     "postversion": "git push",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "prettier --check 'src/**/*.ts' --check 'test/**/*.ts'",
