@@ -2,16 +2,15 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Monday, 6th May 2019 11:06:29 am
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Monday, 6th May 2019 1:45:45 pm
+ * @lastModifiedTime: Wednesday, 8th May 2019 7:34:10 pm
  * @copyright (c) 2019 CTO.ai
  */
 
 import * as Config from '@oclif/config'
-import { MockGoodApiService } from '~/services/mockGoodApi'
-// import { FeathersClient } from '~/services/feathers'
-import AccountSignin from '~/commands/account/signin'
+import { MockGoodApiService } from '../../../src/services/mockGoodApi'
+import AccountSignin from '../../../src/commands/account/signin'
 
-import { fakeToken } from '~/constants/test'
+import { fakeToken } from '../../../src/constants/test'
 
 let cmd: AccountSignin
 

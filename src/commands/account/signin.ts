@@ -1,17 +1,17 @@
 /**
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 30th April 2019 12:07:49 pm
- * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Tuesday, 7th May 2019 6:04:59 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Wednesday, 8th May 2019 7:33:53 pm
  * @copyright (c) 2019 CTO.ai
  */
 
 import { Question } from 'inquirer'
 import cloneDeep from 'lodash/cloneDeep'
-import Command, { flags } from '~/base'
-import { NODE_ENV } from '~/constants/env'
-import { Config, Container, UserCredentials } from '~/types'
-import { asyncPipe } from '~/utils/asyncPipe'
+import Command, { flags } from '../../base'
+import { NODE_ENV } from '../../constants/env'
+import { Config, Container, UserCredentials } from '../../types'
+import { asyncPipe } from '../../utils/asyncPipe'
 import { AnalyticsError } from '../../errors/customErrors'
 
 export const signinPrompts: Container<Question> = {

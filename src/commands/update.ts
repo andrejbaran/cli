@@ -2,9 +2,9 @@ import { ux } from '@cto.ai/sdk'
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 
-import Command, { flags } from '~/base'
-import getLatestVersion from '~/utils/get-latest-version'
-import { PermissionsError } from '~/errors/customErrors'
+import Command, { flags } from '../base'
+import getLatestVersion from '../utils/get-latest-version'
+import { PermissionsError } from '../errors/customErrors'
 
 let self
 
