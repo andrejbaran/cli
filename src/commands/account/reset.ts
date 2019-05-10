@@ -1,18 +1,16 @@
 import Command from '../../base'
 import { ux } from '@cto.ai/sdk'
 import commander from 'commander'
-import { validateEmail } from '../../utils/validate'
+import {
+  validateEmail,
+  validatePasswordFormat,
+  validateCpassword,
+} from '../../utils/validate'
 
 const checkEmail = (input: string) => {
   return (
     validateEmail(input) ||
     '🤔 That email format is invalid. Please check your email and try again.'
-  )
-}
-
-const validatePassword = (input: string, answers: { password: string }) => {
-  return (
-    input === answers.password || "Password doesn't match, please try again."
   )
 }
 
@@ -28,13 +26,14 @@ const passwordPrompts = [
     type: 'password',
     name: 'password',
     message: 'Enter a new password: ',
+    validate: validatePasswordFormat,
     mask: '*',
   },
   {
     type: 'password',
     name: 'passwordConfirm',
     message: 'Confirm your password: ',
-    validate: validatePassword,
+    validate: validateCpassword,
     mask: '*',
   },
 ]

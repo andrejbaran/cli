@@ -11,3 +11,19 @@ export const validateEmail = (email: string): boolean => {
     email,
   )
 }
+
+export const validatePasswordFormat = (input: string) => {
+  if (input.length < 8)
+    return `❗ This password is too short, please choose a password that is at least 8 characters long`
+  return true
+}
+
+export const validateCpassword = (
+  input: string,
+  answers: { password: string },
+): string | boolean => {
+  if (input !== answers.password) {
+    return `❗ Password doesn't match, please try again.`
+  }
+  return true
+}
