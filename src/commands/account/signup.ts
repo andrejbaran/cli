@@ -3,6 +3,11 @@ import { ux } from '@cto.ai/sdk'
 import { INTERCOM_EMAIL } from '../..//constants/env'
 import { Config } from '../../types'
 import { APIError, AnalyticsError } from '../../errors/customErrors'
+import {
+  validateEmail,
+  validatePasswordFormat,
+  validateCpassword,
+} from '../../utils/validate'
 
 let self
 export default class AccountSignup extends Command {
@@ -41,7 +46,7 @@ export default class AccountSignup extends Command {
         '→',
       )}  \n${ux.colors.white('Enter your password')}`,
       afterMessage: `${ux.colors.reset.green('✓')} Password added!`,
-      validate: this._validatePasswordFormat,
+      validate: validatePasswordFormat,
     },
     {
       type: 'password',
@@ -49,7 +54,7 @@ export default class AccountSignup extends Command {
       mask: '*',
       message: '\n🔑 Confirm your password: ',
       afterMessage: `${ux.colors.reset.green('✓')} Password confirmed!`,
-      validate: this._validateCpassword,
+      validate: validateCpassword,
     },
   ]
 
@@ -135,7 +140,7 @@ export default class AccountSignup extends Command {
     }
   }
   async _validateEmail(input: string) {
-    if (!/\S+@\S+\.\S+/.test(input))
+    if (!validateEmail(input))
       return '❗ The format of your email is invalid, please check that it is correct and try again.'
     const unique = await self
       .validateUniqueField({ email: input })
@@ -156,18 +161,5 @@ export default class AccountSignup extends Command {
     } catch (err) {
       throw new APIError(err)
     }
-  }
-
-  _validatePasswordFormat(input) {
-    if (input.length < 8)
-      return `❗ This password is too short, please choose a password that is at least 8 characters long`
-    return true
-  }
-
-  _validateCpassword(input, answers) {
-    if (input !== answers.password) {
-      return `❗ Password doesn't match, please try again.`
-    }
-    return true
   }
 }
