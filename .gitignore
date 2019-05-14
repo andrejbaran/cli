@@ -11,4 +11,4 @@ node_modules
 oclif.manifest.json
 .DS_store
 .env*
-test/coverage/*
+/test/coverage

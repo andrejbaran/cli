@@ -3,7 +3,7 @@
 ############################
 FROM node:10-alpine AS dep
 
-WORKDIR /app
+WORKDIR /ops
 
 RUN apk add python make
 ADD package.json .
@@ -16,6 +16,6 @@ ADD . .
 ############################
 FROM node:10-alpine
 
-WORKDIR /app
+WORKDIR /ops
 
-COPY --from=dep /app .
+COPY --from=dep /ops .

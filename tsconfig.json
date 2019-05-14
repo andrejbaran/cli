@@ -1,22 +1,17 @@
 {
   "compilerOptions": {
-    "skipLibCheck": true,
-    "incremental": true,
-    "tsBuildInfoFile": "./lib/tsconfig.tsbuildinfo",
+    "composite": true,
     "declaration": true,
+    "skipLibCheck": true,
     "importHelpers": true,
     "module": "commonjs",
-    "outDir": "lib",
-    "rootDir": "src",
     "strict": false,
     "target": "es2017",
-    "composite": true,
     "checkJs": false,
     "esModuleInterop": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-  },
-  "include": [
-    "src/**/*"
-  ]
+    "outDir": "lib",
+    "rootDir": "src"
+  }
 }

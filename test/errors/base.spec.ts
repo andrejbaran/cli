@@ -1,15 +1,15 @@
 /**
  * @author: Prachi Singh (prachi@hackcapital.com)
  * @date: Wednesday, 8th May 2019 11:31:34 am
- * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Wednesday, 8th May 2019 3:18:00 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Monday, 13th May 2019 1:27:56 pm
  *
  * DESCRIPTION: Errors base class test
  *
  * @copyright (c) 2019 Hack Capital
  */
 
-import { ErrorTemplate } from '../../src/errors/base'
+import { ErrorTemplate } from '~/errors/ErrorTemplate'
 import { errorSource } from '../../src/constants/errorSource'
 
 const { EXPECTED, UNEXPECTED } = errorSource

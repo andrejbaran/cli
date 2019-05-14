@@ -1,9 +1,14 @@
 {
-  "extends": "../tsconfig",
-  "compilerOptions": {
-    "noEmit": true
-  },
+  "extends": "../tsconfig.json",
   "references": [
-    {"path": ".."}
-  ]
+    { "path": "../src" }
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    "diagnostics": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["../src/*"]
+    }
+  }
 }

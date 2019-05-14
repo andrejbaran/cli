@@ -1,8 +1,8 @@
-import Command, { flags } from '../../base'
 import { ux } from '@cto.ai/sdk'
-import { INTERCOM_EMAIL } from '../..//constants/env'
-import { Config } from '../../types'
-import { APIError, AnalyticsError } from '../../errors/customErrors'
+import Command, { flags } from '~/base'
+import { INTERCOM_EMAIL } from '~/constants/env'
+import { APIError, AnalyticsError } from '~/errors/customErrors'
+import { Config } from '~/types'
 import {
   validateEmail,
   validatePasswordFormat,

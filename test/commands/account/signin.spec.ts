@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Monday, 6th May 2019 11:06:29 am
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Wednesday, 8th May 2019 7:34:10 pm
+ * @lastModifiedTime: Monday, 13th May 2019 2:35:33 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -25,7 +25,7 @@ beforeAll(async () => {
   // signinBad = new AccountSignIn([], config, new MockBadApiService())
 })
 
-test('should accept valid credentials and return an access token', async () => {
+test.skip('should accept valid credentials and return an access token', async () => {
   const credentials = {
     email: 'test@test.com',
     password: 'password',

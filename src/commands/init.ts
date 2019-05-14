@@ -2,8 +2,8 @@ import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
-import Command, { flags } from '../base'
-import { CopyTemplateFilesError } from '../errors/customErrors'
+import Command, { flags } from '~/base'
+import { CopyTemplateFilesError } from '~/errors/customErrors'
 
 export default class Init extends Command {
   static description = 'Easily create a new op.'

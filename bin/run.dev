@@ -1,0 +1,59 @@
+#!/usr/bin/env node
+
+/**
+ * @author: Brett Campbell (brett@hackcapital.com)
+ * @date: Friday, 5th April 2019 12:06:07 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Monday, 13th May 2019 1:49:39 pm
+ * @copyright (c) 2019 CTO.ai
+ *
+ */
+
+const fs = require('fs')
+const path = require('path')
+const dotenv = require('dotenv-safe')
+
+const pathToEnv = getRelativePath('../.env')
+const pathToEnvExample = getRelativePath('../.env.example')
+const pathToEnvRuntime = getRelativePath(`../.env.${process.env.NODE_ENV}`)
+
+setupEnv()
+
+// run the command
+require('@oclif/command')
+  .run()
+  .then(require('@oclif/command/flush'))
+  .catch(require('@oclif/errors/handle'))
+
+function setupEnv(params) {
+  console.log({
+    DEBUG: process.env.DEBUG,
+    NODE_ENV: process.env.NODE_ENV,
+  })
+  // add environment variables to process.env using .env file
+  if (fs.existsSync(pathToEnvExample)) {
+    dotenv.config({ path: pathToEnv, example: pathToEnvExample })
+  }
+
+  // override process.env with .env.[$NODE_ENV]
+  if (fs.existsSync(pathToEnvRuntime)) {
+    overrideEnv(pathToEnvRuntime)
+  }
+}
+
+function getRelativePath(relativePath) {
+  return path.join(__dirname, relativePath)
+}
+
+function overrideEnv(envPath) {
+  const envFile = fs.readFileSync(envPath)
+  const envConfig = dotenv.parse(envFile)
+  for (let k in envConfig) {
+    process.env[k] = envConfig[k]
+  }
+  if (process.env.DEBUG) {
+    console.log({
+      envConfig,
+    })
+  }
+}
