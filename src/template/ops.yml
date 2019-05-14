@@ -1,7 +1,7 @@
 version: '1'
 name: hello-world
 description: Your first hello-world op
-run: node ./index.js
+run: node /ops/index.js
 network: 'host'
 flags:
   - 'v=0.0.0'
@@ -9,14 +9,16 @@ env:
   - 'USER=world'
   - 'LOGGER_PLUGINS_STDOUT_ENABLED=true'
   - 'OPS_ACCESS_TOKEN'
-bind:
-  - '/tmp:/tmp'
 src:
   - Dockerfile
   - index.js
   - demo.js
   - package.json
   - .dockerignore
+mountCwd: false
+mountHome: false
+bind:
+  - '/tmp:/tmp'
 help:
   usage: 'Your first hello-world op'
   arguments:

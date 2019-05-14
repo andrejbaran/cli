@@ -1,4 +1,6 @@
-import { ErrorTemplate } from '../../src/errors/base'
+import { ErrorTemplate } from '../../src/errors/ErrorTemplate'
+jest.mock('../../src/errors/ErrorTemplate')
+
 import {
   CouldNotGetLatestVersion,
   ReadFileError,
@@ -17,8 +19,6 @@ import {
   PermissionsError,
 } from '../../src/errors/customErrors'
 import { errorSource } from '../../src/constants/errorSource'
-
-jest.mock('../../src/errors/base')
 
 const message = 'I am a javascript Error object message'
 const newError = new Error(message)

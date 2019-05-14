@@ -1,5 +1,4 @@
-import { ux } from '@cto.ai/sdk'
-import { ErrorTemplate } from '../errors/base'
+import { ErrorTemplate } from '../errors/ErrorTemplate'
 import { errorSource } from '../constants/errorSource'
 
 const { EXPECTED } = errorSource

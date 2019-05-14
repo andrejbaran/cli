@@ -17,11 +17,15 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
-      "program": "${workspaceFolder}/bin/run",
+      "program": "${workspaceFolder}/bin/run.dev",
       "console": "integratedTerminal",
       "args": [
-        "cleanup"
-      ]
+        "run",
+        "jackfruit:7781dd89-5857-4427-9499-8b2980687b"
+      ],
+      "env": {
+        "DEBUG": "1"
+      }
     }
   ]
 }

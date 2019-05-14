@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Sunday, 28th April 2019 1:16:46 am
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 3rd May 2019 12:18:44 pm
+ * @lastModifiedTime: Monday, 13th May 2019 2:00:31 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -21,10 +21,6 @@ export class FeathersClient {
 
   constructor(apiUrl: string = localFeathersHost) {
     this.feathersClient = feathers().configure(rest(apiUrl).axios(axios))
-  }
-
-  async get(service: string, payload: object): Promise<any> {
-    return this.feathersClient.service(service).create(payload)
   }
 
   async find(service: string, payload: object): Promise<any> {

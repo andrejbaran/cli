@@ -1,3 +1,14 @@
+/**
+ * @author: Brett Campbell (brett@hackcapital.com)
+ * @date: Saturday, 6th April 2019 10:39:58 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Monday, 13th May 2019 3:05:46 pm
+ * @copyright (c) 2019 CTO.ai
+ *
+ * DESCRIPTION
+ *
+ */
+
 import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
 import * as json from 'JSONStream'
@@ -12,9 +23,10 @@ import {
   OPS_API_PATH,
   OPS_REGISTRY_HOST,
 } from '../constants/env'
-import { Op, RegistryAuth } from '../types'
+import { Op, RegistryAuth, Container, Config } from '../types'
 import { getOpImageTag, getOpUrl } from '../utils/getOpUrl'
 import { CouldNotGetRegistryToken } from '../errors/customErrors'
+import { Question } from 'inquirer'
 
 export default class Run extends Command {
   static description = 'Run an op from the registry.'
@@ -48,6 +60,20 @@ export default class Run extends Command {
   CTRL_P = '\u0010'
   CTRL_Q = '\u0011'
 
+  prompts: Container<Question> = {
+    agreeToMountHome: {
+      type: 'confirm',
+      name: 'agreeToMountHome',
+      message:
+        'Note: This container will mount your home directory as a read-only file system. Continue?',
+    },
+    ignoreMountWarnings: {
+      type: 'confirm',
+      name: 'ignoreMountWarnings',
+      message: 'Would you like to skip this confirmation step from now on?',
+    },
+  }
+
   parse(options, argv = this.argv) {
     if (!options) options = this.constructor
     var value = require('@oclif/parser').parse(argv, {
@@ -64,7 +90,7 @@ export default class Run extends Command {
     this.isLoggedIn()
 
     // Obtain the op if exists, otherwise return
-    const { args, opParams, flags } = this.parse(Run)
+    const { args, argv, flags } = this.parse(Run)
     if (!args.nameOrPath) {
       // If run is not supplied any arguments, and the help flag is given,
       // Use the default help functionality
@@ -75,6 +101,8 @@ export default class Run extends Command {
     }
 
     // Get the local image if exists
+    const opParams: string[] = this._getAllArgsAfterOpName(argv, args)
+
     let op = await this._getOp(args.nameOrPath, opParams)
 
     if (flags.help) {
@@ -95,12 +123,14 @@ export default class Run extends Command {
       await this._getImage(op, args.nameOrPath)
     }
 
+    await this._doBindMountChecks(op.mountHome, this.state.config)
+
     self.log(`⚙️  Running ${ux.colors.dim(op.name)}...`)
     try {
-      op = await this._setEnvs(this, op)
-      op = await this._setBinds(op)
-      const options = await this._getOptions(op)
+      op.env = this._setEnvs(process.env)(op.env, this.accessToken)
+      op.bind = this._setBinds(op.bind)
 
+      const options = await this._getOptions(op)
       this.docker.createContainer(options, handler)
     } catch (error) {
       console.error(error)
@@ -185,6 +215,10 @@ export default class Run extends Command {
         process.exit()
       })
     }
+  }
+
+  private _getAllArgsAfterOpName(argv: any, args: any): string[] {
+    return argv.slice(Object.keys(args).length)
   }
 
   /**
@@ -285,8 +319,14 @@ export default class Run extends Command {
             team_id: this.team.id,
             search: splitOpName[0],
           },
-          headers: { Authorization: this.accessToken },
+          headers: {
+            Authorization: this.accessToken,
+          },
         })
+
+        if (!res || !res.data) {
+          throw `API request failed ${res.message}`
+        }
         if (!res.data.length) {
           this.log('‼️  No op was found with this name or ID. Please try again')
           process.exit()
@@ -303,39 +343,63 @@ export default class Run extends Command {
     return op
   }
 
-  private async _setEnvs(self, op) {
-    const envs = _.map(op.env, (e: string) => {
-      const x = e.split('=')
-      return { key: x[0], value: x[1] }
-    })
-    const penvs = _.mapObject(process.env, (v, k) => {
-      return { key: k, value: v }
-    })
-    op.env = _.map(envs, e => {
-      if (e && penvs[e.key] && penvs[e.key].value) {
-        return `${penvs[e.key].key}=${penvs[e.key].value}`
-      } else {
-        return `${e.key}=${e.value}`
-      }
-    })
-    op.env.push(`OPS_API_HOST=${OPS_API_HOST}`)
-    op.env.push(`OPS_API_PATH=${OPS_API_PATH}`)
-    op.env.push(`OPS_ACCESS_TOKEN=${self.accessToken}`)
-    op.env.push('LOGGER_PLUGINS_STDOUT_ENABLED=true')
-    op.env.push('NODE_ENV=production')
-    return op
+  _setEnvs = (processEnv: Container<string | undefined>) => (
+    env: string[],
+    accessToken: string,
+  ) => {
+    const defaultEnv: Container<string> = {
+      NODE_ENV: 'production',
+      LOGGER_PLUGINS_STDOUT_ENABLED: 'true',
+      OPS_ACCESS_TOKEN: accessToken,
+      OPS_API_PATH,
+      OPS_API_HOST,
+    }
+    const opsYamlEnv: Container<string> | null = env
+      ? env.reduce(this._convertEnvStringsToObject, {})
+      : []
+
+    const mergedEnv = {
+      ...defaultEnv,
+      ...opsYamlEnv,
+    }
+
+    const overriddenEnv = Object.entries(mergedEnv)
+      .map(this._overrideEnvWithProcessEnv(processEnv))
+      .map(this._concatenateKeyValToString)
+
+    return overriddenEnv
   }
 
-  private async _setBinds(op) {
-    const binds = _.map(op.bind, (b: string) => {
-      const x = b.split(':')
-      x[0] = x[0].replace('~', HOME).replace('$HOME', HOME)
-      return { key: x[0], value: x[1] }
-    })
-    op.bind = _.map(binds, b => {
-      return `${b.key}:${b.value}`
-    })
-    return op
+  _concatenateKeyValToString = ([key, val]: [string, string]) => `${key}=${val}`
+
+  _setBinds = (binds: string[]) => {
+    return binds ? binds.map(this._replaceHomeAlias) : []
+  }
+
+  _convertEnvStringsToObject = (acc: Container<string>, curr: string) => {
+    const [key, val] = curr.split('=')
+    if (!val) {
+      return { ...acc }
+    }
+    return {
+      ...acc,
+      [key]: val,
+    }
+  }
+
+  _overrideEnvWithProcessEnv = (processEnv: Container<string | undefined>) => ([
+    key,
+    val,
+  ]: [string, string]) => [key, processEnv[key] || val]
+
+  private _replaceHomeAlias = (bindPair: string) => {
+    const pairArray = bindPair.split(':')
+    let [first, ...rest] = pairArray
+
+    const from = first.replace('~', HOME).replace('$HOME', HOME)
+    const to = rest.join('')
+
+    return `${from}:${to}`
   }
 
   /**
@@ -487,6 +551,19 @@ export default class Run extends Command {
 
   private async _getOptions(op) {
     const opIdentifier = this.isPublished ? op.id : op.name
+
+    if (op.mountCwd) {
+      const bindFrom = process.cwd()
+      const bindTo = '/cwd'
+      const cwDir = `${bindFrom}:${bindTo}`
+      op.bind.push(cwDir)
+    }
+
+    if (op.mountHome) {
+      const homeDir = `${HOME}:/root:ro`
+      op.bind.push(homeDir)
+    }
+
     let options = {
       AttachStdin: true,
       AttachStdout: true,
@@ -496,22 +573,73 @@ export default class Run extends Command {
       StdinOnce: false,
       Env: op.env,
       Cmd: op.run,
-      // WorkingDir: process.cwd().replace(process.env.HOME, '/root'),
+
+      WorkingDir: op.mountCwd ? '/cwd' : '/ops',
       Image: getOpUrl(
         OPS_REGISTRY_HOST,
         getOpImageTag(this.team.name, opIdentifier),
       ),
-      Volumes: {},
-      VolumesFrom: [],
-      WorkingDir: '',
       HostConfig: {
         Binds: op.bind,
         NetworkMode: op.network,
       },
     }
-    if (op.workdir) {
-      options.WorkingDir = process.cwd().replace(HOME, op.workdir)
-    }
     return options
+  }
+
+  _promptForHomeDirectory = async (
+    mountHome: boolean,
+    { ignoreMountWarnings }: Config,
+  ) => {
+    if (mountHome && !ignoreMountWarnings) {
+      return this.ux.prompt(this.prompts.agreeToMountHome)
+    }
+    return { agreeToMountHome: ignoreMountWarnings }
+  }
+
+  _promptToIgnoreWarning = async (
+    mountHome: boolean,
+    { ignoreMountWarnings }: Config,
+  ) => {
+    /*
+     * Prompt user only if ignore flag is undefined. If it is set to true or false,
+     * the user has made up their mind. They should be asked this question only
+     * once, not every time they run. *
+     */
+    if (mountHome && typeof ignoreMountWarnings === 'undefined') {
+      return this.ux.prompt(this.prompts.ignoreMountWarnings)
+    }
+    return { ignoreMountWarnings }
+  }
+
+  _doBindMountChecks = async (mountHome: boolean, config: Config) => {
+    if (!mountHome || config.ignoreMountWarnings) {
+      return
+    }
+    const { agreeToMountHome } = await this._promptForHomeDirectory(
+      mountHome,
+      config,
+    )
+
+    // TO-DO: replace with link to actual docs
+    if (!agreeToMountHome) {
+      this.log(
+        "\nAborting op execution. If you'd like to read more about our bind-mounting feature, please visit our docs: https://cto.ai/blog/\n",
+      )
+      process.exit()
+    }
+
+    const { ignoreMountWarnings } = await this._promptToIgnoreWarning(
+      mountHome,
+      config,
+    )
+    const isIgnoreFlagUndefined =
+      typeof config.ignoreMountWarnings === 'undefined'
+
+    if (isIgnoreFlagUndefined) {
+      this.writeConfig(config, {
+        ignoreMountWarnings,
+      })
+    }
   }
 }

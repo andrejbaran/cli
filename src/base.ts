@@ -1,3 +1,12 @@
+/**
+ * @author: Brett Campbell (brett@hackcapital.com)
+ * @date: Friday, 5th April 2019 12:06:07 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Monday, 13th May 2019 2:37:53 pm
+ * @copyright (c) 2019 CTO.ai
+ *
+ */
+
 import { ux as _ux } from '@cto.ai/sdk'
 import Command, { flags } from '@oclif/command'
 import * as OClifConfig from '@oclif/config'
@@ -5,7 +14,6 @@ import Analytics from 'analytics-node'
 import Docker from 'dockerode'
 import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
-import * as fs from 'fs'
 import getDocker from './utils/get-docker'
 import { asyncPipe, _trace } from './utils/asyncPipe'
 import { handleMandatory, handleUndefined } from './utils/guards'
@@ -29,14 +37,11 @@ import {
   OPS_REGISTRY_HOST,
   OPS_SEGMENT_KEY,
   INTERCOM_EMAIL,
+  DEBUG,
 } from './constants/env'
 
 import { FeathersClient } from './services/feathers'
-import {
-  UserUnauthorized,
-  APIError,
-  PermissionsError,
-} from './errors/customErrors'
+import { UserUnauthorized, APIError } from './errors/customErrors'
 
 abstract class CTOCommand extends Command {
   analytics = new Analytics(OPS_SEGMENT_KEY)
@@ -45,7 +50,7 @@ abstract class CTOCommand extends Command {
   accessToken!: string
   user!: User
   team!: Team
-  state!: { user: User; team: Team; accessToken: string }
+  state!: { config: Config }
 
   ux = _ux
 
@@ -59,15 +64,13 @@ abstract class CTOCommand extends Command {
 
   async init() {
     try {
-      const { user, accessToken, team } = await this.readConfig()
+      const config = await this.readConfig()
+      this.state = { config }
+
+      const { user, accessToken, team } = config
       this.accessToken = accessToken
       this.user = user
       this.team = team
-      this.state = {
-        accessToken: accessToken,
-        user: user,
-        team: team,
-      }
       this.docker = await this._getDocker()
     } catch (err) {
       this.config.runHook('error', { err })
@@ -168,6 +171,9 @@ abstract class CTOCommand extends Command {
     return team || this.handleTeamNotFound()
   }
 
+  _includeRegistryHost = (debug: number | boolean | string) =>
+    debug ? { registryHost: OPS_REGISTRY_HOST, nodeEnv: NODE_ENV } : {}
+
   formatConfigObject = (signinData: SigninPipeline) => {
     const {
       accessToken,
@@ -184,6 +190,7 @@ abstract class CTOCommand extends Command {
         _id: id,
         email: emails[0].address,
         username: username,
+        ...this._includeRegistryHost(DEBUG),
       },
     }
     return configObj
@@ -218,7 +225,7 @@ abstract class CTOCommand extends Command {
     }
 
     const res: AccessToken = await this.api
-      .get('login', credentials)
+      .create('login', credentials)
       .catch(err => {
         throw new APIError(err)
       })
@@ -258,6 +265,7 @@ abstract class CTOCommand extends Command {
   }
 
   async signinFlow(credentials: UserCredentials) {
+    //to-do: check if credentials are set first
     const signinFlowPipeline = asyncPipe(
       this.authenticateUser,
       this.fetchUserInfo,

@@ -4,8 +4,12 @@ module.exports = {
   testMatch: ['<rootDir>/test/**/*.spec.ts'],
   coverageDirectory: '<rootDir>/test/coverage',
   moduleNameMapper: {
-    'test/(.*)': '<rootDir>/test/$1',
-    '~/(.*)': '<rootDir>/src/$1',
+    '^~/(.*)$': '<rootDir>/src/$1',
+  },
+  globals: {
+    'ts-jest': {
+      diagnostics: false,
+    },
   },
 }
 
