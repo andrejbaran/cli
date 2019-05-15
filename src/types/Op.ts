@@ -9,28 +9,34 @@
  */
 
 export interface Op {
-  id: string
-  version: string
-  name: string
-  description: string
-  filesystem: boolean
-  run: string
-  packagePath: string | null
-  creatorId: string
-  ownerId: string
+  bind: string[]
   createdAt: string
-  updatedAt: string
-  updaterId: string
-  envVariables: string[] | null
-  parameters: Parameters[] | null
-  tag: string
-  src: string[]
-  teamID: string
+  creatorId: string
+  description: string
+  env: string[]
+  filesystem: boolean
   help: {
     usage: string
     arguments: { [key: string]: string }
     options: { [key: string]: string }
   }
+  id: string
+  image: string | void
+  name: string
+  network?: string
+  ownerId: string
+  packagePath: string | null
+  parameters: IParameters[] | null
+  run: string
+  src: string[]
+  tag: string
+  teamID: string
+  updatedAt: string
+  updaterId: string
+  version: string
+  workdir?: string
+  mountCwd: boolean
+  mountHome: boolean
 }
 
 // response from ops/get
@@ -43,7 +49,7 @@ export interface Op {
 //      createdAt: '2019-04-26T10:54:39.572834Z',
 //      updatedAt: '2019-04-26T10:54:39.572834Z' }
 
-interface Parameters {
+export interface IParameters {
   name: string
   shortname: string
   description: string

@@ -18,7 +18,6 @@
 
 CLI_DIR="$( cd "$(dirname "$0")" ; cd .. ; pwd -P )"
 
-
 if [ -f ~/.nvm/versions/node/v11.14.0/bin/ops ]; then
     rm ~/.nvm/versions/node/v11.14.0/bin/ops 
 fi

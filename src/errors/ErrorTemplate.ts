@@ -1,8 +1,8 @@
 /**
  * @author: Prachi Singh (prachi@hackcapital.com)
  * @date: Monday, 6th May 2019 11:11:49 am
- * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Wednesday, 8th May 2019 4:42:47 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Tuesday, 14th May 2019 11:42:24 am
  *
  * DESCRIPTION: Base class that the custom errors should be extending from
  * Error template that provides a modular, extensible and customizable errors.
