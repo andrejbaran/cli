@@ -43,3 +43,9 @@ export interface IError {
   statusCode?: string
   extra: IExtra
 }
+
+export interface ErrorObject {
+  requestID: string
+  code: number
+  message: string
+}

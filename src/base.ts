@@ -225,7 +225,10 @@ abstract class CTOCommand extends Command {
     }
 
     const res: AccessToken = await this.api
-      .create('login', credentials)
+      .create('login', {
+        email: credentials.email,
+        password: credentials.password,
+      })
       .catch(err => {
         throw new APIError(err)
       })

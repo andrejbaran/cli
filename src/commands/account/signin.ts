@@ -42,7 +42,7 @@ export default class AccountSignin extends Command {
     // The `nock` code that is supposed to intercept this call and counter it is not equipped
     // to handle this
     try {
-      if (NODE_ENV !== 'test') {
+      if (NODE_ENV === 'production') {
         this.analytics.identify({
           userId: config.user.email,
           traits: {

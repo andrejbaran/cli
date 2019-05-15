@@ -181,3 +181,11 @@ export class ImageNotFoundError extends ErrorTemplate {
     )
   }
 }
+
+export class SignUpError extends ErrorTemplate {
+  constructor(err) {
+    super("🤔 We couldn't sign you up at this point in time.", err, {
+      source: EXPECTED,
+    })
+  }
+}
