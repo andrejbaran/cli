@@ -10,4 +10,5 @@ export interface UserCredentials {
   email: string | undefined
   password: string | undefined
   help?: void
+  username?: string | undefined
 }

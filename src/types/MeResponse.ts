@@ -24,8 +24,8 @@ interface Me {
   emails: Email[]
   firstName: string
   lastName: string
-  registry_user: string
-  registry_pass: string
+  registry_user?: string
+  registry_pass?: string
   createdAt: string
   updatedAt: string
 }
