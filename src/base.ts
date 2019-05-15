@@ -2,7 +2,7 @@
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Friday, 5th April 2019 12:06:07 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Monday, 13th May 2019 2:37:53 pm
+ * @lastModifiedTime: Tuesday, 14th May 2019 11:26:16 am
  * @copyright (c) 2019 CTO.ai
  *
  */
@@ -65,12 +65,12 @@ abstract class CTOCommand extends Command {
   async init() {
     try {
       const config = await this.readConfig()
-      this.state = { config }
 
       const { user, accessToken, team } = config
       this.accessToken = accessToken
       this.user = user
       this.team = team
+      this.state = { config }
       this.docker = await this._getDocker()
     } catch (err) {
       this.config.runHook('error', { err })

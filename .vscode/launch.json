@@ -21,7 +21,7 @@
       "console": "integratedTerminal",
       "args": [
         "run",
-        "jackfruit:7781dd89-5857-4427-9499-8b2980687b"
+        "jackfruit"
       ],
       "env": {
         "DEBUG": "1"
