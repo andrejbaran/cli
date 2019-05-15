@@ -2,7 +2,7 @@
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Saturday, 6th April 2019 10:39:58 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Tuesday, 14th May 2019 11:34:59 am
+ * @lastModifiedTime: Tuesday, 14th May 2019 5:17:46 pm
  * @copyright (c) 2019 CTO.ai
  *
  * DESCRIPTION
@@ -27,7 +27,7 @@ import {
 import { Op, RegistryAuth, Config, Container, RunPipeline } from '../types'
 import { Question } from 'inquirer'
 import { getOpImageTag, getOpUrl } from '../utils/getOpUrl'
-import { asyncPipe } from '../../src/utils/asyncPipe'
+import { asyncPipe } from '~/utils/asyncPipe'
 import { CouldNotGetRegistryToken } from '../errors/customErrors'
 import { OP_FILE } from '../constants/opConfig'
 
