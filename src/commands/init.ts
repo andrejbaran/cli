@@ -1,9 +1,17 @@
 import { ux } from '@cto.ai/sdk'
+import { Question } from 'inquirer'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
 import Command, { flags } from '~/base'
-import { CopyTemplateFilesError } from '~/errors/customErrors'
+import { Container, InitParams, InitPaths, CtoQuestion } from '~/types'
+import { asyncPipe } from '~/utils/asyncPipe'
+import {
+  AnalyticsError,
+  CopyTemplateFilesError,
+  CouldNotInitializeOp,
+} from '~/errors/customErrors'
+import { LOCAL, CONTAINER } from '~/constants/opConfig'
 
 export default class Init extends Command {
   static description = 'Easily create a new op.'
@@ -17,92 +25,152 @@ export default class Init extends Command {
   }
   questions: object[] = []
 
-  srcDir = path.resolve(__dirname, '../template')
+  srcDir = path.resolve(__dirname, '../templates/')
   destDir = path.resolve(process.cwd())
   opName = ''
   opDescription = ''
 
-  namePrompt = {
-    type: 'input',
-    name: 'name',
-    message: `Provide a name for your new op ${ux.colors.reset.green(
-      '→',
-    )}  \n🏷  ${ux.colors.white('Name:')}`,
-    afterMessage: `${ux.colors.reset.green('✓')}`,
-    afterMessageAppend: `${ux.colors.reset(' added!')}`,
-    validate: this._validateName,
+  initPrompts: Container<CtoQuestion> = {
+    template: {
+      type: 'list',
+      name: 'template',
+      message: `\n What type of op would you like to create ${ux.colors.reset.green(
+        '→',
+      )}`,
+      choices: [
+        { name: 'Local Op', value: LOCAL },
+        { name: 'Container Op', value: CONTAINER },
+      ],
+      afterMessage: `${ux.colors.reset.green('✓')}`,
+    },
+    name: {
+      type: 'input',
+      name: 'name',
+      message: `\n Provide a name for your new op ${ux.colors.reset.green(
+        '→',
+      )}  \n🏷  ${ux.colors.white('Name:')}`,
+      afterMessage: `${ux.colors.reset.green('✓')}`,
+      afterMessageAppend: `${ux.colors.reset(' added!')}`,
+      validate: this._validateName,
+    },
+    description: {
+      type: 'input',
+      name: 'description',
+      message: `\nProvide a description ${ux.colors.reset.green(
+        '→',
+      )}  \n📝 ${ux.colors.white('Description:')}`,
+      afterMessage: `${ux.colors.reset.green('✓')}`,
+      afterMessageAppend: `${ux.colors.reset(' added!')}`,
+      validate: this._validateDescription,
+    },
   }
 
-  descriptionPrompt = {
-    type: 'input',
-    name: 'description',
-    message: `\nProvide a description ${ux.colors.reset.green(
-      '→',
-    )}  \n📝 ${ux.colors.white('Description:')}`,
-    afterMessage: `${ux.colors.reset.green('✓')}`,
-    afterMessageAppend: `${ux.colors.reset(' added!')}`,
-    validate: this._validateDescription,
+  determineQuestions = ({
+    prompts,
+    flags,
+  }: {
+    prompts: Container<Question>
+    flags: Partial<InitParams>
+  }) => {
+    const removeIfPassedToFlags = ([key, _question]: [string, Question]) =>
+      !Object.entries(flags)
+        .map(([flagKey]) => flagKey)
+        .includes(key)
+
+    const questions = Object.entries(prompts)
+      .filter(removeIfPassedToFlags)
+      .map(([_key, question]) => question)
+
+    return questions
   }
 
-  private _assignFlags() {
-    const { flags } = this.parse(Init)
-    this.opName = flags.name || ''
-    this.opDescription = flags.description || ''
+  askQuestions = async (questions: Question[]) => {
+    return ux.prompt(questions)
   }
 
-  private async _askQuestions() {
-    if (!this.opName) this.questions.push(this.namePrompt)
-    if (!this.opDescription) this.questions.push(this.descriptionPrompt)
-
-    if (this.questions.length) {
-      const answers = await ux.prompt(this.questions)
-      if (answers.name) this.opName = answers.name
-      if (answers.description) this.opDescription = answers.description
-    }
+  determineInitPaths = (flags: Partial<InitParams>) => (
+    answers: Partial<InitParams>,
+  ) => {
+    const initParams = { ...flags, ...answers }
+    const { template, name } = initParams
+    const templateDir = `${this.srcDir}/${template}`
+    const sharedDir = `${this.srcDir}/shared`
+    const destDir = `${this.destDir}/${name}`
+    const initPaths = { templateDir, sharedDir, destDir }
+    return { initPaths, initParams }
   }
 
-  private _customizePackageJson() {
-    const packageObj = JSON.parse(
-      fs.readFileSync(`${this.srcDir}/package.json`, 'utf8'),
-    )
-    packageObj.name = this.opName
-    packageObj.description = this.opDescription
-
-    const newPackageString = JSON.stringify(packageObj, null, 2)
-
-    fs.writeFileSync(
-      `${this.destDir}/${this.opName}/package.json`,
-      newPackageString,
-    )
-  }
-
-  private _customizeOpsYaml() {
-    const opsYamlObj = yaml.parse(
-      fs.readFileSync(`${this.destDir}/${this.opName}/ops.yml`, 'utf8'),
-    )
-    opsYamlObj.name = this.opName
-    opsYamlObj.description = this.opDescription
-
-    const newOpsString = yaml.stringify(opsYamlObj)
-
-    fs.writeFileSync(`${this.destDir}/${this.opName}/ops.yml`, newOpsString)
-  }
-
-  private async _copyTemplateFiles() {
+  copyTemplateFiles = async (input: {
+    initPaths: InitPaths
+    initParams: InitParams
+  }) => {
     try {
-      await fs.ensureDir(`${this.destDir}/${this.opName}`)
-      await fs.copy(this.srcDir, `${this.destDir}/${this.opName}`)
-      this._customizePackageJson()
-      this._customizeOpsYaml()
+      const { destDir, templateDir, sharedDir } = input.initPaths
+
+      await fs.ensureDir(destDir)
+      // copies select template files
+      await fs.copy(templateDir, destDir)
+      // copies shared files for both
+      await fs.copy(sharedDir, destDir)
+      return input
     } catch (err) {
       throw new CopyTemplateFilesError(err)
     }
   }
 
-  private _logMessages() {
-    this.log('\n🎉 Success! Your op is ready to start coding... \n')
+  customizePackageJson = async (input: {
+    initPaths: InitPaths
+    initParams: InitParams
+  }) => {
+    try {
+      const { destDir, sharedDir } = input.initPaths
+      const { name, description } = input.initParams
+      const packageObj = JSON.parse(
+        fs.readFileSync(`${sharedDir}/package.json`, 'utf8'),
+      )
+      packageObj.name = name
+      packageObj.description = description
+      const newPackageString = JSON.stringify(packageObj, null, 2)
+      fs.writeFileSync(`${destDir}/package.json`, newPackageString)
+      return input
+    } catch (err) {
+      throw new CouldNotInitializeOp(err)
+    }
+  }
 
-    fs.readdirSync(`${this.destDir}/${this.opName}`).forEach((file: any) => {
+  customizeOpsYaml = async (input: {
+    initPaths: InitPaths
+    initParams: InitParams
+  }) => {
+    try {
+      const { destDir } = input.initPaths
+      const { name, description, template } = input.initParams
+      const opsYamlObj = yaml.parse(
+        fs.readFileSync(`${destDir}/ops.yml`, 'utf8'),
+      )
+      if (template === LOCAL) {
+        opsYamlObj.ops[0].name = name
+        opsYamlObj.ops[0].description = description
+      } else {
+        opsYamlObj.name = name
+        opsYamlObj.description = description
+      }
+      const newOpsString = yaml.stringify(opsYamlObj)
+      fs.writeFileSync(`${destDir}/ops.yml`, newOpsString)
+      return input
+    } catch (err) {
+      throw new CouldNotInitializeOp(err)
+    }
+  }
+
+  logMessages = async (input: {
+    initPaths: InitPaths
+    initParams: InitParams
+  }) => {
+    const { destDir } = input.initPaths
+    const { name } = input.initParams
+    this.log('\n🎉 Success! Your op is ready to start coding... \n')
+    fs.readdirSync(`${destDir}`).forEach((file: any) => {
       let callout = ''
       if (file.indexOf('index.js') > -1) {
         callout = `${ux.colors.green('←')} ${ux.colors.white(
@@ -110,34 +178,46 @@ export default class Init extends Command {
         )}`
       }
       let msg = ux.colors.italic(
-        `${path.relative(this.destDir, process.cwd())}/${
-          this.opName
-        }/${file} ${callout}`,
+        `${path.relative(
+          this.destDir,
+          process.cwd(),
+        )}/${name}/${file} ${callout}`,
       )
       this.log(`📁 .${msg}`)
     })
     this.log(
       `\n🚀 Now test your op with: ${ux.colors.green(
         '$',
-      )} ops run ${ux.colors.callOutCyan(this.opName)}\n`,
+      )} ops run ${ux.colors.callOutCyan(name)}\n`,
     )
+    return input
   }
 
-  private _trackAnalytics() {
-    this.analytics.track({
-      userId: this.user.email,
-      event: 'Ops CLI Init',
-      properties: {
-        email: this.user.email,
-        username: this.user.username,
-        path: this.destDir,
-        name: this.opName,
-        description: this.opDescription,
-      },
-    })
+  trackAnalytics = async (input: {
+    initPaths: InitPaths
+    initParams: InitParams
+  }) => {
+    try {
+      const { destDir } = input.initPaths
+      const { name, description, template } = input.initParams
+      this.analytics.track({
+        userId: this.user.email,
+        event: 'Ops CLI Init',
+        properties: {
+          email: this.user.email,
+          username: this.user.username,
+          path: destDir,
+          name,
+          description,
+          template,
+        },
+      })
+    } catch (err) {
+      throw new AnalyticsError(err)
+    }
   }
 
-  _validateName(input: string) {
+  private _validateName(input: string) {
     if (input === '') return 'You need name your op before you can continue'
     if (!input.match('^[a-z0-9_-]*$')) {
       return 'Sorry, please name the Op using only numbers, letters, -, or _'
@@ -145,7 +225,7 @@ export default class Init extends Command {
     return true
   }
 
-  _validateDescription(input: string) {
+  private _validateDescription(input: string) {
     if (input === '')
       return 'You need to provide a description of your op before continuing'
     return true
@@ -153,12 +233,21 @@ export default class Init extends Command {
 
   async run() {
     try {
+      const { flags } = this.parse(Init)
       this.isLoggedIn()
-      this._assignFlags()
-      await this._askQuestions()
-      await this._copyTemplateFiles()
-      this._logMessages()
-      this._trackAnalytics()
+
+      const initPipeline = asyncPipe(
+        this.determineQuestions,
+        this.askQuestions,
+        this.determineInitPaths(flags),
+        this.copyTemplateFiles,
+        this.customizePackageJson,
+        this.customizeOpsYaml,
+        this.logMessages,
+        this.trackAnalytics,
+      )
+
+      await initPipeline({ prompts: this.initPrompts, flags })
     } catch (err) {
       this.config.runHook('error', { err })
     }

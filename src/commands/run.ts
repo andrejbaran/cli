@@ -2,7 +2,7 @@
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Saturday, 6th April 2019 10:39:58 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Tuesday, 14th May 2019 5:17:46 pm
+ * @lastModifiedTime: Thursday, 16th May 2019 4:54:26 pm
  * @copyright (c) 2019 CTO.ai
  *
  * DESCRIPTION
@@ -17,19 +17,39 @@ import * as through from 'through2'
 import _ from 'underscore'
 import * as yaml from 'yaml'
 import Docker from 'dockerode'
-import Command, { flags } from '../base'
+
+import { spawn, SpawnOptions } from 'child_process'
+import { Question } from 'inquirer'
+
+import Command, { flags } from '~/base'
 import {
   HOME,
   OPS_API_HOST,
   OPS_API_PATH,
   OPS_REGISTRY_HOST,
-} from '../constants/env'
-import { Op, RegistryAuth, Config, Container, RunPipeline } from '../types'
-import { Question } from 'inquirer'
-import { getOpImageTag, getOpUrl } from '../utils/getOpUrl'
-import { asyncPipe } from '~/utils/asyncPipe'
-import { CouldNotGetRegistryToken } from '../errors/customErrors'
-import { OP_FILE } from '../constants/opConfig'
+} from '~/constants/env'
+import {
+  Op,
+  RegistryAuth,
+  Config,
+  Container,
+  RunPipeline,
+  LocalOp,
+  RunCommandArgs,
+  ChildProcessError,
+} from '~/types'
+import { CouldNotGetRegistryToken } from '~/errors/customErrors'
+import { OP_FILE } from '~/constants/opConfig'
+import { onExit, asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
+import { string } from '@oclif/parser/lib/flags'
+import { LocalOpPipelineError } from '~/types/ChildProcessError'
+
+type LocalHook = 'main command' | 'before-hook' | 'after-hook'
+
+export interface CommandInfo {
+  hookType: LocalHook
+  command: string
+}
 
 export default class Run extends Command {
   static description = 'Run an op from the registry.'
@@ -541,37 +561,6 @@ export default class Run extends Command {
     })
   }
 
-  async run() {
-    try {
-      this.isLoggedIn()
-      const { config } = this.state
-      const parsedArgs: RunPipeline['parsedArgs'] = this.useCustomParser(
-        Run,
-        this.argv,
-      )
-
-      const runPipeline = asyncPipe(
-        this.getOpConfig,
-        this.getImage,
-        this.setEnvs(process.env),
-        this.setBinds,
-        this.getOptions,
-        this.createDockerContainer,
-        this.attachToContainer,
-        this.sendAnalytics,
-      )
-
-      await runPipeline({
-        parsedArgs,
-        config,
-        isPublished: false,
-        options: undefined,
-      })
-    } catch (err) {
-      this.config.runHook('error', { err })
-    }
-  }
-
   _promptForHomeDirectory = async (
     mountHome: boolean,
     { ignoreMountWarnings }: Config,
@@ -625,6 +614,192 @@ export default class Run extends Command {
       this.writeConfig(config, {
         ignoreMountWarnings,
       })
+    }
+  }
+
+  async findLocalOp(manifestPath: string, nameOrPath: string) {
+    const manifest = await fs.readFile(manifestPath, 'utf8')
+    const { ops }: { ops: LocalOp[] } = yaml.parse(manifest)
+    return ops.find(({ name }) => name === nameOrPath)
+  }
+
+  printMessage(bold: string, normal: string = '') {
+    this.log(`\n ${this.ux.colors.bold(bold)} ${normal}\n`)
+  }
+
+  printErrorMessage({ code, signal }: ChildProcessError) {
+    this.log(
+      this.ux.colors.redBright(
+        `Exit with error code ${this.ux.colors.whiteBright(
+          code,
+        )} and signal ${this.ux.colors.whiteBright(signal)}`,
+      ),
+    )
+  }
+
+  _runLocalOp = (options: SpawnOptions) => this._runLocalOpHof(options)
+
+  _runLocalOpHof = (options: SpawnOptions) => (
+    commandInfo: CommandInfo,
+  ) => async ({
+    errors,
+    args,
+  }: {
+    errors: LocalOpPipelineError[]
+    args: string[]
+  }) => {
+    const { hookType, command } = commandInfo
+
+    this.printMessage(`🏃  Running ${hookType}:`, command)
+
+    const params = args && hookType === 'main command' ? args : []
+    const childProcess = spawn(command, params, options)
+
+    const exitResponse: void | ChildProcessError = await onExit(childProcess)
+
+    if (exitResponse) {
+      this.printErrorMessage(exitResponse)
+    }
+
+    const newErrors = exitResponse
+      ? [...errors, { exitResponse, commandInfo }]
+      : [...errors]
+    return { errors: newErrors, args }
+  }
+
+  labelTheCommand = (hookType: LocalHook) => (
+    command: string,
+  ): CommandInfo => ({
+    hookType,
+    command,
+  })
+
+  createArrayOfAllLocalCommands = (
+    { before, run, after }: LocalOp,
+    options: SpawnOptions,
+  ) => {
+    const beforeCommands = before
+      ? before.map(this.labelTheCommand('before-hook'))
+      : []
+    const runCommand = [run].map(this.labelTheCommand('main command'))
+    const afterCommands = after
+      ? after.map(this.labelTheCommand('after-hook'))
+      : []
+    const flattenedCommands = [
+      ...beforeCommands,
+      ...runCommand,
+      ...afterCommands,
+    ]
+    return flattenedCommands.map(this.convertCommandToSpawnFunction(options))
+  }
+
+  convertCommandToSpawnFunction = (options: SpawnOptions) => (
+    commandInfo: CommandInfo,
+  ): Function => this._runLocalOp(options)(commandInfo)
+
+  async runLocalOps(localOp: LocalOp, parsedArgs: RunCommandArgs) {
+    const { name } = localOp
+    const options: SpawnOptions = {
+      stdio: 'inherit',
+      shell: true,
+      env: process.env,
+    }
+
+    const localOps = this.createArrayOfAllLocalCommands(localOp, options)
+
+    const errors: LocalOpPipelineError[] = []
+
+    const localOpPipeline = asyncPipe(...localOps)
+
+    const finalOutput: {
+      errors: LocalOpPipelineError[]
+      args: string[]
+    } = await localOpPipeline({
+      errors,
+      args: parsedArgs.opParams,
+    })
+
+    const { errors: finalErrors } = finalOutput
+
+    finalErrors.forEach((error: LocalOpPipelineError, i: number) => {
+      if (i === 0) {
+        this.log(`\n❗️  Local op ${this.ux.colors.callOutCyan(name)} failed.`)
+        this.log(
+          this.ux.colors.redBright(
+            `🤔  There was a problem with the ${this.ux.colors.whiteBright(
+              error.commandInfo.command,
+            )} command in the ${this.ux.colors.whiteBright(
+              error.commandInfo.hookType,
+            )}.\n`,
+          ),
+        )
+        // additional error logging, probably not necessary
+        // if (error.exitResponse) {
+        //   this.printErrorMessage(error.exitResponse)
+        // }
+      }
+    })
+
+    !finalErrors.length &&
+      this.printMessage(
+        `😌  Local op ${this.ux.colors.callOutCyan(
+          name,
+        )} completed successfully.`,
+      )
+  }
+
+  async getLocalOpIfExists({ args: { nameOrPath } }: RunCommandArgs) {
+    const localManifest = path.join(process.cwd(), OP_FILE)
+    const localManifestExists = fs.existsSync(localManifest)
+
+    if (!localManifestExists) {
+      return null
+    }
+
+    const localOp: LocalOp | undefined = await this.findLocalOp(
+      localManifest,
+      nameOrPath,
+    )
+    if (localOp && !localOp.run) {
+      throw new Error('ops.yml must specify a run command')
+    }
+
+    return localOp
+  }
+
+  async run() {
+    try {
+      this.isLoggedIn()
+      const { config } = this.state
+      const parsedArgs: RunPipeline['parsedArgs'] = this.useCustomParser(
+        Run,
+        this.argv,
+      )
+
+      const localOp = await this.getLocalOpIfExists(parsedArgs)
+      if (localOp) {
+        return await this.runLocalOps(localOp, parsedArgs)
+      }
+
+      const runPipeline = asyncPipe(
+        this.getOpConfig,
+        this.getImage,
+        this.setEnvs(process.env),
+        this.setBinds,
+        this.getOptions,
+        this.createDockerContainer,
+        this.attachToContainer,
+        this.sendAnalytics,
+      )
+
+      await runPipeline({
+        parsedArgs,
+        config,
+        isPublished: false,
+        options: undefined,
+      })
+    } catch (err) {
+      this.config.runHook('error', { err })
     }
   }
 }

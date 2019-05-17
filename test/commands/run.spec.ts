@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Monday, 6th May 2019 11:06:29 am
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Tuesday, 14th May 2019 11:54:10 am
+ * @lastModifiedTime: Wednesday, 15th May 2019 1:24:42 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -100,3 +100,18 @@ test.skip('setBinds should replace $HOME and ~ with home directory', () => {
 
 //   expect(mockConfirm).not.toBeCalled()
 // })
+
+test.skip('should run a local op', () => {
+  const home = process.env.HOME
+
+  const expected = ['/tmp:/tmp', `${home}/.aws:/.aws`, `${home}/.ssh:/mnt/.ssh`]
+
+  // @ts-ignore
+  const received = cmd.setBinds({
+    op: {
+      bind: ['/tmp:/tmp', '$HOME/.aws:/.aws', '~/.ssh:/mnt/.ssh'],
+    },
+  })
+
+  expect(received.op.env).toStrictEqual(expected)
+})
