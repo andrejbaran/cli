@@ -63,7 +63,7 @@ export default class Search extends Command {
       if (!manifest) {
         return { apiOps, localOps: [] }
       }
-      const { ops: localOps } = yaml.parse(manifest)
+      const { ops: localOps = [] } = yaml.parse(manifest)
       return { apiOps, localOps }
     } catch {
       return { apiOps, localOps: [] }
