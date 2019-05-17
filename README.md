@@ -21,7 +21,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.3.15 darwin-x64 node-v11.14.0
+@cto.ai/ops/1.3.16 darwin-x64 node-v11.14.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -60,7 +60,7 @@ USAGE
   $ ops account:reset
 ```
 
-_See code: [src/commands/account/reset.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/account/reset.ts)_
+_See code: [src/commands/account/reset.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/account/reset.ts)_
 
 ## `ops account:signin`
 
@@ -76,7 +76,7 @@ OPTIONS
   -p, --password=password  Password
 ```
 
-_See code: [src/commands/account/signin.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/account/signin.ts)_
+_See code: [src/commands/account/signin.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/account/signin.ts)_
 
 ## `ops account:signout`
 
@@ -90,7 +90,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/account/signout.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/account/signout.ts)_
+_See code: [src/commands/account/signout.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/account/signout.ts)_
 
 ## `ops account:signup`
 
@@ -104,7 +104,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/account/signup.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/account/signup.ts)_
+_See code: [src/commands/account/signup.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/account/signup.ts)_
 
 ## `ops account:support`
 
@@ -118,7 +118,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/account/support.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/account/support.ts)_
+_See code: [src/commands/account/support.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/account/support.ts)_
 
 ## `ops build [PATH]`
 
@@ -135,7 +135,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/build.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/build.ts)_
+_See code: [src/commands/build.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/build.ts)_
 
 ## `ops cleanup [OPNAME]`
 
@@ -152,7 +152,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/cleanup.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/cleanup.ts)_
+_See code: [src/commands/cleanup.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/cleanup.ts)_
 
 ## `ops help [COMMAND]`
 
@@ -185,7 +185,7 @@ OPTIONS
   -n, --name=name                Name of the op.
 ```
 
-_See code: [src/commands/init.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/init.ts)_
+_See code: [src/commands/init.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/init.ts)_
 
 ## `ops publish [PATH]`
 
@@ -202,7 +202,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/publish.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/publish.ts)_
+_See code: [src/commands/publish.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/publish.ts)_
 
 ## `ops remove [OPNAME]`
 
@@ -219,7 +219,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/remove.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/remove.ts)_
+_See code: [src/commands/remove.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/remove.ts)_
 
 ## `ops run [NAMEORPATH]`
 
@@ -237,7 +237,7 @@ OPTIONS
   -h, --help   show CLI help
 ```
 
-_See code: [src/commands/run.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/run.ts)_
+_See code: [src/commands/run.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/run.ts)_
 
 ## `ops search [FILTER]`
 
@@ -254,7 +254,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/search.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/search.ts)_
+_See code: [src/commands/search.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/search.ts)_
 
 ## `ops team:create`
 
@@ -269,7 +269,7 @@ OPTIONS
   -n, --name=name
 ```
 
-_See code: [src/commands/team/create.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/team/create.ts)_
+_See code: [src/commands/team/create.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/team/create.ts)_
 
 ## `ops team:invite`
 
@@ -286,7 +286,7 @@ OPTIONS
                                      user2@gmail.com, user3@something")
 ```
 
-_See code: [src/commands/team/invite.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/team/invite.ts)_
+_See code: [src/commands/team/invite.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/team/invite.ts)_
 
 ## `ops team:join`
 
@@ -297,7 +297,7 @@ USAGE
   $ ops team:join
 ```
 
-_See code: [src/commands/team/join.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/team/join.ts)_
+_See code: [src/commands/team/join.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/team/join.ts)_
 
 ## `ops team:switch`
 
@@ -311,7 +311,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/team/switch.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/team/switch.ts)_
+_See code: [src/commands/team/switch.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/team/switch.ts)_
 
 ## `ops update`
 
@@ -325,5 +325,5 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/update.ts](https://github.com/cto.ai/ops/blob/v1.3.15/src/commands/update.ts)_
+_See code: [src/commands/update.ts](https://github.com/cto.ai/ops/blob/v1.3.16/src/commands/update.ts)_
 <!-- commandsstop -->
