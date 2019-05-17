@@ -1,9 +1,8 @@
 import Command, { flags } from '../base'
 import { ImageNotFoundError } from '../errors/customErrors'
 import { OPS_REGISTRY_HOST } from '../constants/env'
-import url from 'url'
 import { Output } from '@oclif/parser/lib'
-import { ApiResponse } from '../types/ApiResponse'
+import { FindResponse } from '../types'
 import { FeathersClient } from '../services/feathers'
 
 // get ops matching the provided name
@@ -12,7 +11,7 @@ export const getOps = async (
   teamId: string,
   accessToken: string,
   api: FeathersClient,
-): Promise<ApiResponse> => {
+): Promise<FindResponse> => {
   return api.find('ops', {
     query: {
       name: opName,
@@ -74,7 +73,7 @@ export class Cleanup extends Command {
         process.exit()
       }
 
-      const ops: ApiResponse = await getOps(
+      const ops: FindResponse = await getOps(
         opName,
         this.team.id,
         this.accessToken,

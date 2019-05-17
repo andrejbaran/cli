@@ -21,10 +21,11 @@
       "console": "integratedTerminal",
       "args": [
         "run",
-        "jackfruit"
+        "tomato"
       ],
       "env": {
-        "DEBUG": "1"
+        "DEBUG": "1",
+        "NODE_ENV": "development"
       }
     }
   ]

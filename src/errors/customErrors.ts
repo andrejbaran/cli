@@ -73,6 +73,12 @@ export class CouldNotCreateOp extends ErrorTemplate {
   }
 }
 
+export class CouldNotInitializeOp extends ErrorTemplate {
+  constructor(err) {
+    super('Failed to initialize op.', err)
+  }
+}
+
 export class CouldNotGetRegistryToken extends ErrorTemplate {
   constructor() {
     super(

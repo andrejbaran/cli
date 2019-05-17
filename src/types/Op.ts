@@ -14,7 +14,7 @@ export interface Op {
   creatorId: string
   description: string
   env: string[]
-  filesystem: boolean
+  filesystem?: boolean
   help: {
     usage: string
     arguments: { [key: string]: string }
@@ -24,9 +24,9 @@ export interface Op {
   image: string | void
   name: string
   network?: string
-  ownerId: string
-  packagePath: string | null
-  parameters: IParameters[] | null
+  ownerId?: string
+  packagePath?: string | null
+  parameters?: IParameters[] | null
   run: string
   src: string[]
   tag: string

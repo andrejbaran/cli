@@ -15,18 +15,15 @@
 ##
 #! /bin/bash
 
-
 CLI_DIR="$( cd "$(dirname "$0")" ; cd .. ; pwd -P )"
+NODE_MODULES_DIR="$(npm config get prefix)"
+OPS_BINARY="$NODE_MODULES_DIR/bin/ops"
 
-if [ -f ~/.nvm/versions/node/v11.14.0/bin/ops ]; then
-    rm ~/.nvm/versions/node/v11.14.0/bin/ops 
+if [ -f $OPS_BINARY ]; then
+    rm $OPS_BINARY 
 fi
 
-if [ -f /usr/local/bin/ops  ]; then
-    rm /usr/local/bin/ops 
-fi
-
-ln -s $CLI_DIR/bin/run.dev /usr/local/bin/ops 
+ln -s $CLI_DIR/bin/run.dev $OPS_BINARY
 
 tsc -b src
 
