@@ -372,11 +372,11 @@ export default class Run extends Command {
       ? op.env.reduce(this.convertEnvStringsToObject, {})
       : []
 
-    const opEnv = Object.entries({ ...defaultEnv, ...opsYamlEnv })
+    const env = Object.entries({ ...defaultEnv, ...opsYamlEnv })
       .map(this.overrideEnvWithProcessEnv(processEnv))
       .map(this.concatenateKeyValToString)
 
-    return { ...rest, config, op: { ...op, opEnv } }
+    return { ...rest, config, op: { ...op, env } }
   }
 
   replaceHomeAlias = (bindPair: string) => {
