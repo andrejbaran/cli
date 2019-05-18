@@ -2,7 +2,7 @@
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Saturday, 6th April 2019 10:39:58 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Thursday, 16th May 2019 4:54:26 pm
+ * @lastModifiedTime: Friday, 17th May 2019 6:29:20 pm
  * @copyright (c) 2019 CTO.ai
  *
  * DESCRIPTION
@@ -41,8 +41,8 @@ import {
 import { CouldNotGetRegistryToken } from '~/errors/customErrors'
 import { OP_FILE } from '~/constants/opConfig'
 import { onExit, asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
-import { string } from '@oclif/parser/lib/flags'
 import { LocalOpPipelineError } from '~/types/ChildProcessError'
+import getDocker from '~/utils/get-docker'
 
 type LocalHook = 'main command' | 'before-hook' | 'after-hook'
 
@@ -77,6 +77,7 @@ export default class Run extends Command {
     },
   ]
 
+  docker: Docker | undefined
   container: Docker.Container | undefined = undefined
 
   prompts: Container<Question> = {
@@ -780,6 +781,8 @@ export default class Run extends Command {
       if (localOp) {
         return await this.runLocalOps(localOp, parsedArgs)
       }
+
+      this.docker = await getDocker(this, 'run')
 
       const runPipeline = asyncPipe(
         this.getOpConfig,

@@ -8,6 +8,7 @@
  *
  */
 import * as path from 'path'
+import Docker from 'dockerode'
 
 import Command, { flags } from '../base'
 import { Op } from '../types'
@@ -24,6 +25,7 @@ import { getOpUrl, getOpImageTag } from '../utils/getOpUrl'
 import { OPS_REGISTRY_HOST } from '../constants/env'
 import { OP_FILE } from '../constants/opConfig'
 import { isValidOpName } from '../utils/validate'
+import getDocker from '~/utils/get-docker'
 
 export default class Build extends Command {
   static description = 'Build your op for sharing.'
@@ -36,8 +38,12 @@ export default class Build extends Command {
     { name: 'path', description: 'Path to the op you want to build.' },
   ]
 
+  docker: Docker | undefined
+
   async run(this: any) {
     try {
+      this.docker = await getDocker(this, 'build')
+
       const { args } = this.parse(Build)
       if (!args.path) throw new MissingRequiredArgument('ops [command]')
 

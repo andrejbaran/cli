@@ -81,7 +81,10 @@
       "validate": "./lib/hooks/validate",
       "publish": "./lib/hooks/publish",
       "error": "./lib/hooks/error",
-      "prerun": "./lib/hooks/prerun/check-version"
+      "prerun": [
+        "./lib/hooks/prerun/check-version",
+        "./lib/hooks/prerun/check-docker"
+      ]
     },
     "bin": "ops",
     "plugins": [
