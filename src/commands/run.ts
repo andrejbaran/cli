@@ -115,14 +115,13 @@ export default class Run extends Command {
     const manifestObj: Op = yaml.parse(manifestYML)
 
     // This allows any flags aside from -h to be passed into the op's run command
-    const run = [manifestObj.run, ...opParams].join(' ')
 
     const image = path.join(
       OPS_REGISTRY_HOST,
       `${team.name}/${manifestObj.name}`,
     )
 
-    return { op: { ...manifestObj, run, image }, isPublished: false }
+    return { op: { ...manifestObj, image }, isPublished: false }
   }
 
   getOpFromAPI = async (opNameOrPath: string, config: Config) => {
@@ -192,7 +191,7 @@ export default class Run extends Command {
       : await this.getOpFromAPI(nameOrPath, config)
 
     if (!op || !op.name) throw new Error('Unable to find Op')
-
+    op.run = [op.run, ...opParams].join(' ')
     if (help) {
       this.printCustomHelp(op)
       process.exit()
