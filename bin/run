@@ -1,6 +1,10 @@
 #!/usr/bin/env node --preserve-symlinks
 
 // run the command
+
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'production'
+}
 require('@oclif/command')
   .run()
   .then(require('@oclif/command/flush'))
