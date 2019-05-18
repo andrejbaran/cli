@@ -8,7 +8,7 @@ const hook: Hook<'prerun'> = async function(opts) {
     const command = opts.Command.id
 
     // not including `run` here because local ops work without Docker
-    const dockerDependentCommands = ['publish', 'build']
+    const dockerDependentCommands = ['publish', 'build', 'cleanup']
 
     if (dockerDependentCommands.includes(command)) {
       const docker = await getDocker(CTOCommand, command)
