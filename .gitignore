@@ -2,7 +2,7 @@
 *-error.log
 /.nyc_output
 /dist
-/lib
+# /lib
 /logs
 /tmp
 /yarn.lock
@@ -12,3 +12,4 @@ oclif.manifest.json
 .DS_store
 .env*
 /test/coverage
+.vscode/*
