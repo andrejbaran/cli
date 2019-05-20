@@ -21,7 +21,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.3.17 darwin-x64 node-v11.9.0
+@cto.ai/ops/1.3.17 darwin-x64 node-v11.14.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -241,7 +241,7 @@ _See code: [src/commands/run.ts](https://github.com/cto.ai/ops/blob/v1.3.17/src/
 
 ## `ops search [FILTER]`
 
-Search for ops in the registry.
+Search for ops in your workspaces.
 
 ```
 USAGE
