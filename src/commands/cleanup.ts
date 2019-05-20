@@ -94,6 +94,7 @@ export class Cleanup extends Command {
 
       this.log(`\n Successfully removed images for ${opName}`)
     } catch (err) {
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }

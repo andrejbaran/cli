@@ -799,7 +799,7 @@ export default class Run extends Command {
         options: undefined,
       })
     } catch (err) {
-      console.log('err :', err)
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }

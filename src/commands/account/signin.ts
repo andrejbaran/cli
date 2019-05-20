@@ -151,6 +151,7 @@ export default class AccountSignin extends Command {
 
       await signinPipeline(flags)
     } catch (err) {
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }
