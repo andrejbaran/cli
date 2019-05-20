@@ -198,6 +198,7 @@ export default class AccountSignup extends Command {
 
       await signupPipeline(this.questions)
     } catch (err) {
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }

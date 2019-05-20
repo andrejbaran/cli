@@ -98,6 +98,7 @@ export default class Remove extends Command {
         },
       })
     } catch (err) {
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }

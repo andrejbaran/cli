@@ -23,44 +23,48 @@ export default class TeamCreate extends Command {
   questions: object[] = []
 
   async run(): Promise<void> {
-    self = this
-    const { flags } = this.parse(TeamCreate)
-    const { name } = flags
-    if (!name) this.questions.push(this.teamNamePrompt)
-    let teamName = name
-    if (this.questions.length) {
-      const res = await ux.prompt(this.questions)
-      teamName = res.teamName
-    } else {
-      const validName = name && (await this.validateTeamName(name))
-      if (!validName || typeof validName === 'string') {
-        throw new InvalidTeamNameFormat(null)
+    try {
+      self = this
+      const { flags } = this.parse(TeamCreate)
+      const { name } = flags
+      if (!name) this.questions.push(this.teamNamePrompt)
+      let teamName = name
+      if (this.questions.length) {
+        const res = await ux.prompt(this.questions)
+        teamName = res.teamName
+      } else {
+        const validName = name && (await this.validateTeamName(name))
+        if (!validName || typeof validName === 'string') {
+          throw new InvalidTeamNameFormat(null)
+        }
       }
-    }
 
-    const res = await this.api
-      .create(
-        'teams',
-        { name: teamName },
-        { headers: { Authorization: this.accessToken } },
-      )
-      .catch(err => {
-        throw new InvalidTeamNameFormat(err)
+      const res = await this.api
+        .create(
+          'teams',
+          { name: teamName },
+          { headers: { Authorization: this.accessToken } },
+        )
+        .catch(err => {
+          throw new InvalidTeamNameFormat(err)
+        })
+      const team = { id: res.data.id, name: res.data.name }
+
+      this.log(`\n ${ux.colors.white('🙌 Your team has been created!')}`)
+
+      const oldConfig = await this.readConfig()
+      await this.writeConfig(oldConfig, { team })
+
+      this.analytics.track({
+        userId: this.user.email,
+        event: 'Ops Team Create',
+        properties: {
+          teamName: team.name,
+        },
       })
-    const team = { id: res.data.id, name: res.data.name }
-
-    this.log(`\n ${ux.colors.white('🙌 Your team has been created!')}`)
-
-    const oldConfig = await this.readConfig()
-    await this.writeConfig(oldConfig, { team })
-
-    this.analytics.track({
-      userId: this.user.email,
-      event: 'Ops Team Create',
-      properties: {
-        teamName: team.name,
-      },
-    })
+    } catch (err) {
+      this.debug(err)
+    }
   }
 
   async validateTeamName(input: string): Promise<boolean | string> {
