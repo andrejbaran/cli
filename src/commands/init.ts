@@ -249,6 +249,7 @@ export default class Init extends Command {
 
       await initPipeline({ prompts: this.initPrompts, flags })
     } catch (err) {
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }

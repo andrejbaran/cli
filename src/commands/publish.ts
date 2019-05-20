@@ -17,6 +17,7 @@ import { OP_FILE } from '../constants/opConfig'
 import { Op, RegistryAuth } from '../types'
 import {
   CouldNotCreateOp,
+  DockerPublishNoImageFound,
   MissingRequiredArgument,
   FileNotFoundError,
   InvalidInputCharacter,
@@ -34,6 +35,8 @@ export default class Publish extends Command {
   static args = [
     { name: 'path', description: 'Path to the op you want to publish.' },
   ]
+  imageFilterPredicate = (repo: string) => ({ RepoTags }: Docker.ImageInfo) =>
+    RepoTags.find((repoTag: string) => repoTag.includes(repo))
 
   docker: Docker | undefined
 
@@ -50,6 +53,14 @@ export default class Publish extends Command {
 
       this.isLoggedIn()
 
+      const registryAuth: RegistryAuth | undefined = await this.getRegistryAuth(
+        this.accessToken,
+      )
+
+      if (!registryAuth) {
+        throw new Error('could not get registry auth')
+      }
+
       const manifest = await fs
         .readFile(path.join(opPath, OP_FILE), 'utf8')
         .catch((err: any) => {
@@ -61,7 +72,16 @@ export default class Publish extends Command {
       // await this.config.runHook('validate', pkg)
       if (!isValidOpName(pkg)) throw new InvalidInputCharacter('Op Name')
 
-      // TODO: Handle removal of image from database if publish doesn't work
+      if (!this.docker) throw new Error('No docker container')
+      const list: Docker.ImageInfo[] = await this.docker.listImages()
+      const repo = `${OPS_REGISTRY_HOST}/${this.team.name}/${pkg.name}:latest`
+
+      const localImage = list
+        .map(this.imageFilterPredicate(repo))
+        .find((repoTag: string) => !!repoTag)
+      if (!localImage) {
+        throw new DockerPublishNoImageFound(pkg.name, this.team.name)
+      }
       let publishOpResponse = await this.api.create(
         'ops',
         { ...pkg, teamID: this.team.id },
@@ -79,14 +99,6 @@ export default class Publish extends Command {
         )
       }
       const { data: op }: { data: Op } = publishOpResponse
-
-      const registryAuth: RegistryAuth | undefined = await this.getRegistryAuth(
-        this.accessToken,
-      )
-
-      if (!registryAuth) {
-        throw new Error('could not get registry auth')
-      }
 
       await this.config.runHook('publish', {
         op,
@@ -106,6 +118,7 @@ export default class Publish extends Command {
         },
       })
     } catch (err) {
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }

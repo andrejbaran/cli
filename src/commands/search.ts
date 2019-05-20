@@ -10,7 +10,7 @@ import { AnalyticsError, APIError } from '../errors/customErrors'
 import { LOCAL, OP_FILE } from '../constants/opConfig'
 
 export default class Search extends Command {
-  static description = 'Search for ops in the registry.'
+  static description = 'Search for ops in your workspaces.'
 
   static args = [
     {
@@ -28,7 +28,7 @@ export default class Search extends Command {
   showSearchMessage = (filter: string) => {
     this.log(
       `\n🔍 ${this.ux.colors.white(
-        'Searching team, public, local registries for,',
+        'Searching team, public & local workspaces for ',
       )} ${this.ux.colors.callOutCyan(filter || 'all ops')}.`,
     )
     return filter
@@ -115,7 +115,7 @@ export default class Search extends Command {
   checkData = async (filteredOps: Op[]) => {
     if (!filteredOps.length) {
       this.log(
-        `\n 😞 No ops found in your team, public or local registry. Try again or run ${this.ux.colors.callOutCyan(
+        `\n 😞 No ops found in your team, public or local workspaces. Try again or run ${this.ux.colors.callOutCyan(
           'ops publish',
         )} to create an op. \n`,
       )
@@ -129,11 +129,13 @@ export default class Search extends Command {
       type: 'autocomplete',
       name: 'runOp',
       pageSize: 5,
-      message: `\nSelect a team, public ${this.ux.colors.multiBlue(
+      message: `\nSelect a ${this.ux.colors.errorRed(
         '\u2749',
-      )} or local ${this.ux.colors.successGreen(
+      )} team ${this.ux.colors.multiBlue(
         '\u2749',
-      )} op to run ${this.ux.colors.reset.green('→')}`,
+      )} public or ${this.ux.colors.successGreen(
+        '\u2749',
+      )} local op to run ${this.ux.colors.reset.green('→')}`,
       source: this._autocompleteSearch.bind(this),
       bottomContent: `\n \n${this.ux.colors.white(
         `Or, run ${this.ux.colors.callOutCyan(
@@ -191,15 +193,17 @@ export default class Search extends Command {
     const opName = this.ux.colors.reset.white(op.name)
     switch (op.teamID) {
       case this.team.id:
-        return opName
+        return `${this.ux.colors.reset(
+          this.ux.colors.errorRed('\u2749'),
+        )} ${opName}`
       case LOCAL:
-        return `${opName} ${this.ux.colors.reset(
+        return `${this.ux.colors.reset(
           this.ux.colors.successGreen('\u2749'),
-        )}`
+        )} ${opName} `
       default:
-        return `${opName} ${this.ux.colors.reset(
+        return `${this.ux.colors.reset(
           this.ux.colors.multiBlue('\u2749'),
-        )}`
+        )} ${opName} `
     }
   }
 
@@ -224,6 +228,7 @@ export default class Search extends Command {
       )
       await searchPipeline(filter)
     } catch (err) {
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }

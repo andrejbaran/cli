@@ -205,6 +205,7 @@ export default class AccountSignup extends Command {
         )} to begin creating your own. \n\n`,
       )
     } catch (err) {
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }

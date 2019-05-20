@@ -51,6 +51,7 @@ export default class AccountSignout extends Command {
         },
       })
     } catch (err) {
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }

@@ -116,14 +116,13 @@ export default class Run extends Command {
     const manifestObj: Op = yaml.parse(manifestYML)
 
     // This allows any flags aside from -h to be passed into the op's run command
-    const run = [manifestObj.run, ...opParams].join(' ')
 
     const image = path.join(
       OPS_REGISTRY_HOST,
       `${team.name}/${manifestObj.name}`,
     )
 
-    return { op: { ...manifestObj, run, image }, isPublished: false }
+    return { op: { ...manifestObj, image }, isPublished: false }
   }
 
   getOpFromAPI = async (opNameOrPath: string, config: Config) => {
@@ -193,7 +192,7 @@ export default class Run extends Command {
       : await this.getOpFromAPI(nameOrPath, config)
 
     if (!op || !op.name) throw new Error('Unable to find Op')
-
+    op.run = [op.run, ...opParams].join(' ')
     if (help) {
       this.printCustomHelp(op)
       process.exit()
@@ -374,11 +373,11 @@ export default class Run extends Command {
       ? op.env.reduce(this.convertEnvStringsToObject, {})
       : []
 
-    const opEnv = Object.entries({ ...defaultEnv, ...opsYamlEnv })
+    const env = Object.entries({ ...defaultEnv, ...opsYamlEnv })
       .map(this.overrideEnvWithProcessEnv(processEnv))
       .map(this.concatenateKeyValToString)
 
-    return { ...rest, config, op: { ...op, opEnv } }
+    return { ...rest, config, op: { ...op, env } }
   }
 
   replaceHomeAlias = (bindPair: string) => {
@@ -621,6 +620,7 @@ export default class Run extends Command {
   async findLocalOp(manifestPath: string, nameOrPath: string) {
     const manifest = await fs.readFile(manifestPath, 'utf8')
     const { ops }: { ops: LocalOp[] } = yaml.parse(manifest)
+    if (!ops) return
     return ops.find(({ name }) => name === nameOrPath)
   }
 
@@ -761,9 +761,9 @@ export default class Run extends Command {
       localManifest,
       nameOrPath,
     )
-    if (localOp && !localOp.run) {
-      throw new Error('ops.yml must specify a run command')
-    }
+    // if (localOp && !localOp.run) {
+    //   throw new Error('ops.yml must specify a run command')
+    // }
 
     return localOp
   }
@@ -802,6 +802,7 @@ export default class Run extends Command {
         options: undefined,
       })
     } catch (err) {
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }

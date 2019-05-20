@@ -121,8 +121,9 @@ describe('Custom Errors', () => {
     expect(err).toBeInstanceOf(CouldNotCreateOp)
     expect(ErrorTemplate).toHaveBeenCalledTimes(1)
     expect(ErrorTemplate).toHaveBeenCalledWith(
-      'Failed to publish op. API failed to create a new op.',
+      '🤚 This op already exists, please remove it and republish to update.',
       newError,
+      { source: EXPECTED },
     )
   })
 

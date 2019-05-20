@@ -24,6 +24,7 @@ export default class Update extends Command {
       await this._updateVersion()
       this._trackAnalytics(latestVersion)
     } catch (err) {
+      this.debug(err)
       this.config.runHook('error', { err })
     }
   }
