@@ -1,3 +1,4 @@
+import { ux } from '@cto.ai/sdk'
 import { ErrorTemplate } from '../errors/ErrorTemplate'
 import { errorSource } from '../constants/errorSource'
 
@@ -69,7 +70,13 @@ export class UserUnauthorized extends ErrorTemplate {
 
 export class CouldNotCreateOp extends ErrorTemplate {
   constructor(err) {
-    super('Failed to publish op. API failed to create a new op.', err)
+    super(
+      '🤚 This op already exists, please remove it and republish to update.',
+      err,
+      {
+        source: EXPECTED,
+      },
+    )
   }
 }
 
@@ -169,9 +176,13 @@ export class NoOpFoundForDeletion extends ErrorTemplate {
 }
 
 export class DockerPublishNoImageFound extends ErrorTemplate {
-  constructor(opName: string) {
+  constructor(opName: string, teamName: string) {
     super(
-      `✋ We couldn't find an image for that op. You'll need to build the op by running "$ ops build ${opName}"`,
+      `✋ We couldn't find an image for that op... \n ⚙️  Please build this op for ${ux.colors.actionBlue(
+        `${teamName}`,
+      )}: ${ux.colors.successGreen('$')} ${ux.colors.callOutCyan(
+        `ops build ${opName}`,
+      )}`,
       undefined,
       { source: EXPECTED },
     )
