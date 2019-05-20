@@ -30,7 +30,4 @@ tscpaths -p src/tsconfig.json -s ./src -o ./lib 1>/dev/null
 oclif-dev manifest
 oclif-dev readme
 
-if [ ! -d lib ] ; then
-  mkdir lib
-fi
 cp -R src/templates lib/templates
