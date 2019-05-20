@@ -2,7 +2,7 @@
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Friday, 5th April 2019 12:06:07 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Tuesday, 14th May 2019 11:26:16 am
+ * @lastModifiedTime: Friday, 17th May 2019 6:26:32 pm
  * @copyright (c) 2019 CTO.ai
  *
  */
@@ -11,10 +11,8 @@ import { ux as _ux } from '@cto.ai/sdk'
 import Command, { flags } from '@oclif/command'
 import * as OClifConfig from '@oclif/config'
 import Analytics from 'analytics-node'
-import Docker from 'dockerode'
 import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
-import getDocker from './utils/get-docker'
 import { asyncPipe, _trace } from './utils/asyncPipe'
 import { handleMandatory, handleUndefined } from './utils/guards'
 
@@ -45,7 +43,6 @@ import { UserUnauthorized, APIError } from './errors/customErrors'
 
 abstract class CTOCommand extends Command {
   analytics = new Analytics(OPS_SEGMENT_KEY)
-  docker!: Docker | undefined
 
   accessToken!: string
   user!: User
@@ -71,7 +68,6 @@ abstract class CTOCommand extends Command {
       this.user = user
       this.team = team
       this.state = { config }
-      this.docker = await this._getDocker()
     } catch (err) {
       this.config.runHook('error', { err })
     }
@@ -291,11 +287,6 @@ abstract class CTOCommand extends Command {
         throw new APIError(err)
       })
     return response.data
-  }
-
-  private async _getDocker() {
-    if (NODE_ENV === 'test') return
-    return getDocker(this, 'base')
   }
 
   async createToken(email: string) {

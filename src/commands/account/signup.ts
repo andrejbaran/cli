@@ -1,4 +1,3 @@
-import { ux } from '@cto.ai/sdk'
 import { Config, UserCredentials, QuestionInquirer } from '~/types'
 import Command, { flags } from '~/base'
 import { INTERCOM_EMAIL, NODE_ENV } from '~/constants/env'
@@ -50,31 +49,31 @@ export default class AccountSignup extends Command {
     {
       type: 'input',
       name: 'email',
-      message: `\n📩 Please enter your email ${ux.colors.reset.green(
+      message: `\n📩 Please enter your email ${this.ux.colors.reset.green(
         '→',
-      )}  \n${ux.colors.white('Enter Email')}`,
-      afterMessage: `${ux.colors.reset.green('✓')} Email`,
-      afterMessageAppend: `${ux.colors.reset(' added!')}`,
+      )}  \n${this.ux.colors.white('Enter Email')}`,
+      afterMessage: `${this.ux.colors.reset.green('✓')} Email`,
+      afterMessageAppend: `${this.ux.colors.reset(' added!')}`,
       validate: this._validateEmail.bind(this),
     },
     {
       type: 'input',
       name: 'username',
-      message: `\n🖖 Create a username to get started ${ux.colors.reset.green(
+      message: `\n🖖 Create a username to get started ${this.ux.colors.reset.green(
         '→',
-      )}  \n${ux.colors.white('Enter Username')}`,
-      afterMessage: `${ux.colors.reset.green('✓')} Username`,
-      afterMessageAppend: `${ux.colors.reset(' created!')}`,
+      )}  \n${this.ux.colors.white('Enter Username')}`,
+      afterMessage: `${this.ux.colors.reset.green('✓')} Username`,
+      afterMessageAppend: `${this.ux.colors.reset(' created!')}`,
       validate: this._validateUsername.bind(this),
     },
     {
       type: 'password',
       name: 'password',
       mask: '*',
-      message: `\n🔑 Let's create a password next ${ux.colors.reset.green(
+      message: `\n🔑 Let's create a password next ${this.ux.colors.reset.green(
         '→',
-      )}  \n${ux.colors.white('Enter your password')}`,
-      afterMessage: `${ux.colors.reset.green('✓')} Password added!`,
+      )}  \n${this.ux.colors.white('Enter your password')}`,
+      afterMessage: `${this.ux.colors.reset.green('✓')} Password added!`,
       validate: validatePasswordFormat,
     },
     {
@@ -82,21 +81,21 @@ export default class AccountSignup extends Command {
       name: 'cpassword',
       mask: '*',
       message: '\n🔑 Confirm your password: ',
-      afterMessage: `${ux.colors.reset.green('✓')} Password confirmed!`,
+      afterMessage: `${this.ux.colors.reset.green('✓')} Password confirmed!`,
       validate: validateCpassword,
     },
   ]
 
-  logConfimationMessage = () => {
-    ux.spinner.stop(`${ux.colors.green('Done!')}`)
+  logConfirmationMessage = () => {
+    this.ux.spinner.stop(`${this.ux.colors.green('Done!')}`)
 
     this.log(
-      `\n✅ ${ux.colors.white(
+      `\n✅  ${this.ux.colors.white(
         'Your account is setup! You can now build, run and share ops!',
       )}`,
     )
     this.log(
-      `🎉 ${ux.colors.white(
+      `🎉  ${this.ux.colors.white(
         'We just sent you an email with tips on how to get started!',
       )}\n`,
     )
@@ -146,7 +145,7 @@ export default class AccountSignup extends Command {
 
   logCreatingAccount = (input: SignUpData) => {
     this.log('')
-    ux.spinner.start(`${ux.colors.white('Creating account')}`)
+    this.ux.spinner.start(`${this.ux.colors.white('Creating account')}`)
     return { ...input }
   }
 
@@ -160,27 +159,27 @@ export default class AccountSignup extends Command {
   logHelpMessage = () => {
     this.log('')
     this.log(
-      `💻 ${ux.colors.multiBlue('CTO.ai Ops')} - ${ux.colors.actionBlue(
-        'The CLI built for Teams',
-      )} 🚀`,
+      `💻 ${this.ux.colors.multiBlue(
+        'CTO.ai Ops',
+      )} - ${this.ux.colors.actionBlue('The CLI built for Teams')} 🚀`,
     )
     this.log('')
 
     this.log(
-      `👋 ${ux.colors.white('Welcome to the')} ${ux.colors.callOutCyan(
-        'Ops CLI beta',
-      )}! \n`,
+      `👋 ${this.ux.colors.white(
+        'Welcome to the',
+      )} ${this.ux.colors.callOutCyan('Ops CLI beta')}! \n`,
     )
     this.log('❔ Let us know if you have questions...')
 
     this.log(
-      `📬 You can always reach us by ${this.ux.url(
+      `📬  You can always reach us by ${this.ux.url(
         'email',
         `mailto:${INTERCOM_EMAIL}`,
       )} ${this.ux.colors.dim(`(${INTERCOM_EMAIL})`)}.\n`,
     )
 
-    this.log(`⚡️ Let's get you ${ux.colors.callOutCyan('started')}...`)
+    this.log(`⚡️  Let's get you ${this.ux.colors.callOutCyan('started')}...`)
   }
 
   async run() {
@@ -193,10 +192,18 @@ export default class AccountSignup extends Command {
         this.createUser,
         this.signinFlow.bind(this),
         this.trackSignup,
-        this.logConfimationMessage,
+        this.logConfirmationMessage,
       )
 
       await signupPipeline(this.questions)
+
+      console.log(
+        `\n💻  Now try running ${this.ux.colors.italic.dim(
+          'ops search',
+        )} to find some ops to run, or ${this.ux.colors.italic.dim(
+          'ops init',
+        )} to begin creating your own. \n\n`,
+      )
     } catch (err) {
       this.debug(err)
       this.config.runHook('error', { err })

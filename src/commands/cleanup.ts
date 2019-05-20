@@ -1,9 +1,11 @@
+import { Output } from '@oclif/parser/lib'
+import Docker from 'dockerode'
 import Command, { flags } from '../base'
 import { ImageNotFoundError } from '../errors/customErrors'
 import { OPS_REGISTRY_HOST } from '../constants/env'
-import { Output } from '@oclif/parser/lib'
 import { FindResponse } from '../types'
 import { FeathersClient } from '../services/feathers'
+import getDocker from '~/utils/get-docker'
 
 // get ops matching the provided name
 export const getOps = async (
@@ -56,11 +58,14 @@ export class Cleanup extends Command {
     },
   ]
 
+  docker: Docker | undefined
+
   async run() {
     try {
       const {
         args: { opName },
       }: Output<{}, { opName: string }> = this.parse(Cleanup)
+      this.docker = await getDocker(this, 'publish')
 
       this.isLoggedIn()
 

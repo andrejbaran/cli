@@ -1,8 +1,8 @@
 /**
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Friday, 5th April 2019 12:06:07 pm
- * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Friday, 3rd May 2019 4:57:28 pm
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Friday, 17th May 2019 6:28:25 pm
  * @copyright (c) 2019 CTO.ai
  *
  */
@@ -23,6 +23,7 @@ import {
   InvalidInputCharacter,
 } from '../errors/customErrors'
 import { isValidOpName } from '../utils/validate'
+import getDocker from '~/utils/get-docker'
 
 export default class Publish extends Command {
   static description = 'Publish an op to a team.'
@@ -37,10 +38,14 @@ export default class Publish extends Command {
   imageFilterPredicate = (repo: string) => ({ RepoTags }: Docker.ImageInfo) =>
     RepoTags.find((repoTag: string) => repoTag.includes(repo))
 
+  docker: Docker | undefined
+
   async run() {
     try {
       const { args } = this.parse(Publish)
       if (!args.path) throw new MissingRequiredArgument('ops publish')
+
+      this.docker = await getDocker(this, 'publish')
 
       const opPath = args.path
         ? path.resolve(process.cwd(), args.path)

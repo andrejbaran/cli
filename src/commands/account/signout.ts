@@ -38,7 +38,7 @@ export default class AccountSignout extends Command {
             '✓',
           )} Signed out! Type \'ops ${ux.colors.actionBlue(
             'account:signin',
-          )}\' to sign back into your account.`,
+          )}\' to sign back into your account.\n`,
         )
       }
 
