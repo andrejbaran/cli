@@ -45,7 +45,7 @@ export default async function publish(
     // getImage always returns an image. Must listImages
     const image: Dockerode.Image | undefined = docker.getImage(imageName)
     if (!image) {
-      throw new DockerPublishNoImageFound(op.name)
+      throw new DockerPublishNoImageFound(op.name, this.team.name)
     }
 
     this.log(

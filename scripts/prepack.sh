@@ -16,8 +16,6 @@
 #! /bin/bash
 
 # start fresh
-rm -rf lib
-
 # create a ~ symlink in node_modules. tsc requires this in order to resolve path aliases.
 link-module-alias
 
