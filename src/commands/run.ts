@@ -619,6 +619,7 @@ export default class Run extends Command {
   async findLocalOp(manifestPath: string, nameOrPath: string) {
     const manifest = await fs.readFile(manifestPath, 'utf8')
     const { ops }: { ops: LocalOp[] } = yaml.parse(manifest)
+    if (!ops) return
     return ops.find(({ name }) => name === nameOrPath)
   }
 
@@ -759,9 +760,9 @@ export default class Run extends Command {
       localManifest,
       nameOrPath,
     )
-    if (localOp && !localOp.run) {
-      throw new Error('ops.yml must specify a run command')
-    }
+    // if (localOp && !localOp.run) {
+    //   throw new Error('ops.yml must specify a run command')
+    // }
 
     return localOp
   }
@@ -798,6 +799,7 @@ export default class Run extends Command {
         options: undefined,
       })
     } catch (err) {
+      console.log('err :', err)
       this.config.runHook('error', { err })
     }
   }
