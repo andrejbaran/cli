@@ -367,6 +367,8 @@ export default class Run extends Command {
       OPS_ACCESS_TOKEN: config.accessToken,
       OPS_API_PATH,
       OPS_API_HOST,
+      OPS_OP_ID: op.id,
+      OPS_TEAM_ID: config.team.id,
     }
 
     const opsYamlEnv: Container<string> = op.env

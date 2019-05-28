@@ -1,4 +1,4 @@
-# 🛠 CTO.ai OPS SDK 🚀
+# Inquirer.js
 
 A collection of common interactive command line user interfaces.
 
@@ -166,3 +166,15 @@ Outputs:
    └─ baz
       └─ qux
 ```
+
+## sdk.track
+
+<a name="track"></a>
+Send a track event to cto.ai api
+
+```typescript
+sdk.track(tags, metadata)
+```
+
+- **tags**: (String || String[]) Tags for the event you want to track
+- **metaData**: (Object) Data you want to be tracked

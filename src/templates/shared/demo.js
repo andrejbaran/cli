@@ -1,4 +1,4 @@
-const { ux, sdk, log } = require('@cto.ai/sdk')
+const { ux, sdk } = require('@cto.ai/sdk')
 const fuzzy = require('fuzzy')
 const states = [
   'Alabama',
@@ -432,16 +432,16 @@ const getFlags = argv => {
 }
 
 const main = async () => {
-
   const argv = process.argv
-  const arguments = (argv && argv.length) ? getArgs(argv) : []
-  const flags = (argv && argv.length) ? getFlags(argv) : []
+  const arguments = argv && argv.length ? getArgs(argv) : []
+  const flags = argv && argv.length ? getFlags(argv) : []
 
-  if (arguments.length && arguments[0]) console.log('The username is ', arguments[0])
-  if (arguments.length && arguments[1]) console.log('The email is ', arguments[1])
+  if (arguments.length && arguments[0])
+    console.log('The username is ', arguments[0])
+  if (arguments.length && arguments[1])
+    console.log('The email is ', arguments[1])
 
   if (flags.length) console.log('Received flags of: ', flags)
-
 
   // Trigger prompt
   // https://github.com/SBoudrias/Inquirer.js/#examples-run-it-and-see-it
@@ -450,17 +450,18 @@ const main = async () => {
 
   console.log(ux.colors.bold.underline('\n Logs \n'))
   answers.password = '*****'
-  log.debug({ answers }, 'New answers logged in as DEBUG')
-  log.info({ answers, tags: 'track' }, 'New answers logged in as INFO')
-  log.error({ answers }, 'New answers logged in as WARN')
 
   await ux.wait(2000)
   console.log(ux.colors.bold.underline('\n Current User \n'))
-  console.log(
-    await sdk.user().catch(err => {
-      console.log('unable to retrieve current user')
-    }),
-  )
+  const currentUser = await sdk.user().catch(err => {
+    console.log('unable to retrieve current user')
+  })
+  console.log(currentUser)
+
+  sdk.track(['demo', 'track'], {
+    currentUser,
+    answers,
+  })
 
   // Spinner Action
   // https://github.com/oclif/cli-ux#cliaction
