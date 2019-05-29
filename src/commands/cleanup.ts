@@ -40,6 +40,7 @@ export const removeImage = async (docker, imageName: string) => {
     .getImage(imageName)
     .remove()
     .catch(err => {
+      this.debug(err)
       throw new ImageNotFoundError()
     })
 }
@@ -83,7 +84,8 @@ export class Cleanup extends Command {
         this.team.id,
         this.accessToken,
         this.api,
-      ).catch(() => {
+      ).catch(err => {
+        this.debug(err)
         throw new Error('API error')
       })
       if (!ops.data) {

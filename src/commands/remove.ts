@@ -35,6 +35,7 @@ export default class Remove extends Command {
           },
         })
         .catch(err => {
+          this.debug(err)
           throw new Error(err)
         })
 
@@ -70,6 +71,7 @@ export default class Remove extends Command {
       await this.api
         .remove('ops', id, { headers: { Authorization: this.accessToken } })
         .catch(err => {
+          this.debug(err)
           throw new Error(err)
         })
 

@@ -46,6 +46,7 @@ export default class TeamCreate extends Command {
           { headers: { Authorization: this.accessToken } },
         )
         .catch(err => {
+          this.debug(err)
           throw new InvalidTeamNameFormat(err)
         })
       const team = { id: res.data.id, name: res.data.name }
@@ -76,6 +77,7 @@ export default class TeamCreate extends Command {
         return `😞 Sorry this name has already been taken. Try again with a different name.`
       return true
     } catch (err) {
+      this.debug(err)
       throw new InvalidTeamNameFormat(err)
     }
   }

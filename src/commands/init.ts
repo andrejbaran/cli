@@ -114,6 +114,7 @@ export default class Init extends Command {
       await fs.copy(sharedDir, destDir)
       return input
     } catch (err) {
+      this.debug(err)
       throw new CopyTemplateFilesError(err)
     }
   }
@@ -134,6 +135,7 @@ export default class Init extends Command {
       fs.writeFileSync(`${destDir}/package.json`, newPackageString)
       return input
     } catch (err) {
+      this.debug(err)
       throw new CouldNotInitializeOp(err)
     }
   }
@@ -159,6 +161,7 @@ export default class Init extends Command {
       fs.writeFileSync(`${destDir}/ops.yml`, newOpsString)
       return input
     } catch (err) {
+      this.debug(err)
       throw new CouldNotInitializeOp(err)
     }
   }
@@ -213,6 +216,7 @@ export default class Init extends Command {
         },
       })
     } catch (err) {
+      this.debug(err)
       throw new AnalyticsError(err)
     }
   }

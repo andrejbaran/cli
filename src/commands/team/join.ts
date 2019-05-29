@@ -24,6 +24,7 @@ export default class TeamJoin extends Command {
     ])
     this.startSpinner()
     const res = await this.joinTeam(inviteCode).catch(err => {
+      this.debug(err)
       throw new InviteCodeInvalid(err)
     })
 

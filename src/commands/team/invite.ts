@@ -57,7 +57,8 @@ export default class TeamInvite extends Command {
       .then(inviteResponses => {
         this._printInviteResponses(inviteesArray, inviteResponses)
       })
-      .catch(() => {
+      .catch(err => {
+        this.debug(err)
         this.error(`Failed inviting ${inviteesArray.length} users to team`)
       })
 

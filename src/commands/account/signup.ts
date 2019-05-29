@@ -26,6 +26,7 @@ export default class AccountSignup extends Command {
       return '❗ The format of your email is invalid, please check that it is correct and try again.'
     const unique = await this.validateUniqueField({ email: input }).catch(
       err => {
+        this.debug(err)
         throw new APIError(err)
       },
     )
@@ -41,6 +42,7 @@ export default class AccountSignup extends Command {
         return '😞 Username is already taken, please try using another.'
       return true
     } catch (err) {
+      this.debug(err)
       throw new APIError(err)
     }
   }
@@ -124,8 +126,9 @@ export default class AccountSignup extends Command {
           terminal: this.config.shell,
         },
       })
-    } catch (error) {
-      throw new AnalyticsError(error)
+    } catch (err) {
+      this.debug(err)
+      throw new AnalyticsError(err)
     }
   }
 
@@ -137,6 +140,7 @@ export default class AccountSignup extends Command {
         username: input.username,
       })
       .catch(err => {
+        this.debug(err)
         throw new SignUpError(err)
       })
     const { email, password } = input

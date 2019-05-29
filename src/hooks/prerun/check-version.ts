@@ -27,6 +27,7 @@ const hook: Hook<'prerun'> = async function(opts) {
       )
     }
   } catch (err) {
+    this.debug(err)
     await this.config.runHook('error', { err })
   }
 }
