@@ -75,6 +75,7 @@ export default class Update extends Command {
       await exec('npm install -g @cto.ai/ops')
       ux.spinner.stop('Done!')
     } catch (err) {
+      this.debug(err)
       ux.spinner.stop('Failed')
       throw new PermissionsError(err)
     }

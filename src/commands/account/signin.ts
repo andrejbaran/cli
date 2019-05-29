@@ -61,6 +61,7 @@ export default class AccountSignin extends Command {
         },
       })
     } catch (err) {
+      this.debug(err)
       throw new AnalyticsError(err)
     }
     return cloneDeep(config)

@@ -50,6 +50,7 @@ export default class Search extends Command {
       const { data: apiOps } = findResponse
       return { apiOps }
     } catch (err) {
+      this.debug(err)
       throw new APIError(err)
     }
   }
@@ -167,6 +168,7 @@ export default class Search extends Command {
         },
       })
     } catch (err) {
+      this.debug(err)
       throw new AnalyticsError(err)
     }
   }

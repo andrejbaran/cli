@@ -150,6 +150,7 @@ export default class Run extends Command {
       }
       return { op: data[0], isPublished: true }
     } catch (err) {
+      this.debug(err)
       throw new Error(err)
     }
   }
@@ -255,6 +256,7 @@ export default class Run extends Command {
         }
         bar.update(100)
         bar.stop()
+        this.debug(err)
         return err ? reject(err) : resolve(allData)
       })
   }
@@ -323,6 +325,7 @@ export default class Run extends Command {
 
       return opUrl
     } catch (err) {
+      this.debug(err)
       throw new Error(err)
     }
   }
@@ -342,6 +345,7 @@ export default class Run extends Command {
       }
       return { op: { ...op, image: localImage }, config }
     } catch (err) {
+      this.debug(err)
       throw new Error('Unable to find image for this op')
     }
   }
@@ -459,6 +463,7 @@ export default class Run extends Command {
       this.container = container
       return { ...rest, op, options }
     } catch (err) {
+      this.debug(err)
       throw new Error('Error creating Docker container')
     }
   }
@@ -481,6 +486,7 @@ export default class Run extends Command {
 
       return state
     } catch (err) {
+      this.debug(err)
       throw new Error(err)
     }
   }
@@ -497,6 +503,7 @@ export default class Run extends Command {
         this.container.resize(dimensions, () => {})
       }
     } catch (err) {
+      this.debug(err)
       throw new Error(err)
     }
   }
@@ -515,6 +522,7 @@ export default class Run extends Command {
       stream.end()
       this.container.remove(() => process.exit())
     } catch (err) {
+      this.debug(err)
       throw new Error(err)
     }
   }
@@ -550,6 +558,7 @@ export default class Run extends Command {
       await this.container.wait()
       this.handleExit(stream, false)
     } catch (err) {
+      this.debug(err)
       throw new Error(err)
     }
   }

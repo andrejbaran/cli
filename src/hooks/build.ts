@@ -28,6 +28,7 @@ async function build(
       log(chunk.stream.replace('\n', ''))
       all.push(chunk)
     } else if (chunk.errorDetail) {
+      this.debug(chunk.errorDetail)
       throw new ReadFileError(chunk.errorDetail.message)
     }
     cb()
@@ -45,8 +46,8 @@ async function build(
       const stream = await docker
         .buildImage({ context: opPath, src: op.src }, { t: tag })
         .catch(err => {
-          throw new DockerBuildImageError(err)
-          reject()
+          this.debug(err)
+          reject(new DockerBuildImageError(err))
           return null
         })
 

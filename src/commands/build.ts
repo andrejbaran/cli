@@ -26,6 +26,7 @@ import { OPS_REGISTRY_HOST } from '../constants/env'
 import { OP_FILE } from '../constants/opConfig'
 import { isValidOpName } from '../utils/validate'
 import getDocker from '~/utils/get-docker'
+import { thisExpression } from '@babel/types'
 
 export default class Build extends Command {
   static description = 'Build your op for sharing.'
@@ -56,6 +57,7 @@ export default class Build extends Command {
       const manifest = await fs
         .readFile(path.join(opPath, OP_FILE), 'utf8')
         .catch(err => {
+          this.debug(err)
           throw new FileNotFoundError(err, opPath, OP_FILE)
         })
       const op: Op = manifest && yaml.parse(manifest)
