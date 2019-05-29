@@ -158,7 +158,7 @@ export class InvalidInputCharacter extends ErrorTemplate {
 export class MissingRequiredArgument extends ErrorTemplate {
   constructor(command: string) {
     super(
-      `✋ This command requires an argument. Run $ ${command} -h to learn more.`,
+      `✋ This command requires an argument. Run $ ${command} --help to learn more.`,
       undefined,
       { source: EXPECTED },
     )

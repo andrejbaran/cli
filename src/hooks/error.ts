@@ -9,7 +9,6 @@
  * @copyright (c) 2019 Hack Capital
  */
 
-import { log } from '@cto.ai/sdk'
 import { ErrorTemplate } from '../errors/ErrorTemplate'
 import { errorSource } from '../constants/errorSource'
 
@@ -24,8 +23,6 @@ export default async function error(
   this: any,
   options: { err: ErrorTemplate },
 ) {
-  log.error(options.err)
-
   const { UNEXPECTED } = errorSource
   const { extra } = options.err
   const { message } = options.err
