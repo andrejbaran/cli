@@ -38,7 +38,10 @@ import {
   RunCommandArgs,
   ChildProcessError,
 } from '~/types'
-import { CouldNotGetRegistryToken } from '~/errors/customErrors'
+import {
+  CouldNotGetRegistryToken,
+  MissingRequiredArgument,
+} from '~/errors/customErrors'
 import { OP_FILE } from '~/constants/opConfig'
 import { onExit, asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
 import { LocalOpPipelineError } from '~/types/ChildProcessError'
@@ -100,7 +103,7 @@ export default class Run extends Command {
       context: this,
     })
     if (!args.nameOrPath && !flags.help) {
-      throw new Error('Please enter the name or path of the op')
+      throw new MissingRequiredArgument('ops run')
     }
     if (!args.nameOrPath) this._help()
 
