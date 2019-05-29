@@ -29,7 +29,7 @@ export default class TeamInvite extends Command {
       flags: { inviteesInput },
       argv,
     } = this.parse(TeamInvite)
-
+    this.isLoggedIn()
     if (argv.length) {
       this.error(
         'team:invite doesn\'t accept any arguments. Please use the -i flag like this: ops team:invite "user1, user2@gmail.com, user3@something"',
