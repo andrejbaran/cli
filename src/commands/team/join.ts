@@ -19,6 +19,7 @@ export default class TeamJoin extends Command {
   }
 
   async run() {
+    this.isLoggedIn()
     const { inviteCode }: { inviteCode: string } = await ux.prompt([
       inviteCodePrompt,
     ])

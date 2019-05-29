@@ -14,6 +14,7 @@ export default class TeamSwitch extends Command {
   }
 
   async run() {
+    this.isLoggedIn()
     this.log("Here's the list of your teams:\n")
 
     // Gets the active team from the config

@@ -24,6 +24,7 @@ export default class TeamCreate extends Command {
 
   async run(): Promise<void> {
     try {
+      this.isLoggedIn()
       self = this
       const { flags } = this.parse(TeamCreate)
       const { name } = flags
