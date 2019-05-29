@@ -203,8 +203,10 @@ export default class Run extends Command {
     return { ...rest, op, isPublished, parsedArgs, config }
   }
 
-  imageFilterPredicate = (repo: string) => ({ RepoTags }: Docker.ImageInfo) =>
-    RepoTags.find((repoTag: string) => repoTag.includes(repo))
+  imageFilterPredicate = (repo: string) => ({ RepoTags }: Docker.ImageInfo) => {
+    if (!RepoTags) return
+    return RepoTags.find((repoTag: string) => repoTag.includes(repo))
+  }
 
   findLocalImage = async ({ id, name }: Op, { team }: Config) => {
     if (!this.docker) throw new Error('No docker container')

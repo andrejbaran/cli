@@ -35,8 +35,10 @@ export default class Publish extends Command {
   static args = [
     { name: 'path', description: 'Path to the op you want to publish.' },
   ]
-  imageFilterPredicate = (repo: string) => ({ RepoTags }: Docker.ImageInfo) =>
-    RepoTags.find((repoTag: string) => repoTag.includes(repo))
+  imageFilterPredicate = (repo: string) => ({ RepoTags }: Docker.ImageInfo) => {
+    if (!RepoTags) return
+    return RepoTags.find((repoTag: string) => repoTag.includes(repo))
+  }
 
   docker: Docker | undefined
 
