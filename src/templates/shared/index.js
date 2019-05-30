@@ -1,4 +1,4 @@
-const { ux, sdk, log } = require('@cto.ai/sdk')
+const { sdk } = require('@cto.ai/sdk')
 
 async function main() {
   const res = await sdk.user().catch(err => console.log(err))
