@@ -1,5 +1,5 @@
 import Command, { flags } from '../base'
-import { ux, log } from '@cto.ai/sdk'
+import { ux } from '@cto.ai/sdk'
 import { OPS_REGISTRY_HOST } from '../constants/env'
 import { NoOpFoundForDeletion } from '../errors/customErrors'
 
