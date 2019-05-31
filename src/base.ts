@@ -75,13 +75,14 @@ abstract class CTOCommand extends Command {
 
   getRegistryAuth = async (
     accessToken: string,
+    teamName: string,
   ): Promise<RegistryAuth | undefined> => {
     try {
       const registryResponse: RegistryResponse = await this.api.find(
         'registry/token',
         {
           query: {
-            registryProject: this.team.name,
+            registryProject: teamName,
           },
           headers: { Authorization: accessToken },
         },

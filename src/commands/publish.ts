@@ -57,8 +57,8 @@ export default class Publish extends Command {
 
       const registryAuth: RegistryAuth | undefined = await this.getRegistryAuth(
         this.accessToken,
+        this.team.name,
       )
-
       if (!registryAuth) {
         throw new Error('could not get registry auth')
       }

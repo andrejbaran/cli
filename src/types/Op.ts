@@ -37,6 +37,7 @@ export interface Op {
   workdir?: string
   mountCwd: boolean
   mountHome: boolean
+  isPublic?: boolean
 }
 
 // response from ops/get
