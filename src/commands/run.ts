@@ -148,11 +148,54 @@ export default class Run extends Command {
           '‼️  No op was found with this name or ID. Please try again.',
         )
       }
-      return { op: data[0], isPublished: true }
+      let op
+      if (data.length > 1) {
+        const answer = await ux.prompt({
+          type: 'list',
+          name: 'runOp',
+          pageSize: 5,
+          message: `\nSelect a ${this.ux.colors.multiBlue(
+            '\u2749',
+          )} public ${this.ux.colors.errorRed(
+            '\u2749',
+          )} team op to run ${this.ux.colors.reset.green('→')}`,
+          choices: this.publicAndPrivateOpList(data),
+          bottomContent: `\n \n${this.ux.colors.white(
+            `Or, run ${this.ux.colors.callOutCyan(
+              'ops help',
+            )} for usage information.`,
+          )}`,
+        })
+        op = answer.runOp
+      } else {
+        op = data[0]
+      }
+      return { op, isPublished: true }
     } catch (err) {
       this.debug(err)
       throw new Error(err)
     }
+  }
+
+  publicAndPrivateOpList = (ops: Op[]) => {
+    return ops.map(op => {
+      let opName = this.ux.colors.reset.white(op.name)
+      if (this.team.id === op.teamID) {
+        opName = `${this.ux.colors.reset(
+          this.ux.colors.errorRed('\u2749'),
+        )} ${opName}`
+      } else {
+        opName = `${this.ux.colors.reset(
+          this.ux.colors.multiBlue('\u2749'),
+        )} ${opName} `
+        op.isPublic = true
+      }
+
+      return {
+        name: `${opName} - ${op.description}`,
+        value: op,
+      }
+    })
   }
 
   printCustomHelp = (op: Op) => {
@@ -228,9 +271,10 @@ export default class Run extends Command {
     await this.config.runHook('build', { tag, opPath, op })
   }
 
-  getAuthConfig = async (accessToken: string) => {
+  getAuthConfig = async (accessToken: string, teamName: string) => {
     const registryAuth: RegistryAuth | undefined = await this.getRegistryAuth(
       accessToken,
+      teamName,
     )
     if (!registryAuth || !registryAuth.authconfig) {
       throw new CouldNotGetRegistryToken()
@@ -311,7 +355,11 @@ export default class Run extends Command {
 
     try {
       const opUrl = this.setOpUrl(op, config, isPublished)
-      const { authconfig } = await this.getAuthConfig(config.accessToken)
+      const teamName = op.isPublic ? 'ops' : this.team.name
+      const { authconfig } = await this.getAuthConfig(
+        config.accessToken,
+        teamName,
+      )
       const stream = await this.docker.pull(opUrl, { authconfig })
 
       if (!stream) throw new Error('No stream')
@@ -411,7 +459,8 @@ export default class Run extends Command {
 
   setOpUrl = (op: Op, { team }: Config, isPublished: boolean) => {
     const opIdentifier = isPublished ? op.id : op.name
-    const opImageTag = getOpImageTag(team.name, opIdentifier)
+    const projectIdentifier = op.isPublic ? 'ops' : team.name
+    const opImageTag = getOpImageTag(projectIdentifier, opIdentifier)
     return getOpUrl(OPS_REGISTRY_HOST, opImageTag)
   }
 
