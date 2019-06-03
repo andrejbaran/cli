@@ -3,6 +3,7 @@ import Command, { flags } from '~/base'
 import { INTERCOM_EMAIL, NODE_ENV } from '~/constants/env'
 import { APIError, SignUpError, AnalyticsError } from '~/errors/customErrors'
 import {
+  validChars,
   validateEmail,
   validatePasswordFormat,
   validateCpassword,
@@ -37,6 +38,9 @@ export default class AccountSignup extends Command {
 
   _validateUsername = async input => {
     try {
+      if (!validChars.test(input)) {
+        return `❗Sorry, your username must use letters (case sensitive), numbers (0-9), dashes (-) and underscores (_).`
+      }
       const unique = await this.validateUniqueField({ username: input })
       if (!unique)
         return '😞 Username is already taken, please try using another.'
@@ -140,7 +144,7 @@ export default class AccountSignup extends Command {
         username: input.username,
       })
       .catch(err => {
-        this.debug(err)
+        this.debug(err.error)
         throw new SignUpError(err)
       })
     const { email, password } = input

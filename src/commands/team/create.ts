@@ -1,6 +1,7 @@
 import Command, { flags } from '../../base'
 import { InvalidTeamNameFormat } from '../../errors/customErrors'
 import { ux } from '@cto.ai/sdk'
+import { validChars } from '../../utils/validate'
 
 let self
 export default class TeamCreate extends Command {
@@ -71,8 +72,8 @@ export default class TeamCreate extends Command {
 
   async validateTeamName(input: string): Promise<boolean | string> {
     try {
-      if (!/^[a-zA-Z0-9-_]+$/.test(input))
-        return `❗Sorry, the team name must use letters (case sensitive), numbers (0-9), and underscore (_).`
+      if (!validChars.test(input))
+        return `❗Sorry, the team name must use letters (case sensitive), numbers (0-9), dashes (-), and underscores (_).`
       const unique = await self.validateUniqueField({ username: input })
       if (!unique)
         return `😞 Sorry this name has already been taken. Try again with a different name.`
