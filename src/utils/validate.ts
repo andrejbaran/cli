@@ -1,6 +1,6 @@
 import { Op } from '../types'
 
-const validChars = /^[a-zA-Z0-9-_]+$/
+export const validChars = /^[a-zA-Z0-9-_]+$/
 
 export const isValidOpName = ({ name }: Op) =>
   typeof name === 'string' && validChars.test(name)
