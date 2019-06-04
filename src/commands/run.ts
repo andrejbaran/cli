@@ -762,8 +762,14 @@ export default class Run extends Command {
     commandInfo: CommandInfo,
   ): Function => this._runLocalOp(options)(commandInfo)
 
-  async runLocalOps(localOp: LocalOp, parsedArgs: RunCommandArgs) {
+  async runLocalOps(
+    localOp: LocalOp,
+    parsedArgs: RunCommandArgs,
+    config: Config,
+  ) {
     const { name } = localOp
+
+    process.env.OPS_ACCESS_TOKEN = config.accessToken
     const options: SpawnOptions = {
       stdio: 'inherit',
       shell: true,
@@ -773,7 +779,6 @@ export default class Run extends Command {
     const localOps = this.createArrayOfAllLocalCommands(localOp, options)
 
     const errors: LocalOpPipelineError[] = []
-
     const localOpPipeline = asyncPipe(...localOps)
 
     const finalOutput: {
@@ -843,7 +848,7 @@ export default class Run extends Command {
 
       const localOp = await this.getLocalOpIfExists(parsedArgs)
       if (localOp) {
-        return await this.runLocalOps(localOp, parsedArgs)
+        return await this.runLocalOps(localOp, parsedArgs, config)
       }
 
       this.docker = await getDocker(this, 'run')
