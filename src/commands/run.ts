@@ -170,6 +170,7 @@ export default class Run extends Command {
       } else {
         op = data[0]
       }
+      op.isPublic = this.team.id !== op.teamID
       return { op, isPublished: true }
     } catch (err) {
       this.debug(err)
@@ -188,7 +189,6 @@ export default class Run extends Command {
         opName = `${this.ux.colors.reset(
           this.ux.colors.multiBlue('\u2749'),
         )} ${opName} `
-        op.isPublic = true
       }
 
       return {
@@ -233,7 +233,6 @@ export default class Run extends Command {
     } = parsedArgs
     const dirPath = path.resolve(process.cwd(), `${nameOrPath}`)
     const manifestPath = path.join(dirPath, OP_FILE)
-
     const { op, isPublished } = fs.existsSync(manifestPath)
       ? await this.getOpFromFs(manifestPath, opParams, config)
       : await this.getOpFromAPI(nameOrPath, config)
