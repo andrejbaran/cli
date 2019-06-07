@@ -4,10 +4,10 @@ import * as path from 'path'
 import * as yaml from 'yaml'
 
 import Command, { flags } from '../base'
-import { Op, Fuzzy, FindQuery, FindResponse, LocalOp } from '../types'
+import { Op, Fuzzy, FindQuery, FindResponse, Workflow } from '../types'
 import { asyncPipe } from '../utils/asyncPipe'
 import { AnalyticsError, APIError } from '../errors/customErrors'
-import { LOCAL, OP_FILE } from '../constants/opConfig'
+import { WORKFLOW, OP_FILE } from '../constants/opConfig'
 
 export default class Search extends Command {
   static description = 'Search for ops in your workspaces.'
@@ -55,62 +55,65 @@ export default class Search extends Command {
     }
   }
 
-  getLocalOps = async ({ apiOps }: { apiOps: Op[] }) => {
+  getWorkflows = async ({ apiOps }: { apiOps: Op[] }) => {
     try {
       const manifest = await fs.readFile(
         path.join(process.cwd(), OP_FILE),
         'utf8',
       )
       if (!manifest) {
-        return { apiOps, localOps: [] }
+        return { apiOps, workflows: [] }
       }
-      const { ops: localOps = [] } = yaml.parse(manifest)
-      return { apiOps, localOps }
+      const { ops: workflows = [] } = yaml.parse(manifest)
+      return { apiOps, workflows }
     } catch {
-      return { apiOps, localOps: [] }
+      return { apiOps, workflows: [] }
     }
   }
 
   _removeIfNameOrDescriptionDontContainQuery = (filterQuery: string) => (
-    localOp: LocalOp,
+    workflow: Workflow,
   ) =>
-    localOp.name.includes(filterQuery) ||
-    localOp.description.includes(filterQuery)
+    workflow.name.includes(filterQuery) ||
+    workflow.description.includes(filterQuery)
 
-  _setTeamIdToLocal = (localOp: LocalOp) => ({ ...localOp, teamID: LOCAL })
+  _setTeamIdToLocal = (workflow: Workflow) => ({
+    ...workflow,
+    teamID: WORKFLOW,
+  })
 
-  filterLocalOps = (filterQuery: string = '') => ({
+  filterWorkflows = (filterQuery: string = '') => ({
     apiOps,
-    localOps,
+    workflows,
   }: {
     apiOps: Op[]
-    localOps: LocalOp[]
+    workflows: Workflow[]
   }) => {
-    if (!localOps.length) {
-      return { apiOps, localOps }
+    if (!workflows.length) {
+      return { apiOps, workflows }
     }
 
-    const filteredLocalOps = localOps
+    const filteredWorkflows = workflows
       .filter(this._removeIfNameOrDescriptionDontContainQuery(filterQuery))
       .map(this._setTeamIdToLocal)
 
-    return { apiOps, localOps: filteredLocalOps }
+    return { apiOps, workflows: filteredWorkflows }
   }
 
-  _removeIfLocalExists = localOps => apiOp => {
-    const match = localOps.find(localOp => localOp.name === apiOp.name)
+  _removeIfLocalExists = workflows => apiOp => {
+    const match = workflows.find(workflow => workflow.name === apiOp.name)
     return !match
   }
 
   resolveLocalAndApiOps = ({
     apiOps,
-    localOps,
+    workflows,
   }: {
     apiOps: Op[]
-    localOps: LocalOp[]
+    workflows: Workflow[]
   }) => {
-    const filteredApiOps = apiOps.filter(this._removeIfLocalExists(localOps))
-    return [...filteredApiOps, ...localOps]
+    const filteredApiOps = apiOps.filter(this._removeIfLocalExists(workflows))
+    return [...filteredApiOps, ...workflows]
   }
 
   checkData = async (filteredOps: Op[]) => {
@@ -134,9 +137,9 @@ export default class Search extends Command {
         '\u2749',
       )} team ${this.ux.colors.multiBlue(
         '\u2749',
-      )} public or ${this.ux.colors.successGreen(
+      )} public ops or ${this.ux.colors.successGreen(
         '\u2749',
-      )} local op to run ${this.ux.colors.reset.green('→')}`,
+      )} workflow to run ${this.ux.colors.reset.green('→')}`,
       source: this._autocompleteSearch.bind(this),
       bottomContent: `\n \n${this.ux.colors.white(
         `Or, run ${this.ux.colors.callOutCyan(
@@ -198,7 +201,7 @@ export default class Search extends Command {
         return `${this.ux.colors.reset(
           this.ux.colors.errorRed('\u2749'),
         )} ${opName}`
-      case LOCAL:
+      case WORKFLOW:
         return `${this.ux.colors.reset(
           this.ux.colors.successGreen('\u2749'),
         )} ${opName} `
@@ -220,8 +223,8 @@ export default class Search extends Command {
       const searchPipeline = asyncPipe(
         this.showSearchMessage,
         this.getApiOps,
-        this.getLocalOps,
-        this.filterLocalOps(filter),
+        this.getWorkflows,
+        this.filterWorkflows(filter),
         this.resolveLocalAndApiOps,
         this.checkData,
         this.askQuestion,

@@ -34,7 +34,7 @@ import {
   Config,
   Container,
   RunPipeline,
-  LocalOp,
+  Workflow,
   RunCommandArgs,
   ChildProcessError,
 } from '~/types'
@@ -45,13 +45,13 @@ import {
 } from '~/errors/customErrors'
 import { OP_FILE } from '~/constants/opConfig'
 import { onExit, asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
-import { LocalOpPipelineError } from '~/types/ChildProcessError'
+import { WorkflowPipelineError } from '~/types/ChildProcessError'
 import getDocker from '~/utils/get-docker'
 
-type LocalHook = 'main command' | 'before-hook' | 'after-hook'
+type WorkflowHook = 'main command' | 'before-hook' | 'after-hook'
 
 export interface CommandInfo {
-  hookType: LocalHook
+  hookType: WorkflowHook
   command: string
 }
 
@@ -716,9 +716,9 @@ export default class Run extends Command {
     }
   }
 
-  async findLocalOp(manifestPath: string, nameOrPath: string) {
+  async findWorkflow(manifestPath: string, nameOrPath: string) {
     const manifest = await fs.readFile(manifestPath, 'utf8')
-    const { ops }: { ops: LocalOp[] } = yaml.parse(manifest)
+    const { ops }: { ops: Workflow[] } = yaml.parse(manifest)
     if (!ops) return
     return ops.find(({ name }) => name === nameOrPath)
   }
@@ -737,15 +737,15 @@ export default class Run extends Command {
     )
   }
 
-  _runLocalOp = (options: SpawnOptions) => this._runLocalOpHof(options)
+  _runWorkflow = (options: SpawnOptions) => this._runWorkflowHof(options)
 
-  _runLocalOpHof = (options: SpawnOptions) => (
+  _runWorkflowHof = (options: SpawnOptions) => (
     commandInfo: CommandInfo,
   ) => async ({
     errors,
     args,
   }: {
-    errors: LocalOpPipelineError[]
+    errors: WorkflowPipelineError[]
     args: string[]
   }) => {
     const { hookType, command } = commandInfo
@@ -767,15 +767,15 @@ export default class Run extends Command {
     return { errors: newErrors, args }
   }
 
-  labelTheCommand = (hookType: LocalHook) => (
+  labelTheCommand = (hookType: WorkflowHook) => (
     command: string,
   ): CommandInfo => ({
     hookType,
     command,
   })
 
-  createArrayOfAllLocalCommands = (
-    { before, run, after }: LocalOp,
+  createArrayOfAllWorkflowCommands = (
+    { before, run, after }: Workflow,
     options: SpawnOptions,
   ) => {
     const beforeCommands = before
@@ -795,14 +795,14 @@ export default class Run extends Command {
 
   convertCommandToSpawnFunction = (options: SpawnOptions) => (
     commandInfo: CommandInfo,
-  ): Function => this._runLocalOp(options)(commandInfo)
+  ): Function => this._runWorkflow(options)(commandInfo)
 
-  async runLocalOps(
-    localOp: LocalOp,
+  async runWorkflow(
+    workflow: Workflow,
     parsedArgs: RunCommandArgs,
     config: Config,
   ) {
-    const { name } = localOp
+    const { name } = workflow
 
     process.env.OPS_ACCESS_TOKEN = config.accessToken
     const options: SpawnOptions = {
@@ -811,24 +811,27 @@ export default class Run extends Command {
       env: process.env,
     }
 
-    const localOps = this.createArrayOfAllLocalCommands(localOp, options)
+    const workflowComands = this.createArrayOfAllWorkflowCommands(
+      workflow,
+      options,
+    )
 
-    const errors: LocalOpPipelineError[] = []
-    const localOpPipeline = asyncPipe(...localOps)
+    const errors: WorkflowPipelineError[] = []
+    const workflowPipeline = asyncPipe(...workflowComands)
 
     const finalOutput: {
-      errors: LocalOpPipelineError[]
+      errors: WorkflowPipelineError[]
       args: string[]
-    } = await localOpPipeline({
+    } = await workflowPipeline({
       errors,
       args: parsedArgs.opParams,
     })
 
     const { errors: finalErrors } = finalOutput
 
-    finalErrors.forEach((error: LocalOpPipelineError, i: number) => {
+    finalErrors.forEach((error: WorkflowPipelineError, i: number) => {
       if (i === 0) {
-        this.log(`\n❗️  Local op ${this.ux.colors.callOutCyan(name)} failed.`)
+        this.log(`\n❗️  Workflow ${this.ux.colors.callOutCyan(name)} failed.`)
         this.log(
           this.ux.colors.redBright(
             `🤔  There was a problem with the ${this.ux.colors.whiteBright(
@@ -847,13 +850,13 @@ export default class Run extends Command {
 
     !finalErrors.length &&
       this.printMessage(
-        `😌  Local op ${this.ux.colors.callOutCyan(
+        `😌  Workflow ${this.ux.colors.callOutCyan(
           name,
         )} completed successfully.`,
       )
   }
 
-  async getLocalOpIfExists(
+  async getWorkflowIfExists(
     config: Config,
     { args: { nameOrPath } }: RunCommandArgs,
   ) {
@@ -864,7 +867,7 @@ export default class Run extends Command {
       return null
     }
 
-    const localOp: LocalOp | undefined = await this.findLocalOp(
+    const workflow: Workflow | undefined = await this.findWorkflow(
       localManifest,
       nameOrPath,
     )
@@ -872,15 +875,15 @@ export default class Run extends Command {
     //   throw new Error('ops.yml must specify a run command')
     // }
 
-    if (localOp) {
+    if (workflow) {
       let opsHome =
         (process.env.HOME || process.env.USERPROFILE) + '/.config/@cto.ai/ops'
-      localOp.opsHome = opsHome === undefined ? '' : opsHome
-      localOp.stateDir = '/' + config.team.name + '/' + localOp.name
+      workflow.opsHome = opsHome === undefined ? '' : opsHome
+      workflow.stateDir = '/' + config.team.name + '/' + workflow.name
 
-      if (!fs.existsSync(localOp.stateDir)) {
+      if (!fs.existsSync(workflow.stateDir)) {
         try {
-          fs.mkdirSync(path.resolve(localOp.opsHome + localOp.stateDir), {
+          fs.mkdirSync(path.resolve(workflow.opsHome + workflow.stateDir), {
             recursive: true,
           })
         } catch (err) {
@@ -889,7 +892,7 @@ export default class Run extends Command {
       }
     }
 
-    return localOp
+    return workflow
   }
 
   async run() {
@@ -901,9 +904,9 @@ export default class Run extends Command {
         this.argv,
       )
 
-      const localOp = await this.getLocalOpIfExists(config, parsedArgs)
-      if (localOp) {
-        return await this.runLocalOps(localOp, parsedArgs, config)
+      const workflow = await this.getWorkflowIfExists(config, parsedArgs)
+      if (workflow) {
+        return await this.runWorkflow(workflow, parsedArgs, config)
       }
 
       this.docker = await getDocker(this, 'run')

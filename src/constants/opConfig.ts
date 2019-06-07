@@ -1,3 +1,3 @@
 export const OP_FILE = 'ops.yml'
-export const LOCAL = 'local'
-export const CONTAINER = 'container'
+export const WORKFLOW = 'workflow'
+export const OP = 'op'
