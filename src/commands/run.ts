@@ -515,6 +515,7 @@ export default class Run extends Command {
     op.bind.push(stateDir)
 
     const options = {
+      name: `${config.team.name}-${op.name}`,
       AttachStderr: true,
       AttachStdin: true,
       AttachStdout: true,
