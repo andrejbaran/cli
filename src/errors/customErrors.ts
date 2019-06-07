@@ -94,6 +94,12 @@ export class CouldNotGetRegistryToken extends ErrorTemplate {
   }
 }
 
+export class CouldNotMakeDir extends ErrorTemplate {
+  constructor() {
+    super('Failed to create a directory on host machine.')
+  }
+}
+
 export class InvalidTeamNameFormat extends ErrorTemplate {
   constructor(err) {
     super(

@@ -23,6 +23,8 @@ export interface Op {
   id: string
   image: string | void
   name: string
+  opsHome: string
+  stateDir: string
   network?: string
   ownerId?: string
   packagePath?: string | null
