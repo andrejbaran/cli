@@ -13,7 +13,7 @@ export interface ChildProcessError {
   signal: string
 }
 
-export interface LocalOpPipelineError {
+export interface WorkflowPipelineError {
   exitResponse: ChildProcessError | void
   commandInfo: CommandInfo
 }

@@ -11,7 +11,7 @@ import {
   CopyTemplateFilesError,
   CouldNotInitializeOp,
 } from '~/errors/customErrors'
-import { LOCAL, CONTAINER } from '~/constants/opConfig'
+import { WORKFLOW, OP } from '~/constants/opConfig'
 
 export default class Init extends Command {
   static description = 'Easily create a new op.'
@@ -38,8 +38,14 @@ export default class Init extends Command {
         '→',
       )}`,
       choices: [
-        { name: 'Local Op', value: LOCAL },
-        { name: 'Container Op', value: CONTAINER },
+        {
+          name: 'Op - A template for building a portable operation',
+          value: OP,
+        },
+        {
+          name: 'Workflow - A template for combining many Ops into a workflow',
+          value: WORKFLOW,
+        },
       ],
       afterMessage: `${ux.colors.reset.green('✓')}`,
     },
@@ -150,7 +156,7 @@ export default class Init extends Command {
       const opsYamlObj = yaml.parse(
         fs.readFileSync(`${destDir}/ops.yml`, 'utf8'),
       )
-      if (template === LOCAL) {
+      if (template === WORKFLOW) {
         opsYamlObj.ops[0].name = name
         opsYamlObj.ops[0].description = description
       } else {
@@ -171,7 +177,7 @@ export default class Init extends Command {
     initParams: InitParams
   }) => {
     const { destDir } = input.initPaths
-    const { name } = input.initParams
+    const { name, template } = input.initParams
     this.log('\n🎉 Success! Your op is ready to start coding... \n')
     fs.readdirSync(`${destDir}`).forEach((file: any) => {
       let callout = ''
@@ -188,10 +194,14 @@ export default class Init extends Command {
       )
       this.log(`📁 .${msg}`)
     })
+    let workflowStep = ''
+    if (template === WORKFLOW) {
+      workflowStep = `cd ${name} && npm install && `
+    }
     this.log(
       `\n🚀 Now test your op with: ${ux.colors.green(
         '$',
-      )} ops run ${ux.colors.callOutCyan(name)}\n`,
+      )} ${ux.colors.callOutCyan(`${workflowStep}ops run ${name}`)}\n`,
     )
     return input
   }

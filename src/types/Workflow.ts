@@ -6,7 +6,7 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-export interface LocalOp {
+export interface Workflow {
   opsHome: string
   stateDir: string
   name: string
