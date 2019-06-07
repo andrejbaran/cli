@@ -41,6 +41,7 @@ import {
 import {
   CouldNotGetRegistryToken,
   MissingRequiredArgument,
+  CouldNotMakeDir,
 } from '~/errors/customErrors'
 import { OP_FILE } from '~/constants/opConfig'
 import { onExit, asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
@@ -418,14 +419,24 @@ export default class Run extends Command {
     ...rest
   }: RunPipeline) => {
     const defaultEnv: Container<string> = {
+      OPS_HOME:
+        (process.env.HOME || process.env.USERPROFILE) + '/.config/@cto.ai/ops',
+      STATE_DIR: '/' + config.team.name + '/' + op.name,
       NODE_ENV: 'production',
       LOGGER_PLUGINS_STDOUT_ENABLED: 'true',
       OPS_ACCESS_TOKEN: config.accessToken,
       OPS_API_PATH,
       OPS_API_HOST,
       OPS_OP_ID: op.id,
+      OPS_OP_NAME: op.name,
       OPS_TEAM_ID: config.team.id,
+      OPS_TEAM_NAME: config.team.name,
     }
+
+    let opsHome =
+      (process.env.HOME || process.env.USERPROFILE) + '/.config/@cto.ai/ops'
+    op.opsHome = opsHome === undefined ? '' : opsHome
+    op.stateDir = '/' + config.team.name + '/' + op.name
 
     const opsYamlEnv: Container<string> = op.env
       ? op.env.reduce(this.convertEnvStringsToObject, {})
@@ -444,6 +455,26 @@ export default class Run extends Command {
     const to = rest.join('')
 
     return `${from}:${to}`
+  }
+
+  hostSetup = ({ op, ...rest }: RunPipeline) => {
+    if (!fs.existsSync(op.stateDir)) {
+      try {
+        fs.mkdirSync(path.resolve(op.opsHome + op.stateDir), {
+          recursive: true,
+        })
+      } catch (err) {
+        throw new CouldNotMakeDir()
+      }
+    }
+
+    return {
+      ...rest,
+      op: {
+        ...op,
+        bind: op.bind ? op.bind.map(this.replaceHomeAlias) : [],
+      },
+    }
   }
 
   setBinds = ({ op, ...rest }: RunPipeline) => {
@@ -476,9 +507,12 @@ export default class Run extends Command {
     }
 
     if (op.mountHome) {
-      const homeDir = `${HOME}:/root:ro`
+      const homeDir = `${HOME}:/root:rw`
       op.bind.push(homeDir)
     }
+
+    const stateDir = op.opsHome + op.stateDir + ':/root/' + op.stateDir + ':rw'
+    op.bind.push(stateDir)
 
     const options = {
       AttachStderr: true,
@@ -818,7 +852,10 @@ export default class Run extends Command {
       )
   }
 
-  async getLocalOpIfExists({ args: { nameOrPath } }: RunCommandArgs) {
+  async getLocalOpIfExists(
+    config: Config,
+    { args: { nameOrPath } }: RunCommandArgs,
+  ) {
     const localManifest = path.join(process.cwd(), OP_FILE)
     const localManifestExists = fs.existsSync(localManifest)
 
@@ -834,6 +871,23 @@ export default class Run extends Command {
     //   throw new Error('ops.yml must specify a run command')
     // }
 
+    if (localOp) {
+      let opsHome =
+        (process.env.HOME || process.env.USERPROFILE) + '/.config/@cto.ai/ops'
+      localOp.opsHome = opsHome === undefined ? '' : opsHome
+      localOp.stateDir = '/' + config.team.name + '/' + localOp.name
+
+      if (!fs.existsSync(localOp.stateDir)) {
+        try {
+          fs.mkdirSync(path.resolve(localOp.opsHome + localOp.stateDir), {
+            recursive: true,
+          })
+        } catch (err) {
+          throw new CouldNotMakeDir()
+        }
+      }
+    }
+
     return localOp
   }
 
@@ -846,7 +900,7 @@ export default class Run extends Command {
         this.argv,
       )
 
-      const localOp = await this.getLocalOpIfExists(parsedArgs)
+      const localOp = await this.getLocalOpIfExists(config, parsedArgs)
       if (localOp) {
         return await this.runLocalOps(localOp, parsedArgs, config)
       }
@@ -857,6 +911,7 @@ export default class Run extends Command {
         this.getOpConfig,
         this.getImage,
         this.setEnvs(process.env),
+        this.hostSetup,
         this.setBinds,
         this.getOptions,
         this.createDockerContainer,

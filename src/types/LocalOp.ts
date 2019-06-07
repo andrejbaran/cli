@@ -7,6 +7,8 @@
  */
 
 export interface LocalOp {
+  opsHome: string
+  stateDir: string
   name: string
   description: string
   run: string
