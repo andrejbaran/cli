@@ -174,7 +174,7 @@ function logError(self: any, numRepeats: number, type: string) {
 /**
  * Helper function to display the prompt to the user if they want to retry
  */
-async function confirmReadyContinue() {
+async function confirmReadyContinue(): Promise<{ answer: boolean }> {
   return ux.prompt({
     type: 'confirm',
     name: 'answer',

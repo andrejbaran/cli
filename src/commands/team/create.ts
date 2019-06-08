@@ -1,7 +1,8 @@
 import Command, { flags } from '../../base'
 import { InvalidTeamNameFormat } from '../../errors/customErrors'
-import { ux } from '@cto.ai/sdk'
 import { validChars } from '../../utils/validate'
+
+import { Question, Team } from '~/types'
 
 let self
 export default class TeamCreate extends Command {
@@ -12,16 +13,16 @@ export default class TeamCreate extends Command {
     name: flags.string({ char: 'n' }),
   }
 
-  teamNamePrompt = {
+  teamNamePrompt: Question = {
     type: 'input',
     name: 'teamName',
-    message: `\nChoose a display name for your team and share ops ${ux.colors.reset.green(
+    message: `\nChoose a display name for your team and share ops ${this.ux.colors.reset.green(
       '→',
-    )}  \n🏀 ${ux.colors.white('Team Name')} `,
-    afterMessage: `${ux.colors.reset.green('✓')} Team name    `,
+    )}  \n🏀 ${this.ux.colors.white('Team Name')} `,
+    afterMessage: `${this.ux.colors.reset.green('✓')} Team name    `,
     validate: this.validateTeamName,
   }
-  questions: object[] = []
+  questions: Question[] = []
 
   async run(): Promise<void> {
     try {
@@ -32,8 +33,10 @@ export default class TeamCreate extends Command {
       if (!name) this.questions.push(this.teamNamePrompt)
       let teamName = name
       if (this.questions.length) {
-        const res = await ux.prompt(this.questions)
-        teamName = res.teamName
+        const {
+          promptedTeamName,
+        }: { promptedTeamName: string } = await this.ux.prompt(this.questions)
+        teamName = promptedTeamName
       } else {
         const validName = name && (await this.validateTeamName(name))
         if (!validName || typeof validName === 'string') {
@@ -41,7 +44,7 @@ export default class TeamCreate extends Command {
         }
       }
 
-      const res = await this.api
+      const res: { data: Team } = await this.api
         .create(
           'teams',
           { name: teamName },
@@ -53,7 +56,7 @@ export default class TeamCreate extends Command {
         })
       const team = { id: res.data.id, name: res.data.name }
 
-      this.log(`\n ${ux.colors.white('🙌 Your team has been created!')}`)
+      this.log(`\n ${this.ux.colors.white('🙌 Your team has been created!')}`)
 
       const oldConfig = await this.readConfig()
       await this.writeConfig(oldConfig, { team })

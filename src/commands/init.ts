@@ -1,10 +1,9 @@
 import { ux } from '@cto.ai/sdk'
-import { Question } from 'inquirer'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
 import Command, { flags } from '~/base'
-import { Container, InitParams, InitPaths, CtoQuestion } from '~/types'
+import { Container, InitParams, InitPaths, Question } from '~/types'
 import { asyncPipe } from '~/utils/asyncPipe'
 import {
   AnalyticsError,
@@ -30,7 +29,7 @@ export default class Init extends Command {
   opName = ''
   opDescription = ''
 
-  initPrompts: Container<CtoQuestion> = {
+  initPrompts: Container<Question> = {
     template: {
       type: 'list',
       name: 'template',
@@ -177,7 +176,7 @@ export default class Init extends Command {
     initParams: InitParams
   }) => {
     const { destDir } = input.initPaths
-    const { name, template } = input.initParams
+    const { name = '', template } = input.initParams
     this.log('\n🎉 Success! Your op is ready to start coding... \n')
     fs.readdirSync(`${destDir}`).forEach((file: any) => {
       let callout = ''

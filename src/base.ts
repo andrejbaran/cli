@@ -2,15 +2,16 @@
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Friday, 5th April 2019 12:06:07 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 17th May 2019 6:26:32 pm
+ * @lastModifiedTime: Thursday, 6th June 2019 5:33:29 pm
  * @copyright (c) 2019 CTO.ai
  *
  */
 
-import { ux as _ux } from '@cto.ai/sdk'
+import { ux } from '@cto.ai/sdk'
+import _inquirer from '@cto.ai/inquirer'
+
 import Command, { flags } from '@oclif/command'
 import * as OClifConfig from '@oclif/config'
-import Analytics from 'analytics-node'
 import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
 import { asyncPipe, _trace } from './utils/asyncPipe'
@@ -39,22 +40,22 @@ import {
 } from './constants/env'
 
 import { FeathersClient } from './services/feathers'
+import { SegmentClient } from './services/segment'
 import { UserUnauthorized, APIError } from './errors/customErrors'
 
 abstract class CTOCommand extends Command {
-  analytics = new Analytics(OPS_SEGMENT_KEY)
-
   accessToken!: string
   user!: User
   team!: Team
   state!: { config: Config }
 
-  ux = _ux
+  ux = ux
 
   constructor(
     argv: string[],
     config: OClifConfig.IConfig,
     protected api: ApiService = new FeathersClient(),
+    protected analytics = new SegmentClient(OPS_SEGMENT_KEY),
   ) {
     super(argv, config)
   }

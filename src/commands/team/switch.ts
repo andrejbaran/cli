@@ -1,5 +1,5 @@
 import Command, { flags } from '../../base'
-import { Team } from '../../types'
+import { Question, Team } from '../../types'
 import { ux } from '@cto.ai/sdk'
 
 interface displayTeam extends Team {
@@ -76,7 +76,7 @@ export default class TeamSwitch extends Command {
    */
   private async _getSelectedTeamPrompt(teams: displayTeam[]): Promise<string> {
     // The prompt to show to the user
-    const prompt = {
+    const prompt: Question = {
       type: 'list',
       name: 'teamSelected',
       message: 'Select a team',

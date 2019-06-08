@@ -1,5 +1,5 @@
 import Command, { flags } from '../../base'
-import { Team, Invites, OclifCommand } from '../../types'
+import { Question, Team, Invites } from '../../types'
 import { ux } from '@cto.ai/sdk'
 import { validateEmail } from '../../utils/validate'
 
@@ -22,7 +22,7 @@ export default class TeamInvite extends Command {
     }),
   }
 
-  questions: OclifCommand[] = []
+  questions: Question[] = []
 
   async run(): Promise<void> {
     const {
@@ -46,7 +46,7 @@ export default class TeamInvite extends Command {
 
     // Sets the response to the invitees question
     if (this.questions.length) {
-      const res = await ux.prompt(this.questions)
+      const res: { invitees: string } = await ux.prompt(this.questions)
       invitees = res && res.invitees ? res.invitees : invitees
     }
 
@@ -118,7 +118,7 @@ export default class TeamInvite extends Command {
   }
 
   // Gets the question to ask for to the user
-  private _getInvitesPrompt(teamInfo: Team): OclifCommand {
+  private _getInvitesPrompt(teamInfo: Team): Question {
     return {
       type: 'input',
       name: 'invitees',
