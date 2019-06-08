@@ -661,7 +661,7 @@ export default class Run extends Command {
         username: this.user.username,
         name: op.name,
         description: op.description,
-        image: `${op.image}`,
+        image: op.name,
       },
     })
   }
@@ -930,8 +930,8 @@ export default class Run extends Command {
         this.setBinds,
         this.getOptions,
         this.createDockerContainer,
-        this.attachToContainer,
         this.sendAnalytics,
+        this.attachToContainer,
       )
 
       await runPipeline({
