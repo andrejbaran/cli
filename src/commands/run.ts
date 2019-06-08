@@ -511,8 +511,14 @@ export default class Run extends Command {
       op.bind.push(homeDir)
     }
 
-    const stateDir = op.opsHome + op.stateDir + ':/root/' + op.stateDir + ':rw'
-    op.bind.push(stateDir)
+    const stateMount =
+      op.opsHome +
+      op.stateDir +
+      ':/root/.config/@cto.ai/ops' +
+      op.stateDir +
+      ':rw'
+
+    op.bind.push(stateMount)
 
     const options = {
       // name: `${config.team.name}-${op.name}`,
@@ -803,6 +809,11 @@ export default class Run extends Command {
     config: Config,
   ) {
     const { name } = workflow
+
+    //TODO: both local & container ops should set the same envs in the same place
+    process.env.OPS_OP_NAME = workflow.name
+    process.env.OPS_TEAM_NAME = config.team.name
+    //TODO: both local & container ops should set the same envs in the same place
 
     process.env.OPS_ACCESS_TOKEN = config.accessToken
     const options: SpawnOptions = {
