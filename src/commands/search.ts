@@ -2,9 +2,17 @@ import fuzzy from 'fuzzy'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
-
 import Command, { flags } from '../base'
-import { Op, Fuzzy, FindQuery, FindResponse, Workflow } from '../types'
+import {
+  Answers,
+  SourceResult,
+  Question,
+  Op,
+  Fuzzy,
+  FindQuery,
+  FindResponse,
+  Workflow,
+} from '../types'
 import { asyncPipe } from '../utils/asyncPipe'
 import { AnalyticsError, APIError } from '../errors/customErrors'
 import { WORKFLOW, OP_FILE } from '../constants/opConfig'
@@ -24,6 +32,25 @@ export default class Search extends Command {
   }
 
   ops: Op[] = []
+
+  searchPrompt: Question = {
+    type: 'autocomplete',
+    name: 'runOp',
+    pageSize: 5,
+    message: `\nSelect a ${this.ux.colors.errorRed(
+      '\u2749',
+    )} team ${this.ux.colors.multiBlue(
+      '\u2749',
+    )} public or ${this.ux.colors.successGreen(
+      '\u2749',
+    )} local op to run ${this.ux.colors.reset.green('→')}`,
+    source: this._autocompleteSearch.bind(this),
+    bottomContent: `\n \n${this.ux.colors.white(
+      `Or, run ${this.ux.colors.callOutCyan(
+        'ops help',
+      )} for usage information.`,
+    )}`,
+  }
 
   showSearchMessage = (filter: string) => {
     this.log(
@@ -50,7 +77,7 @@ export default class Search extends Command {
       const { data: apiOps } = findResponse
       return { apiOps }
     } catch (err) {
-      this.debug(err)
+      this.debug('error: %O', err)
       throw new APIError(err)
     }
   }
@@ -64,7 +91,8 @@ export default class Search extends Command {
       if (!manifest) {
         return { apiOps, workflows: [] }
       }
-      const { ops: workflows = [] } = yaml.parse(manifest)
+
+      const { ops: workflows = [] }: { ops: Workflow[] } = yaml.parse(manifest)
       return { apiOps, workflows }
     } catch {
       return { apiOps, workflows: [] }
@@ -100,7 +128,7 @@ export default class Search extends Command {
     return { apiOps, workflows: filteredWorkflows }
   }
 
-  _removeIfLocalExists = workflows => apiOp => {
+  _removeIfLocalExists = (workflows: Workflow[]) => (apiOp: Op) => {
     const match = workflows.find(workflow => workflow.name === apiOp.name)
     return !match
   }
@@ -129,27 +157,10 @@ export default class Search extends Command {
   }
 
   askQuestion = async () => {
-    return this.ux.prompt({
-      type: 'autocomplete',
-      name: 'runOp',
-      pageSize: 5,
-      message: `\nSelect a ${this.ux.colors.errorRed(
-        '\u2749',
-      )} team ${this.ux.colors.multiBlue(
-        '\u2749',
-      )} public ops or ${this.ux.colors.successGreen(
-        '\u2749',
-      )} workflow to run ${this.ux.colors.reset.green('→')}`,
-      source: this._autocompleteSearch.bind(this),
-      bottomContent: `\n \n${this.ux.colors.white(
-        `Or, run ${this.ux.colors.callOutCyan(
-          'ops help',
-        )} for usage information.`,
-      )}`,
-    })
+    return this.ux.prompt(this.searchPrompt)
   }
 
-  showRunMessage = answer => {
+  showRunMessage = (answer: { runOp: SourceResult }) => {
     const { runOp } = answer
     this.log(
       `\n💻 Run ${this.ux.colors.green('$')} ${this.ux.colors.italic.dim(
@@ -176,7 +187,7 @@ export default class Search extends Command {
     }
   }
 
-  private async _autocompleteSearch(_: any, input = ''): Promise<object[]> {
+  private async _autocompleteSearch(_: Answers, input = '') {
     const { list, options } = this.fuzzyFilterParams()
     const fuzzyResult: Fuzzy[] = fuzzy.filter(input, list, options)
     return fuzzyResult.map(result => result.original)

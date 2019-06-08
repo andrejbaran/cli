@@ -2,15 +2,13 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 30th April 2019 12:07:49 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Wednesday, 8th May 2019 7:33:53 pm
+ * @lastModifiedTime: Thursday, 6th June 2019 3:19:14 pm
  * @copyright (c) 2019 CTO.ai
  */
 
-import { Question } from 'inquirer'
 import cloneDeep from 'lodash/cloneDeep'
 import Command, { flags } from '../../base'
-import { NODE_ENV } from '../../constants/env'
-import { Config, Container, UserCredentials } from '../../types'
+import { Question, Config, Container, UserCredentials } from '../../types'
 import { asyncPipe } from '../../utils/asyncPipe'
 import { AnalyticsError } from '../../errors/customErrors'
 
@@ -38,20 +36,15 @@ export default class AccountSignin extends Command {
   }
 
   sendAnalytics = (config: Config) => {
-    // This is wrapped in an if statement because it takes a while to finish executing.
-    // The `nock` code that is supposed to intercept this call and counter it is not equipped
-    // to handle this
     try {
-      if (NODE_ENV === 'production') {
-        this.analytics.identify({
-          userId: config.user.email,
-          traits: {
-            beta: true,
-            email: config.user.email,
-            username: config.user.username,
-          },
-        })
-      }
+      this.analytics.identify({
+        userId: config.user.email,
+        traits: {
+          beta: true,
+          email: config.user.email,
+          username: config.user.username,
+        },
+      })
       this.analytics.track({
         userId: config.user.email,
         event: 'Ops CLI Signin',

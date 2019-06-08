@@ -41,7 +41,7 @@ export default class Update extends Command {
     )
   }
 
-  private _trackAnalytics(newVersion) {
+  private _trackAnalytics(newVersion: string | undefined) {
     this.analytics.track({
       userId: this.user.email,
       event: 'Ops CLI Update',

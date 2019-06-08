@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Sunday, 28th April 2019 2:54:44 am
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Monday, 13th May 2019 1:45:22 pm
+ * @lastModifiedTime: Friday, 31st May 2019 5:13:51 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -20,7 +20,7 @@ export const OPS_REGISTRY_HOST: string =
 
 export const NODE_ENV = process.env.NODE_ENV || 'production'
 
-export const DEBUG = process.env.DEBUG || 0
+export const DEBUG = process.env.DEBUG || 'false'
 
 export const HOME = process.env.HOME || '~'
 

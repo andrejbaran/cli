@@ -1,8 +1,9 @@
 import Command from '../../base'
 import { ux } from '@cto.ai/sdk'
 import { InviteCodeInvalid } from '../../errors/customErrors'
+import { Question } from '~/types'
 
-const inviteCodePrompt = {
+const inviteCodePrompt: Question = {
   type: 'input',
   name: 'inviteCode',
   message: `Please enter the invite code you received via email to join a team:\n\n🔑  ${ux.colors.white(
@@ -20,10 +21,13 @@ export default class TeamJoin extends Command {
 
   async run() {
     this.isLoggedIn()
-    const { inviteCode }: { inviteCode: string } = await ux.prompt([
+    const { inviteCode }: { inviteCode?: string } = await ux.prompt(
       inviteCodePrompt,
-    ])
+    )
     this.startSpinner()
+    if (!inviteCode) {
+      throw new Error('no invite code')
+    }
     const res = await this.joinTeam(inviteCode).catch(err => {
       this.debug(err)
       throw new InviteCodeInvalid(err)

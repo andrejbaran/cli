@@ -1,11 +1,12 @@
-import Command from '../../base'
 import { ux } from '@cto.ai/sdk'
 import commander from 'commander'
+import Command from '~/base'
+import { Question } from '~/types'
 import {
+  validateCpassword,
   validateEmail,
   validatePasswordFormat,
-  validateCpassword,
-} from '../../utils/validate'
+} from '~/utils/validate'
 
 const checkEmail = (input: string) => {
   return (
@@ -14,14 +15,14 @@ const checkEmail = (input: string) => {
   )
 }
 
-const emailPrompt = {
+const emailPrompt: Question = {
   type: 'input',
   name: 'email',
   message: 'Enter an email address to reset your password: ',
   validate: checkEmail,
 }
 
-const passwordPrompts = [
+const passwordPrompts: Question[] = [
   {
     type: 'password',
     name: 'password',
@@ -60,7 +61,7 @@ export default class AccountReset extends Command {
     } = commander.parse(process.argv)
 
     if (!token) {
-      const { email }: { email: string } = await ux.prompt([emailPrompt])
+      const { email }: { email: string } = await ux.prompt(emailPrompt)
       this.startSpinner()
       const res = await this.createToken(email)
 
@@ -77,7 +78,7 @@ export default class AccountReset extends Command {
       return this.run()
     }
 
-    const { password }: { password: string } = await ux.prompt(passwordPrompts)
+    const { password } = await ux.prompt(passwordPrompts)
     this.startSpinner()
     const res = await this.resetPassword(token, password)
 

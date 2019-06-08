@@ -2,6 +2,7 @@ import Command, { flags } from '../base'
 import { ux } from '@cto.ai/sdk'
 import { OPS_REGISTRY_HOST } from '../constants/env'
 import { NoOpFoundForDeletion } from '../errors/customErrors'
+import { Op } from '~/types'
 
 export default class Remove extends Command {
   static description = 'Remove an op from a team.'
@@ -16,7 +17,6 @@ export default class Remove extends Command {
 
   async run() {
     try {
-      const self = this
       this.isLoggedIn()
 
       const {
@@ -24,10 +24,10 @@ export default class Remove extends Command {
       } = this.parse(Remove)
 
       const query = opName
-        ? { search: opName, team_id: self.team.id }
-        : { team_id: self.team.id }
+        ? { search: opName, team_id: this.team.id }
+        : { team_id: this.team.id }
 
-      const opsResponse = await this.api
+      const opsResponse: { data: Op[] } = await this.api
         .find('ops', {
           query,
           headers: {
@@ -43,9 +43,9 @@ export default class Remove extends Command {
         throw new NoOpFoundForDeletion()
       }
 
-      let op
+      let op: Op
       if (!opName) {
-        const data = await ux.prompt({
+        const { selected }: { selected: Op } = await ux.prompt({
           type: 'list',
           name: 'selected',
           pageSize: 100,
@@ -59,12 +59,12 @@ export default class Remove extends Command {
             }
           }),
         })
-        op = data.selected
+        op = selected
       } else {
         op = opsResponse.data[0]
       }
 
-      self.log('\n 🗑  Removing from registry...')
+      this.log('\n 🗑  Removing from registry...')
 
       const { id, name, description } = op
 
@@ -75,24 +75,24 @@ export default class Remove extends Command {
           throw new Error(err)
         })
 
-      self.log(
+      this.log(
         `\n ⚡️ ${ux.colors.bold(`${name}:${id}`)} has been ${ux.colors.green(
           'removed',
         )} from the registry!`,
       )
 
-      self.log(
+      this.log(
         `\n To publish again run: ${ux.colors.green('$')} ${ux.colors.dim(
           'ops publish <path>',
         )}\n`,
       )
 
-      self.analytics.track({
-        userId: self.user.email,
+      this.analytics.track({
+        userId: this.user.email,
         event: 'Ops CLI Remove',
         properties: {
-          email: self.user.email,
-          username: self.user.username,
+          email: this.user.email,
+          username: this.user.username,
           id,
           name,
           description,

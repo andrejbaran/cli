@@ -1,0 +1,28 @@
+version: "1"
+name: write_a_file_op
+description: bind mount the cwd and write a file called BRANDNEWFILE.txt
+run: node /ops/index.js
+network: host
+flags:
+  - v=0.0.0
+env:
+  - USER=world
+  - LOGGER_PLUGINS_STDOUT_ENABLED=true
+  - OPS_ACCESS_TOKEN
+src:
+  - Dockerfile
+  - index.js
+  - package.json
+  - .dockerignore
+mountCwd: true
+mountHome: false
+bind:
+  - /tmp:/tmp
+help:
+  usage: Your first hello-world op
+  arguments:
+    username: Your username
+    email: Your email
+  options:
+    build: Build flag
+    clear: Clears

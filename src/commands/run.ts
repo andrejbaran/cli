@@ -2,7 +2,7 @@
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Saturday, 6th April 2019 10:39:58 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 17th May 2019 6:29:20 pm
+ * @lastModifiedTime: Thursday, 6th June 2019 4:01:45 pm
  * @copyright (c) 2019 CTO.ai
  *
  * DESCRIPTION
@@ -19,7 +19,6 @@ import * as yaml from 'yaml'
 import Docker from 'dockerode'
 
 import { spawn, SpawnOptions } from 'child_process'
-import { Question } from 'inquirer'
 
 import Command, { flags } from '~/base'
 import {
@@ -37,6 +36,7 @@ import {
   Workflow,
   RunCommandArgs,
   ChildProcessError,
+  Question,
 } from '~/types'
 import {
   CouldNotGetRegistryToken,
@@ -151,7 +151,7 @@ export default class Run extends Command {
       }
       let op
       if (data.length > 1) {
-        const answer = await ux.prompt({
+        const { runOp } = await ux.prompt({
           type: 'list',
           name: 'runOp',
           pageSize: 5,
@@ -167,7 +167,7 @@ export default class Run extends Command {
             )} for usage information.`,
           )}`,
         })
-        op = answer.runOp
+        op = runOp
       } else {
         op = data[0]
       }
@@ -669,7 +669,7 @@ export default class Run extends Command {
   _promptForHomeDirectory = async (
     mountHome: boolean,
     { ignoreMountWarnings }: Config,
-  ) => {
+  ): Promise<{ agreeToMountHome: boolean | undefined }> => {
     if (mountHome && !ignoreMountWarnings) {
       return this.ux.prompt(this.prompts.agreeToMountHome)
     }
@@ -679,7 +679,7 @@ export default class Run extends Command {
   _promptToIgnoreWarning = async (
     mountHome: boolean,
     { ignoreMountWarnings }: Config,
-  ) => {
+  ): Promise<{ ignoreMountWarnings: boolean | undefined }> => {
     /*
      * Prompt user only if ignore flag is undefined. If it is set to true or false,
      * the user has made up their mind. They should be asked this question only
@@ -737,7 +737,7 @@ export default class Run extends Command {
     this.log(
       this.ux.colors.redBright(
         `Exit with error code ${this.ux.colors.whiteBright(
-          code,
+          code.toString(),
         )} and signal ${this.ux.colors.whiteBright(signal)}`,
       ),
     )

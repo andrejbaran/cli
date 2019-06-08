@@ -1,4 +1,4 @@
-import { Config, UserCredentials, QuestionInquirer } from '~/types'
+import { Question, Config, UserCredentials } from '~/types'
 import Command, { flags } from '~/base'
 import { INTERCOM_EMAIL, NODE_ENV } from '~/constants/env'
 import { APIError, SignUpError, AnalyticsError } from '~/errors/customErrors'
@@ -51,7 +51,7 @@ export default class AccountSignup extends Command {
     }
   }
 
-  questions: QuestionInquirer[] = [
+  questions: Question[] = [
     {
       type: 'input',
       name: 'email',
@@ -109,16 +109,14 @@ export default class AccountSignup extends Command {
 
   trackSignup = (config: Config) => {
     try {
-      if (NODE_ENV === 'production') {
-        this.analytics.identify({
-          userId: config.user.email,
-          traits: {
-            beta: true,
-            email: config.user.email,
-            username: config.user.username,
-          },
-        })
-      }
+      this.analytics.identify({
+        userId: config.user.email,
+        traits: {
+          beta: true,
+          email: config.user.email,
+          username: config.user.username,
+        },
+      })
 
       this.analytics.track({
         userId: config.user.email,
@@ -157,9 +155,7 @@ export default class AccountSignup extends Command {
     return { ...input }
   }
 
-  askQuestions = async (
-    questions: QuestionInquirer[],
-  ): Promise<SignUpData | {}> => {
+  askQuestions = async (questions: Question[]): Promise<SignUpData | {}> => {
     if (!questions.length) return {}
     return this.ux.prompt(questions)
   }
