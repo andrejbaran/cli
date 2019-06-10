@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Friday, 24th May 2019 1:41:52 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 7th June 2019 3:56:31 pm
+ * @lastModifiedTime: Monday, 10th June 2019 11:37:28 am
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -45,7 +45,6 @@ const signup = async (email: string, name: string, password: string) => {
     return run(
       ['account:signup'],
       [email, ENTER, name, ENTER, password, ENTER, password, ENTER],
-      1500,
     )
   } catch (e) {
     console.error('account:signup', e)
@@ -54,7 +53,7 @@ const signup = async (email: string, name: string, password: string) => {
 
 const signin = async (email: string, password: string) => {
   try {
-    return run(['account:signin'], [email, ENTER, password, ENTER], 1500)
+    return run(['account:signin'], [email, ENTER, password, ENTER])
   } catch (e) {
     console.error('account:signin', e)
   }
@@ -95,7 +94,7 @@ test('it should signup, signin, team:switch', async () => {
   await signin(NEW_USER_EMAIL, NEW_USER_PASSWORD)
 
   try {
-    const teamSwitchRes = await run(['team:switch'], [])
+    const teamSwitchRes = await run(['team:switch'])
 
     expect(teamSwitchRes).toContain(`Here's the list of your teams`)
     expect(teamSwitchRes).toContain(NEW_USER_NAME)
