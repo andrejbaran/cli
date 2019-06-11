@@ -24,7 +24,9 @@ export interface Op {
   image: string | void
   name: string
   opsHome: string
+  runId: string
   stateDir: string
+  configDir: string
   network?: string
   ownerId?: string
   packagePath?: string | null

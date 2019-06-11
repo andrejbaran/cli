@@ -7,7 +7,9 @@
  */
 
 export interface Workflow {
+  runId: string
   opsHome: string
+  configDir: string
   stateDir: string
   name: string
   description: string
