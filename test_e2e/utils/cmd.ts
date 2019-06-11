@@ -4,7 +4,9 @@ import axios from 'axios'
 import { DEBUG } from '../../src/constants/env'
 import { isTruthy } from '../../src/utils'
 
-const command = '/usr/local/bin/ops'
+const command = process.env.npm_config_prefix
+  ? `${process.env.npm_config_prefix}/bin/ops`
+  : '/usr/local/bin/ops'
 
 const defaultEnv = {
   NODE_ENV: 'test',
