@@ -17,6 +17,7 @@ import * as through from 'through2'
 import _ from 'underscore'
 import * as yaml from 'yaml'
 import Docker from 'dockerode'
+import { v4 as uuid } from 'uuid'
 
 import { spawn, SpawnOptions } from 'child_process'
 
@@ -421,9 +422,11 @@ export default class Run extends Command {
     const defaultEnv: Container<string> = {
       OPS_HOME:
         (process.env.HOME || process.env.USERPROFILE) + '/.config/@cto.ai/ops',
-      STATE_DIR: '/' + config.team.name + '/' + op.name,
+      CONFIG_DIR: `/${config.team.name}/${op.name}`,
+      STATE_DIR: `/${config.team.name}/${op.name}/${op.runId}`,
       NODE_ENV: 'production',
       LOGGER_PLUGINS_STDOUT_ENABLED: 'true',
+      RUN_ID: op.runId,
       OPS_ACCESS_TOKEN: config.accessToken,
       OPS_API_PATH,
       OPS_API_HOST,
@@ -436,7 +439,8 @@ export default class Run extends Command {
     let opsHome =
       (process.env.HOME || process.env.USERPROFILE) + '/.config/@cto.ai/ops'
     op.opsHome = opsHome === undefined ? '' : opsHome
-    op.stateDir = '/' + config.team.name + '/' + op.name
+    op.stateDir = `/${config.team.name}/${op.name}/${op.runId}`
+    op.configDir = `/${config.team.name}/${op.name}`
 
     const opsYamlEnv: Container<string> = op.env
       ? op.env.reduce(this.convertEnvStringsToObject, {})
@@ -513,9 +517,9 @@ export default class Run extends Command {
 
     const stateMount =
       op.opsHome +
-      op.stateDir +
+      op.configDir +
       ':/root/.config/@cto.ai/ops' +
-      op.stateDir +
+      op.configDir +
       ':rw'
 
     op.bind.push(stateMount)
@@ -813,6 +817,9 @@ export default class Run extends Command {
     //TODO: both local & container ops should set the same envs in the same place
     process.env.OPS_OP_NAME = workflow.name
     process.env.OPS_TEAM_NAME = config.team.name
+    process.env.STATE_DIR = workflow.stateDir
+    process.env.CONFIG_DIR = workflow.configDir
+    process.env.RUN_ID = workflow.runId
     //TODO: both local & container ops should set the same envs in the same place
 
     process.env.OPS_ACCESS_TOKEN = config.accessToken
@@ -878,6 +885,8 @@ export default class Run extends Command {
       return null
     }
 
+    const runId: string = uuid()
+
     const workflow: Workflow | undefined = await this.findWorkflow(
       localManifest,
       nameOrPath,
@@ -890,7 +899,8 @@ export default class Run extends Command {
       let opsHome =
         (process.env.HOME || process.env.USERPROFILE) + '/.config/@cto.ai/ops'
       workflow.opsHome = opsHome === undefined ? '' : opsHome
-      workflow.stateDir = '/' + config.team.name + '/' + workflow.name
+      workflow.stateDir = `/${config.team.name}/${workflow.name}/${runId}`
+      workflow.configDir = `/${config.team.name}/${workflow.name}`
 
       if (!fs.existsSync(workflow.stateDir)) {
         try {
@@ -904,6 +914,13 @@ export default class Run extends Command {
     }
 
     return workflow
+  }
+
+  setRunID = ({ op, ...rest }: RunPipeline) => {
+    const runId: string = uuid()
+    op.runId = runId
+
+    return { op, ...rest }
   }
 
   async run() {
@@ -924,6 +941,7 @@ export default class Run extends Command {
 
       const runPipeline = asyncPipe(
         this.getOpConfig,
+        this.setRunID,
         this.getImage,
         this.setEnvs(process.env),
         this.hostSetup,
