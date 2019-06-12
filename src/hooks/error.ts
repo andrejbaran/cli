@@ -2,7 +2,7 @@
  * @author: Prachi Singh (prachi@hackcapital.com)
  * @date: Tuesday, 23rd April 2019 10:55:23 am
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 7th June 2019 2:58:42 pm
+ * @lastModifiedTime: Tuesday, 11th June 2019 4:35:24 pm
  *
  * DESCRIPTION: This hook is used for error handling
  *
@@ -11,6 +11,8 @@
 
 import { ErrorTemplate } from '../errors/ErrorTemplate'
 import { errorSource } from '../constants/errorSource'
+
+const { UNEXPECTED } = errorSource
 
 /**
  * Error hook to handle the errors
@@ -23,9 +25,7 @@ export default async function error(
   this: any,
   options: { err: ErrorTemplate },
 ) {
-  const { UNEXPECTED } = errorSource
-  const { extra } = options.err
-  const { message } = options.err
+  const { extra, message } = options.err
 
   if (extra && extra.source === UNEXPECTED) {
     this.log(

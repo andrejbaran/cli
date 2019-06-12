@@ -21,11 +21,11 @@
       "console": "integratedTerminal",
       "args": [
         "run",
-        "tomato"
+        "fancyop",
       ],
       "env": {
-        "DEBUG": "1",
-        "NODE_ENV": "development"
+        "DEBUG": "ops:*",
+        "NODE_ENV": "staging"
       }
     }
   ]

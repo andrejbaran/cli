@@ -27,7 +27,7 @@ export default class AccountSignup extends Command {
       return '❗ The format of your email is invalid, please check that it is correct and try again.'
     const unique = await this.validateUniqueField({ email: input }).catch(
       err => {
-        this.debug(err)
+        this.debug('%O', err)
         throw new APIError(err)
       },
     )
@@ -46,7 +46,7 @@ export default class AccountSignup extends Command {
         return '😞 Username is already taken, please try using another.'
       return true
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new APIError(err)
     }
   }
@@ -129,7 +129,7 @@ export default class AccountSignup extends Command {
         },
       })
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new AnalyticsError(err)
     }
   }
@@ -157,7 +157,7 @@ export default class AccountSignup extends Command {
 
   askQuestions = async (questions: Question[]): Promise<SignUpData | {}> => {
     if (!questions.length) return {}
-    return this.ux.prompt(questions)
+    return this.ux.prompt<Partial<SignUpData>>(questions)
   }
 
   logHelpMessage = () => {
@@ -209,7 +209,7 @@ export default class AccountSignup extends Command {
         )} to begin creating your own. \n\n`,
       )
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       this.config.runHook('error', { err })
     }
   }

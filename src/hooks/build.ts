@@ -46,7 +46,7 @@ async function build(
       const stream = await docker
         .buildImage({ context: opPath, src: op.src }, { t: tag })
         .catch(err => {
-          this.debug(err)
+          this.debug('%O', err)
           reject(new DockerBuildImageError(err))
           return null
         })

@@ -128,7 +128,7 @@ export default async function publish(
       )
     })
   } catch (err) {
-    this.debug(err)
+    this.debug('%O', err)
     process.exit(1)
   }
 }

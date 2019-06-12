@@ -24,7 +24,7 @@ export default class Update extends Command {
       await this._updateVersion()
       this._trackAnalytics(latestVersion)
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       this.config.runHook('error', { err })
     }
   }
@@ -53,7 +53,7 @@ export default class Update extends Command {
   }
 
   private async _askQuestion() {
-    const { install } = await ux.prompt({
+    const { install } = await ux.prompt<{ install: boolean }>({
       type: 'confirm',
       name: 'install',
       message: `\n${ux.colors.white('Install update?')}`,
@@ -75,7 +75,7 @@ export default class Update extends Command {
       await exec('npm install -g @cto.ai/ops')
       ux.spinner.stop('Done!')
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       ux.spinner.stop('Failed')
       throw new PermissionsError(err)
     }

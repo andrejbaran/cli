@@ -2,7 +2,7 @@
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Friday, 5th April 2019 12:06:07 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Thursday, 6th June 2019 5:33:29 pm
+ * @lastModifiedTime: Tuesday, 11th June 2019 1:50:03 pm
  * @copyright (c) 2019 CTO.ai
  *
  */
@@ -41,7 +41,8 @@ import {
 
 import { FeathersClient } from './services/feathers'
 import { SegmentClient } from './services/segment'
-import { UserUnauthorized, APIError } from './errors/customErrors'
+import { UserUnauthorized, APIError, SignInError } from './errors/customErrors'
+import { ErrorResponse } from './errors/ErrorTemplate'
 
 abstract class CTOCommand extends Command {
   accessToken!: string
@@ -227,8 +228,9 @@ abstract class CTOCommand extends Command {
         email: credentials.email,
         password: credentials.password,
       })
-      .catch(err => {
-        throw new APIError(err)
+      .catch((err: ErrorResponse) => {
+        this.debug('%O', err)
+        throw new SignInError(err)
       })
     const { data: accessToken = handleUndefined('accessToken') } = res
     return { accessToken, credentials }

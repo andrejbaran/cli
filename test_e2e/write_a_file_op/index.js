@@ -7,7 +7,7 @@ async function main() {
 
   console.log(greeting)
 
-  console.log('writing file')
+  console.log('writing file', process.env.HOME)
   fs.writeFileSync('BRANDNEWFILE.txt', 'this is my brand new file')
 }
 

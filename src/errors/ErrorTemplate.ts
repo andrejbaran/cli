@@ -2,7 +2,7 @@
  * @author: Prachi Singh (prachi@hackcapital.com)
  * @date: Monday, 6th May 2019 11:11:49 am
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Tuesday, 14th May 2019 11:42:24 am
+ * @lastModifiedTime: Tuesday, 11th June 2019 1:52:14 pm
  *
  * DESCRIPTION: Base class that the custom errors should be extending from
  * Error template that provides a modular, extensible and customizable errors.
@@ -22,10 +22,7 @@ const { UNEXPECTED } = errorSource
  * @extends Error
  */
 export class ErrorTemplate extends Error {
-  original?: Error
   extra: IExtra
-  statusCode?: number
-  errorCode?: string
 
   /**
    * @constructor
@@ -37,19 +34,16 @@ export class ErrorTemplate extends Error {
    * @param {Error} [original] Original error object
    */
   constructor(
-    message: string,
-    original?: Error,
+    public message: string,
+    public original?: Error | ErrorResponse,
     extra: IExtra = { exit: true, source: UNEXPECTED },
-    statusCode?: number,
-    errorCode?: string,
+    public statusCode?: number,
+    public errorCode?: string,
   ) {
-    if (!message) throw new Error('Need to specify a message')
-
     super(message)
 
-    if (errorCode) this.errorCode = errorCode
-    if (statusCode) this.statusCode = statusCode
-    if (original) this.original = original
+    if (!message) throw new Error('Need to specify a message')
+
     if (extra.exit === undefined) extra.exit = true
     if (extra.source === undefined) extra.source = UNEXPECTED
     this.extra = {
@@ -60,4 +54,16 @@ export class ErrorTemplate extends Error {
     // name the error
     this.name = this.constructor.name
   }
+}
+
+//this originates from the Go API
+export interface ErrorResponse {
+  data: null
+  error: GoError
+}
+
+export interface GoError {
+  requestID: string
+  code: number
+  message: string
 }

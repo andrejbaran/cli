@@ -3,6 +3,7 @@ import concat from 'concat-stream'
 import axios from 'axios'
 import { DEBUG } from '../../src/constants/env'
 import { isTruthy } from '../../src/utils'
+import { ENTER } from './constants'
 
 const command = process.env.npm_config_prefix
   ? `${process.env.npm_config_prefix}/bin/ops`
@@ -21,9 +22,15 @@ const defaultEnv = {
 const setEnv = (
   defaultEnv: NodeJS.ProcessEnv,
   processEnv: NodeJS.ProcessEnv,
-  DEBUG: string,
+  DEBUG?: string,
 ) => {
-  return isTruthy(DEBUG) ? { ...defaultEnv, ...processEnv } : defaultEnv
+  return { ...defaultEnv, ...processEnv }
+  /*
+   * to-do: when we pass in only the defaultEnv, we are unable to run the
+   * existing op (write_a_file_op)... Therefore, I'm merging the env by default
+   * until we figure out why
+   */
+  // return isTruthy(DEBUG) ? { ...defaultEnv, ...processEnv } : defaultEnv
 }
 
 function run(
@@ -31,7 +38,7 @@ function run(
   inputs: string[] = [],
   timeout: number = 1500,
 ): Promise<string> {
-  const env = setEnv(defaultEnv, process.env, DEBUG)
+  const env = setEnv(defaultEnv, process.env)
 
   const childProcess = spawn(command, args, { env })
 
@@ -91,39 +98,23 @@ const sleep = (milliseconds: number) => {
   return new Promise(resolve => setTimeout(() => resolve(), milliseconds))
 }
 
-const DOWN = '\x1B\x5B\x42'
-const UP = '\x1B\x5B\x41'
-const ENTER = '\x0D'
-const SPACE = '\x20'
-const NEW_OP_NAME = 't_my_new_op'
-const NEW_OP_DESCRIPTION = 'my new op description'
-
-const EXISTING_OP_NAME = 'write_a_file_op'
-
-const EXISTING_USER_EMAIL = 'e2e_existing_user@cto.ai'
-const EXISTING_USER_PASSWORD = 'password'
-
-const NEW_USER_EMAIL = 't_email_new_user@cto.ai'
-const NEW_USER_NAME = 't_user_new'
-const NEW_USER_PASSWORD = 'password'
-
-const NEW_FILE = 'BRANDNEWFILE.txt'
-
-export {
-  run,
-  sleep,
-  cleanup,
-  DOWN,
-  UP,
-  ENTER,
-  SPACE,
-  NEW_OP_NAME,
-  NEW_OP_DESCRIPTION,
-  NEW_USER_EMAIL,
-  NEW_USER_NAME,
-  NEW_USER_PASSWORD,
-  EXISTING_USER_EMAIL,
-  EXISTING_USER_PASSWORD,
-  EXISTING_OP_NAME,
-  NEW_FILE,
+const signup = async (email: string, name: string, password: string) => {
+  try {
+    return run(
+      ['account:signup'],
+      [email, ENTER, name, ENTER, password, ENTER, password, ENTER],
+    )
+  } catch (e) {
+    console.error('account:signup', e)
+  }
 }
+
+const signin = async (email: string, password: string) => {
+  try {
+    return run(['account:signin'], [email, ENTER, password, ENTER])
+  } catch (e) {
+    console.error('account:signin', e)
+  }
+}
+
+export { run, sleep, cleanup, signin, signup }

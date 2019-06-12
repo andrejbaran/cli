@@ -2,7 +2,7 @@
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Saturday, 6th April 2019 10:39:58 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Thursday, 6th June 2019 4:01:45 pm
+ * @lastModifiedTime: Wednesday, 12th June 2019 1:32:39 pm
  * @copyright (c) 2019 CTO.ai
  *
  * DESCRIPTION
@@ -14,7 +14,6 @@ import * as fs from 'fs-extra'
 import * as json from 'JSONStream'
 import * as path from 'path'
 import * as through from 'through2'
-import _ from 'underscore'
 import * as yaml from 'yaml'
 import Docker from 'dockerode'
 import { v4 as uuid } from 'uuid'
@@ -150,9 +149,9 @@ export default class Run extends Command {
           '‼️  No op was found with this name or ID. Please try again.',
         )
       }
-      let op
+      let op: Op
       if (data.length > 1) {
-        const { runOp } = await ux.prompt({
+        const { runOp } = await ux.prompt<{ runOp: Op }>({
           type: 'list',
           name: 'runOp',
           pageSize: 5,
@@ -175,7 +174,7 @@ export default class Run extends Command {
       op.isPublic = this.team.id !== op.teamID
       return { op, isPublished: true }
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new Error(err)
     }
   }
@@ -301,7 +300,7 @@ export default class Run extends Command {
         }
         bar.update(100)
         bar.stop()
-        this.debug(err)
+        this.debug('%O', err)
         return err ? reject(err) : resolve(allData)
       })
   }
@@ -374,7 +373,7 @@ export default class Run extends Command {
 
       return opUrl
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new Error(err)
     }
   }
@@ -394,7 +393,7 @@ export default class Run extends Command {
       }
       return { op: { ...op, image: localImage }, config }
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new Error('Unable to find image for this op')
     }
   }
@@ -466,13 +465,14 @@ export default class Run extends Command {
       try {
         fs.ensureDirSync(path.resolve(op.opsHome + op.stateDir))
       } catch (err) {
-        this.debug(err)
+        this.debug('%O', err)
         throw new CouldNotMakeDir()
       }
     }
 
     return {
       ...rest,
+
       op: {
         ...op,
         bind: op.bind ? op.bind.map(this.replaceHomeAlias) : [],
@@ -555,7 +555,7 @@ export default class Run extends Command {
       this.container = container
       return { ...rest, op, options }
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new Error('Error creating Docker container')
     }
   }
@@ -578,7 +578,7 @@ export default class Run extends Command {
 
       return state
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new Error(err)
     }
   }
@@ -595,7 +595,7 @@ export default class Run extends Command {
         this.container.resize(dimensions, () => {})
       }
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new Error(err)
     }
   }
@@ -614,7 +614,7 @@ export default class Run extends Command {
       stream.end()
       this.container.remove(() => process.exit())
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new Error(err)
     }
   }
@@ -650,7 +650,7 @@ export default class Run extends Command {
       await this.container.wait()
       this.handleExit(stream, false)
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new Error(err)
     }
   }
@@ -674,7 +674,9 @@ export default class Run extends Command {
     { ignoreMountWarnings }: Config,
   ): Promise<{ agreeToMountHome: boolean | undefined }> => {
     if (mountHome && !ignoreMountWarnings) {
-      return this.ux.prompt(this.prompts.agreeToMountHome)
+      return this.ux.prompt<{ agreeToMountHome: boolean }>(
+        this.prompts.agreeToMountHome,
+      )
     }
     return { agreeToMountHome: ignoreMountWarnings }
   }
@@ -689,7 +691,9 @@ export default class Run extends Command {
      * once, not every time they run. *
      */
     if (mountHome && typeof ignoreMountWarnings === 'undefined') {
-      return this.ux.prompt(this.prompts.ignoreMountWarnings)
+      return this.ux.prompt<{ ignoreMountWarnings: boolean }>(
+        this.prompts.ignoreMountWarnings,
+      )
     }
     return { ignoreMountWarnings }
   }
@@ -895,8 +899,8 @@ export default class Run extends Command {
     // }
 
     if (workflow) {
-      let opsHome =
-        (process.env.HOME || process.env.USERPROFILE) + '/.config/@cto.ai/ops'
+      const opsHome = `${process.env.HOME ||
+        process.env.USERPROFILE}/.config/@cto.ai/ops`
       workflow.opsHome = opsHome === undefined ? '' : opsHome
       workflow.stateDir = `/${config.team.name}/${workflow.name}/${runId}`
       workflow.configDir = `/${config.team.name}/${workflow.name}`
@@ -905,7 +909,7 @@ export default class Run extends Command {
         try {
           fs.ensureDirSync(path.resolve(workflow.opsHome + workflow.stateDir))
         } catch (err) {
-          this.debug(err)
+          this.debug('%O', err)
           throw new CouldNotMakeDir()
         }
       }
@@ -957,7 +961,7 @@ export default class Run extends Command {
         options: undefined,
       })
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       this.config.runHook('error', { err })
     }
   }

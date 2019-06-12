@@ -4,7 +4,6 @@ import { validChars } from '../../utils/validate'
 
 import { Question, Team } from '~/types'
 
-let self
 export default class TeamCreate extends Command {
   static description = 'Create your team.'
 
@@ -20,38 +19,46 @@ export default class TeamCreate extends Command {
       '→',
     )}  \n🏀 ${this.ux.colors.white('Team Name')} `,
     afterMessage: `${this.ux.colors.reset.green('✓')} Team name    `,
-    validate: this.validateTeamName,
+    validate: this.validateTeamName.bind(this),
   }
-  questions: Question[] = []
+
+  async promptForTeamName(): Promise<string> {
+    const { teamName } = await this.ux.prompt<{ teamName: string }>(
+      this.teamNamePrompt,
+    )
+    return teamName
+  }
+
+  async guardAgainstInvalidName(name: undefined | string): Promise<void> {
+    if (!name) return
+    const isValidName = await this.validateTeamName(name)
+    if (!isValidName || typeof isValidName === 'string') {
+      throw new InvalidTeamNameFormat(null)
+    }
+  }
 
   async run(): Promise<void> {
     try {
       this.isLoggedIn()
-      self = this
       const { flags } = this.parse(TeamCreate)
-      const { name } = flags
-      if (!name) this.questions.push(this.teamNamePrompt)
-      let teamName = name
-      if (this.questions.length) {
-        const {
-          promptedTeamName,
-        }: { promptedTeamName: string } = await this.ux.prompt(this.questions)
-        teamName = promptedTeamName
-      } else {
-        const validName = name && (await this.validateTeamName(name))
-        if (!validName || typeof validName === 'string') {
-          throw new InvalidTeamNameFormat(null)
-        }
+      let { name } = flags
+
+      // we run this check only against the name passed as an argument, not the
+      // prompted name. This is because validation is built-in to the prompt.
+      await this.guardAgainstInvalidName(name)
+
+      if (!name) {
+        name = await this.promptForTeamName()
       }
 
       const res: { data: Team } = await this.api
         .create(
           'teams',
-          { name: teamName },
+          { name },
           { headers: { Authorization: this.accessToken } },
         )
         .catch(err => {
-          this.debug(err)
+          this.debug('%O', err)
           throw new InvalidTeamNameFormat(err)
         })
       const team = { id: res.data.id, name: res.data.name }
@@ -69,20 +76,20 @@ export default class TeamCreate extends Command {
         },
       })
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
+      this.config.runHook('error', { err })
     }
   }
 
   async validateTeamName(input: string): Promise<boolean | string> {
     try {
       if (!validChars.test(input))
-        return `❗Sorry, the team name must use letters (case sensitive), numbers (0-9), dashes (-), and underscores (_).`
-      const unique = await self.validateUniqueField({ username: input })
+        return `Invalid team name. May contain only letters (case-sensitive), numbers, dashes (-), and underscores (_).`
+      const unique = await this.validateUniqueField({ username: input })
       if (!unique)
         return `😞 Sorry this name has already been taken. Try again with a different name.`
       return true
     } catch (err) {
-      this.debug(err)
       throw new InvalidTeamNameFormat(err)
     }
   }

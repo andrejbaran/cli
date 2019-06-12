@@ -90,7 +90,7 @@ export default class Init extends Command {
   }
 
   askQuestions = async (questions: Question[]) => {
-    return ux.prompt(questions)
+    return ux.prompt<Partial<InitParams>>(questions)
   }
 
   determineInitPaths = (flags: Partial<InitParams>) => (
@@ -119,7 +119,7 @@ export default class Init extends Command {
       await fs.copy(sharedDir, destDir)
       return input
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new CopyTemplateFilesError(err)
     }
   }
@@ -140,7 +140,7 @@ export default class Init extends Command {
       fs.writeFileSync(`${destDir}/package.json`, newPackageString)
       return input
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new CouldNotInitializeOp(err)
     }
   }
@@ -166,7 +166,7 @@ export default class Init extends Command {
       fs.writeFileSync(`${destDir}/ops.yml`, newOpsString)
       return input
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new CouldNotInitializeOp(err)
     }
   }
@@ -225,7 +225,7 @@ export default class Init extends Command {
         },
       })
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new AnalyticsError(err)
     }
   }
@@ -262,7 +262,7 @@ export default class Init extends Command {
 
       await initPipeline({ prompts: this.initPrompts, flags })
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       this.config.runHook('error', { err })
     }
   }

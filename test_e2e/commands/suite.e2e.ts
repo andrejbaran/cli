@@ -2,27 +2,22 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Friday, 24th May 2019 1:41:52 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Monday, 10th June 2019 11:37:28 am
+ * @lastModifiedTime: Wednesday, 12th June 2019 11:58:08 am
  * @copyright (c) 2019 CTO.ai
  */
 
 import fs from 'fs-extra'
-import path from 'path'
+import { run, sleep, cleanup, signin, signup } from '../utils/cmd'
 import {
-  run,
-  sleep,
-  cleanup,
   ENTER,
   NEW_OP_NAME,
   NEW_OP_DESCRIPTION,
-  EXISTING_OP_NAME,
   NEW_USER_EMAIL,
   NEW_USER_PASSWORD,
   NEW_USER_NAME,
   EXISTING_USER_EMAIL,
   EXISTING_USER_PASSWORD,
-  NEW_FILE,
-} from '../utils/cmd'
+} from '../utils/constants'
 
 // give the suite max 5 minutes to complete
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 5
@@ -38,35 +33,6 @@ beforeEach(async () => {
 afterAll(async () => {
   // avoid jest open handle error
   await sleep(500)
-})
-
-const signup = async (email: string, name: string, password: string) => {
-  try {
-    return run(
-      ['account:signup'],
-      [email, ENTER, name, ENTER, password, ENTER, password, ENTER],
-    )
-  } catch (e) {
-    console.error('account:signup', e)
-  }
-}
-
-const signin = async (email: string, password: string) => {
-  try {
-    return run(['account:signin'], [email, ENTER, password, ENTER])
-  } catch (e) {
-    console.error('account:signin', e)
-  }
-}
-
-test('it should --help', async () => {
-  try {
-    console.log('it should --help')
-    const result = await run(['--help'])
-    expect(result).toContain('Manage your account settings.')
-  } catch (error) {
-    console.error(error)
-  }
 })
 
 // test is redundant but useful for debugging
@@ -87,30 +53,14 @@ test.skip('it should signin', async () => {
   expect(result).toContain('Welcome back')
 })
 
-test('it should signup, signin, team:switch', async () => {
-  console.log('it should signup, signin, team:switch')
-  await signup(NEW_USER_EMAIL, NEW_USER_NAME, NEW_USER_PASSWORD)
-
-  await signin(NEW_USER_EMAIL, NEW_USER_PASSWORD)
-
-  try {
-    const teamSwitchRes = await run(['team:switch'])
-
-    expect(teamSwitchRes).toContain(`Here's the list of your teams`)
-    expect(teamSwitchRes).toContain(NEW_USER_NAME)
-  } catch (e) {
-    console.error('team:switch', e)
-  }
-  await sleep(500)
-  await cleanup()
-})
-
 test('it should signup, signin, init, build, publish, search', async () => {
   console.log('it should signup, signin, init, build, publish, search')
 
   await signup(NEW_USER_EMAIL, NEW_USER_NAME, NEW_USER_PASSWORD)
+  await sleep(500)
 
   await signin(NEW_USER_EMAIL, NEW_USER_PASSWORD)
+  await sleep(500)
 
   console.log('ops init')
   try {
@@ -118,7 +68,8 @@ test('it should signup, signin, init, build, publish, search', async () => {
       ['init'],
       [ENTER, NEW_OP_NAME, ENTER, NEW_OP_DESCRIPTION, ENTER],
     )
-    expect(initRes).toMatchSnapshot()
+    expect(initRes.toLowerCase()).toContain('success')
+    expect(initRes).toContain('test your op with')
   } catch (e) {
     console.error('init', e)
   }
@@ -128,8 +79,7 @@ test('it should signup, signin, init, build, publish, search', async () => {
   console.log('ops build [name]')
   try {
     const buildRes = await run(['build', NEW_OP_NAME])
-    expect(buildRes).toContain('Successfully built')
-    expect(buildRes).toContain('Run $ ops publish')
+    expect(buildRes.toLowerCase()).toContain('successfully built')
   } catch (e) {
     console.error('build', e)
   }
@@ -139,7 +89,7 @@ test('it should signup, signin, init, build, publish, search', async () => {
   console.log('ops publish [name]')
   try {
     const publishRes = await run(['publish', NEW_OP_NAME])
-    expect(publishRes).toContain('Preparing:')
+    expect(publishRes.toLowerCase()).toContain('preparing:')
     expect(publishRes).toContain('has been published!')
   } catch (e) {
     console.error('publish', e)
@@ -149,6 +99,8 @@ test('it should signup, signin, init, build, publish, search', async () => {
   console.log('ops search')
   try {
     const searchRes = await run(['search'])
+    await sleep(500)
+
     expect(searchRes).toContain(NEW_OP_NAME)
   } catch (e) {
     console.error('publish', e)
@@ -163,37 +115,4 @@ test('it should signup, signin, init, build, publish, search', async () => {
   }
 
   await cleanup()
-})
-
-test('it should signin, run existing op', async () => {
-  console.log('it should signin, run existing op')
-  try {
-    await run(
-      ['account:signin'],
-      [EXISTING_USER_EMAIL, ENTER, EXISTING_USER_PASSWORD, ENTER],
-    )
-  } catch (error) {
-    console.error(error)
-  }
-
-  await sleep(500)
-
-  console.log('ops run [name]')
-  try {
-    const pathToExistingOp = path.join(__dirname, '../', EXISTING_OP_NAME)
-
-    const result = await run(['run', pathToExistingOp], [])
-    expect(result).toContain(`Running ${EXISTING_OP_NAME}...`)
-
-    const newFile = path.join(process.cwd(), NEW_FILE)
-    const newFileExists = fs.existsSync(newFile)
-    expect(newFileExists).toBeTruthy()
-    if (newFileExists) {
-      fs.unlinkSync(newFile)
-    }
-  } catch (error) {
-    console.error(error)
-  }
-
-  await sleep(500)
 })

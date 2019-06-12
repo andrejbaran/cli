@@ -4,7 +4,6 @@ import { ux } from '@cto.ai/sdk'
 import { validateEmail } from '../../utils/validate'
 
 const SENT_SUCCESSFULLY = 'sent successfully!'
-const SENT_FAILURE = 'failed to send'
 
 export default class TeamInvite extends Command {
   static description = 'Invite your team members.'
@@ -20,58 +19,6 @@ export default class TeamInvite extends Command {
       description:
         'A comma-separated string of usernames/emails we want to invite. E.g. ("user1, user2@gmail.com, user3@something")',
     }),
-  }
-
-  questions: Question[] = []
-
-  async run(): Promise<void> {
-    const {
-      flags: { inviteesInput },
-      argv,
-    } = this.parse(TeamInvite)
-    this.isLoggedIn()
-    if (argv.length) {
-      this.error(
-        'team:invite doesn\'t accept any arguments. Please use the -i flag like this: ops team:invite "user1, user2@gmail.com, user3@something"',
-      )
-    }
-
-    // Gets the active team, indicating which team to invite to
-    const activeTeam: Team = await this._getActiveTeamId()
-
-    const invitesPrompt = this._getInvitesPrompt(activeTeam) // Structure the question to ask to the user
-    if (!inviteesInput) this.questions.push(invitesPrompt) // Ask the question if no param is given through flag
-
-    let invitees = inviteesInput || '' // Initializes the invitees
-
-    // Sets the response to the invitees question
-    if (this.questions.length) {
-      const res: { invitees: string } = await ux.prompt(this.questions)
-      invitees = res && res.invitees ? res.invitees : invitees
-    }
-
-    const inviteesArray = this._splitInvitees(invitees) // Splits the comma-delimited invitees
-
-    // Invites the users to the team
-    await this._inviteUserToTeam(activeTeam, inviteesArray)
-      .then(inviteResponses => {
-        this._printInviteResponses(inviteesArray, inviteResponses)
-      })
-      .catch(err => {
-        this.debug(err)
-        this.error(`Failed inviting ${inviteesArray.length} users to team`)
-      })
-
-    this.analytics.track({
-      userId: this.user.email,
-      event: 'Ops CLI team:invite',
-      properties: {
-        email: this.user.email,
-        username: this.user.username,
-        invitees: inviteesArray,
-        activeTeam,
-      },
-    })
   }
 
   // Prints the invite responses
@@ -184,5 +131,57 @@ export default class TeamInvite extends Command {
       return response.data
     }
     return []
+  }
+
+  async run(): Promise<void> {
+    const {
+      flags: { inviteesInput },
+      argv,
+    } = this.parse(TeamInvite)
+    this.isLoggedIn()
+    if (argv.length) {
+      this.error(
+        'team:invite doesn\'t accept any arguments. Please use the -i flag like this: ops team:invite "user1, user2@gmail.com, user3@something"',
+      )
+    }
+
+    const questions: Question[] = []
+
+    // Gets the active team, indicating which team to invite to
+    const activeTeam: Team = await this._getActiveTeamId()
+
+    const invitesPrompt = this._getInvitesPrompt(activeTeam) // Structure the question to ask to the user
+    if (!inviteesInput) questions.push(invitesPrompt) // Ask the question if no param is given through flag
+
+    let invitees = inviteesInput || '' // Initializes the invitees
+
+    // Sets the response to the invitees question
+    if (questions.length) {
+      const res = await ux.prompt<{ invitees: string }>(questions)
+      invitees = res && res.invitees ? res.invitees : invitees
+    }
+
+    const inviteesArray = this._splitInvitees(invitees) // Splits the comma-delimited invitees
+
+    // Invites the users to the team
+    await this._inviteUserToTeam(activeTeam, inviteesArray)
+      .then(inviteResponses => {
+        this._printInviteResponses(inviteesArray, inviteResponses)
+      })
+      .catch(err => {
+        this.debug('%O', err)
+        this.error(`Failed inviting ${inviteesArray.length} users to team`)
+      })
+
+    this.analytics.track({
+      userId: this.user.email,
+      event: 'Ops CLI team:invite',
+      properties: {
+        email: this.user.email,
+        username: this.user.username,
+        invitees: inviteesArray,
+        activeTeam,
+      },
+    })
   }
 }
