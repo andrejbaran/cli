@@ -464,10 +464,9 @@ export default class Run extends Command {
   hostSetup = ({ op, ...rest }: RunPipeline) => {
     if (!fs.existsSync(op.stateDir)) {
       try {
-        fs.mkdirSync(path.resolve(op.opsHome + op.stateDir), {
-          recursive: true,
-        })
+        fs.ensureDirSync(path.resolve(op.opsHome + op.stateDir))
       } catch (err) {
+        this.debug(err)
         throw new CouldNotMakeDir()
       }
     }
@@ -904,9 +903,7 @@ export default class Run extends Command {
 
       if (!fs.existsSync(workflow.stateDir)) {
         try {
-          fs.mkdirSync(path.resolve(workflow.opsHome + workflow.stateDir), {
-            recursive: true,
-          })
+          fs.ensureDirSync(path.resolve(workflow.opsHome + workflow.stateDir))
         } catch (err) {
           throw new CouldNotMakeDir()
         }
