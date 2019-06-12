@@ -905,6 +905,7 @@ export default class Run extends Command {
         try {
           fs.ensureDirSync(path.resolve(workflow.opsHome + workflow.stateDir))
         } catch (err) {
+          this.debug(err)
           throw new CouldNotMakeDir()
         }
       }
