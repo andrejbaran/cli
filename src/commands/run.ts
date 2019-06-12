@@ -9,7 +9,7 @@
  *
  */
 
-import { ux } from '@cto.ai/sdk'
+import { ux, sdk } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
 import * as json from 'JSONStream'
 import * as path from 'path'
@@ -420,8 +420,7 @@ export default class Run extends Command {
     ...rest
   }: RunPipeline) => {
     const defaultEnv: Container<string> = {
-      OPS_HOME:
-        (process.env.HOME || process.env.USERPROFILE) + '/.config/@cto.ai/ops',
+      OPS_HOME: path.resolve(sdk.homeDir() + '/.config/@cto.ai/ops'),
       CONFIG_DIR: `/${config.team.name}/${op.name}`,
       STATE_DIR: `/${config.team.name}/${op.name}/${op.runId}`,
       NODE_ENV: 'production',
