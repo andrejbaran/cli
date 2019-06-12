@@ -61,7 +61,7 @@ export default class AccountReset extends Command {
     } = commander.parse(process.argv)
 
     if (!token) {
-      const { email }: { email: string } = await ux.prompt(emailPrompt)
+      const { email } = await ux.prompt<{ email: string }>(emailPrompt)
       this.startSpinner()
       const res = await this.createToken(email)
 
@@ -78,7 +78,7 @@ export default class AccountReset extends Command {
       return this.run()
     }
 
-    const { password } = await ux.prompt(passwordPrompts)
+    const { password } = await ux.prompt<{ password: string }>(passwordPrompts)
     this.startSpinner()
     const res = await this.resetPassword(token, password)
 

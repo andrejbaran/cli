@@ -89,7 +89,7 @@ export default class TeamSwitch extends Command {
     }
 
     // Destructures and returns the desired input from the user
-    const { teamSelected } = await ux.prompt(prompt)
+    const { teamSelected } = await ux.prompt<{ teamSelected: string }>(prompt)
     return teamSelected
   }
 

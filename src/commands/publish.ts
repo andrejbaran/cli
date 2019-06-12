@@ -66,7 +66,7 @@ export default class Publish extends Command {
       const manifest = await fs
         .readFile(path.join(opPath, OP_FILE), 'utf8')
         .catch((err: any) => {
-          this.debug(err)
+          this.debug('%O', err)
           throw new FileNotFoundError(err, opPath, OP_FILE)
         })
 
@@ -121,7 +121,7 @@ export default class Publish extends Command {
         },
       })
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       this.config.runHook('error', { err })
     }
   }

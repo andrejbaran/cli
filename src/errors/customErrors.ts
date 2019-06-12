@@ -1,5 +1,5 @@
 import { ux } from '@cto.ai/sdk'
-import { ErrorTemplate } from '../errors/ErrorTemplate'
+import { ErrorTemplate, ErrorResponse } from '../errors/ErrorTemplate'
 import { errorSource } from '../constants/errorSource'
 
 const { EXPECTED } = errorSource
@@ -103,8 +103,12 @@ export class CouldNotMakeDir extends ErrorTemplate {
 export class InvalidTeamNameFormat extends ErrorTemplate {
   constructor(err) {
     super(
-      '❗Sorry, the team name must use letters (case sensitive), numbers (0-9), and underscore (_).',
+      `❗ Sorry, that's an invalid team name. \n ❗ Team names may contain only letters (case-sensitive), numbers, dashes (-), and underscores (_).`,
       err,
+      {
+        source: errorSource.EXPECTED,
+        exit: false,
+      },
     )
   }
 }
@@ -205,8 +209,22 @@ export class ImageNotFoundError extends ErrorTemplate {
   }
 }
 
+export class SignInError extends ErrorTemplate {
+  constructor(err: ErrorResponse) {
+    super(
+      `🤔 Sorry, we couldn’t find an account with that email or password.\nForgot your password? Run ${ux.colors.bold(
+        'ops account:reset',
+      )}.\n`,
+      err,
+      {
+        source: EXPECTED,
+      },
+    )
+  }
+}
+
 export class SignUpError extends ErrorTemplate {
-  constructor(err) {
+  constructor(err: ErrorResponse) {
     super("🤔 We couldn't sign you up at this point in time.", err, {
       source: EXPECTED,
     })

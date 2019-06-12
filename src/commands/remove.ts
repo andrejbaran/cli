@@ -2,7 +2,7 @@ import Command, { flags } from '../base'
 import { ux } from '@cto.ai/sdk'
 import { OPS_REGISTRY_HOST } from '../constants/env'
 import { NoOpFoundForDeletion } from '../errors/customErrors'
-import { Op } from '~/types'
+import { Op, Question } from '~/types'
 
 export default class Remove extends Command {
   static description = 'Remove an op from a team.'
@@ -13,6 +13,23 @@ export default class Remove extends Command {
 
   static flags = {
     help: flags.help({ char: 'h' }),
+  }
+
+  getNamePrompt(opsResponse: { data: Op[] }): Question {
+    return {
+      type: 'list',
+      name: 'selected',
+      pageSize: 100,
+      message: '\n 🗑  Which op would you like to remove?',
+      choices: opsResponse.data.map(l => {
+        return {
+          name: `${ux.colors.callOutCyan(l.name)} ${ux.colors.white(
+            l.description,
+          )} | id: ${ux.colors.white(l.id.toLowerCase())}`,
+          value: l,
+        }
+      }),
+    }
   }
 
   async run() {
@@ -35,7 +52,7 @@ export default class Remove extends Command {
           },
         })
         .catch(err => {
-          this.debug(err)
+          this.debug('%O', err)
           throw new Error(err)
         })
 
@@ -45,20 +62,9 @@ export default class Remove extends Command {
 
       let op: Op
       if (!opName) {
-        const { selected }: { selected: Op } = await ux.prompt({
-          type: 'list',
-          name: 'selected',
-          pageSize: 100,
-          message: '\n 🗑  Which op would you like to remove?',
-          choices: opsResponse.data.map(l => {
-            return {
-              name: `${ux.colors.callOutCyan(l.name)} ${ux.colors.white(
-                l.description,
-              )} | id: ${ux.colors.white(l.id.toLowerCase())}`,
-              value: l,
-            }
-          }),
-        })
+        const { selected } = await ux.prompt<{
+          selected: Op
+        }>(this.getNamePrompt(opsResponse))
         op = selected
       } else {
         op = opsResponse.data[0]
@@ -71,7 +77,7 @@ export default class Remove extends Command {
       await this.api
         .remove('ops', id, { headers: { Authorization: this.accessToken } })
         .catch(err => {
-          this.debug(err)
+          this.debug('%O', err)
           throw new Error(err)
         })
 
@@ -100,7 +106,7 @@ export default class Remove extends Command {
         },
       })
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       this.config.runHook('error', { err })
     }
   }

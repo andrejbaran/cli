@@ -14,7 +14,7 @@ const hook: Hook<'prerun'> = async function(opts) {
       const docker = await getDocker(CTOCommand, command)
     }
   } catch (err) {
-    this.debug(err)
+    this.debug('%O', err)
     await this.config.runHook('error', { err })
   }
 }

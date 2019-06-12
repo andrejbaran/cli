@@ -21,7 +21,7 @@ export default class TeamJoin extends Command {
 
   async run() {
     this.isLoggedIn()
-    const { inviteCode }: { inviteCode?: string } = await ux.prompt(
+    const { inviteCode } = await ux.prompt<{ inviteCode: string }>(
       inviteCodePrompt,
     )
     this.startSpinner()
@@ -29,7 +29,7 @@ export default class TeamJoin extends Command {
       throw new Error('no invite code')
     }
     const res = await this.joinTeam(inviteCode).catch(err => {
-      this.debug(err)
+      this.debug('%O', err)
       throw new InviteCodeInvalid(err)
     })
 

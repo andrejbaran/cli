@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 30th April 2019 12:07:49 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Thursday, 6th June 2019 3:19:14 pm
+ * @lastModifiedTime: Wednesday, 12th June 2019 9:57:48 am
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -54,7 +54,7 @@ export default class AccountSignin extends Command {
         },
       })
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new AnalyticsError(err)
     }
     return cloneDeep(config)
@@ -106,7 +106,7 @@ export default class AccountSignin extends Command {
       return {}
     }
     this.log(`${this.ux.colors.white('Please login to get started.')}\n`)
-    return this.ux.prompt(questions)
+    return this.ux.prompt<Partial<UserCredentials>>(questions)
   }
 
   determineUserCredentials = (flags: Partial<UserCredentials>) => (
@@ -145,7 +145,7 @@ export default class AccountSignin extends Command {
 
       await signinPipeline(flags)
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       this.config.runHook('error', { err })
     }
   }

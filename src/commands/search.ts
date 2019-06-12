@@ -157,7 +157,7 @@ export default class Search extends Command {
   }
 
   askQuestion = async () => {
-    return this.ux.prompt(this.searchPrompt)
+    return this.ux.prompt<{ runOp: SourceResult }>(this.searchPrompt)
   }
 
   showRunMessage = (answer: { runOp: SourceResult }) => {
@@ -182,7 +182,7 @@ export default class Search extends Command {
         },
       })
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       throw new AnalyticsError(err)
     }
   }
@@ -244,7 +244,7 @@ export default class Search extends Command {
       )
       await searchPipeline(filter)
     } catch (err) {
-      this.debug(err)
+      this.debug('%O', err)
       this.config.runHook('error', { err })
     }
   }
