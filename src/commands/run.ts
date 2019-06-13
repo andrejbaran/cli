@@ -432,6 +432,7 @@ export default class Run extends Command {
       OPS_OP_NAME: op.name,
       OPS_TEAM_ID: config.team.id,
       OPS_TEAM_NAME: config.team.name,
+      OPS_HOST_PLATFORM: this.config.platform,
     }
 
     let opsHome =
@@ -938,6 +939,8 @@ export default class Run extends Command {
     try {
       this.isLoggedIn()
       const { config } = this.state
+      process.env.OPS_HOST_PLATFORM = this.config.platform
+
       const parsedArgs: RunPipeline['parsedArgs'] = this.useCustomParser(
         Run,
         this.argv,
