@@ -898,6 +898,7 @@ export default class Run extends Command {
     // }
 
     if (workflow) {
+      workflow.runId = runId
       const opsHome = `${process.env.HOME ||
         process.env.USERPROFILE}/.config/@cto.ai/ops`
       workflow.opsHome = opsHome === undefined ? '' : opsHome
@@ -924,6 +925,15 @@ export default class Run extends Command {
     return { op, ...rest }
   }
 
+  interpolateRunCmd = (
+    { run, runId, name }: Workflow,
+    teamName: string,
+  ): string => {
+    return run
+      .replace('{{OPS_STATE_DIR}}', `/${teamName}/${name}/${runId}`)
+      .replace('{{OPS_CONFIG_DIR}}', `/${teamName}/${name}`)
+  }
+
   async run() {
     try {
       this.isLoggedIn()
@@ -934,8 +944,13 @@ export default class Run extends Command {
       )
 
       const workflow = await this.getWorkflowIfExists(config, parsedArgs)
+
       if (workflow) {
-        return await this.runWorkflow(workflow, parsedArgs, config)
+        const interpolatedWorkflow = {
+          ...workflow,
+          run: this.interpolateRunCmd(workflow, config.team.name),
+        }
+        return await this.runWorkflow(interpolatedWorkflow, parsedArgs, config)
       }
 
       this.docker = await getDocker(this, 'run')
