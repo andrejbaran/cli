@@ -10,6 +10,7 @@ import * as Config from '@oclif/config'
 import Run from '~/commands/run'
 
 import { defaultApiHost } from '~/constants/env'
+import { Workflow } from '../../lib/types'
 
 let cmd: Run
 
@@ -114,4 +115,16 @@ test.skip('should run a local op', () => {
   })
 
   expect(received.op.env).toStrictEqual(expected)
+})
+
+test('should interpolate run command for workflow', () => {
+  const workflowInput: Partial<Workflow> = {
+    run: '{{OPS_STATE_DIR}}/TWO',
+    name: 'mock-name',
+    runId: 'mock-id',
+  }
+
+  const runCmd: string = cmd.interpolateRunCmd(workflowInput, 'mock-team-name')
+
+  expect(runCmd).toBe('/mock-team-name/mock-name/mock-id/TWO')
 })

@@ -927,12 +927,19 @@ export default class Run extends Command {
   }
 
   interpolateRunCmd = (
-    { run, runId, name }: Workflow,
+    { run, runId, name }: Partial<Workflow>,
     teamName: string,
   ): string => {
+    if (!run) {
+      throw new Error('No run command found')
+    }
+
     return run
-      .replace('{{OPS_STATE_DIR}}', `/${teamName}/${name}/${runId}`)
-      .replace('{{OPS_CONFIG_DIR}}', `/${teamName}/${name}`)
+      .replace(
+        '{{OPS_STATE_DIR}}',
+        path.resolve(`/${teamName}/${name}/${runId}`),
+      )
+      .replace('{{OPS_CONFIG_DIR}}', path.resolve(`/${teamName}/${name}`))
   }
 
   async run() {
