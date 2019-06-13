@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Friday, 24th May 2019 1:41:52 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Wednesday, 12th June 2019 11:58:08 am
+ * @lastModifiedTime: Wednesday, 12th June 2019 4:58:08 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -76,7 +76,7 @@ test('it should signup, signin, init, build, publish, search', async () => {
 
   await sleep(500)
 
-  console.log('ops build [name]')
+  console.log(`ops build ${NEW_OP_NAME}`)
   try {
     const buildRes = await run(['build', NEW_OP_NAME])
     expect(buildRes.toLowerCase()).toContain('successfully built')
@@ -86,7 +86,7 @@ test('it should signup, signin, init, build, publish, search', async () => {
 
   await sleep(500)
 
-  console.log('ops publish [name]')
+  console.log(`ops publish ${NEW_OP_NAME}`)
   try {
     const publishRes = await run(['publish', NEW_OP_NAME])
     expect(publishRes.toLowerCase()).toContain('preparing:')
