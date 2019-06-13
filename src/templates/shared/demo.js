@@ -294,81 +294,6 @@ const users = [
     },
   },
 ]
-const questions = [
-  {
-    type: 'input',
-    name: 'email',
-    message: `\nPlease enter your email ${ux.colors.reset.green(
-      '→',
-    )}  \n${ux.colors.white('Enter Email')}`,
-    afterMessage: `${ux.colors.reset.green('✓')} Email`,
-    afterMessageAppend: `${ux.colors.reset(' added!')}`,
-  },
-  {
-    type: 'password',
-    name: 'password',
-    mask: '*',
-    message: `\nLet's create a password next ${ux.colors.reset.green(
-      '→',
-    )}  \n${ux.colors.white('Enter your password')}`,
-    afterMessage: `${ux.colors.reset.green('✓')} Password added!`,
-  },
-  {
-    type: 'list',
-    name: 'list',
-    message: `\nWhat impact is the incident having ${ux.colors.reset.green(
-      '→',
-    )}`,
-    choices: [
-      'All customers are affected.',
-      'Large segment of customers are affected.',
-      'Small segment of customers are affected.',
-      'Site performance degraded for some customers.',
-      'Potential issue, but customers are currently unaware.',
-      'All customers are affected.',
-      'Large segment of customers are affected.',
-      'Small segment of customers are affected.',
-      'Site performance degraded for some customers.',
-      'All customers are affected.',
-      'Large segment of customers are affected.',
-      'Small segment of customers are affected.',
-      'Site performance degraded for some customers.',
-    ],
-    afterMessage: `${ux.colors.reset.green('✓')} Incident added!`,
-  },
-  {
-    type: 'confirm',
-    name: 'confirm',
-    message: `\nIs the incident closed ${ux.colors.reset.green('→')}`,
-    afterMessage: `${ux.colors.reset.green('✓')} Confirmation`,
-  },
-  {
-    type: 'autocomplete',
-    name: 'autocomplete',
-    message: `\nSelect a state to travel from ${ux.colors.reset.green('→')}`,
-    source: (answers, input) => {
-      input = input || ''
-      return new Promise(function(resolve) {
-        setTimeout(function() {
-          var fuzzyResult = fuzzy.filter(input, states)
-          resolve(
-            fuzzyResult.map(function(el) {
-              return el.original
-            }),
-          )
-        })
-      })
-    },
-    afterMessage: `${ux.colors.reset.green('✓')} State selected!`,
-  },
-  {
-    type: 'datepicker',
-    name: 'datepicker',
-    message: `\nWhen are you going ${ux.colors.reset.green('→')}`,
-    format: ['m', '/', 'd', '/', 'yy', ' ', 'h', ':', 'MM', ' ', 'TT'],
-    afterMessage: `${ux.colors.reset.green('✓')} Date Selected`,
-  },
-]
 
 const allColors = [
   'green',
@@ -406,6 +331,112 @@ const allColors = [
   'underline',
 ]
 
+const promptsDescription = [
+  `\nCreate prompts to capture information or details.`,
+  ` Press enter for examples, type anything when asked, it's just for fun.`,
+  `\n💬 ${ux.colors.bold(
+    ux.colors.primary('Ask for information through a form:'),
+  )}`,
+].join('\n')
+
+const inputQuestions = [
+  {
+    type: 'input',
+    name: 'email',
+    message: `\nPlease enter your email ${ux.colors.reset.green(
+      '→',
+    )}\n${ux.colors.white('Enter Email')}`,
+    afterMessage: `${ux.colors.reset.green('✓')} Email`,
+    afterMessageAppend: `${ux.colors.reset(' added!')}`,
+  },
+  {
+    type: 'password',
+    name: 'password',
+    mask: '*',
+    message: `\nLet's create a password next ${ux.colors.reset.green(
+      '→',
+    )}\n${ux.colors.white('Enter your password')}`,
+    afterMessage: `${ux.colors.reset.green('✓')} Password added!`,
+  },
+]
+
+const listQuestions = [
+  {
+    type: 'list',
+    name: 'list',
+    message: `\nWhat impact is the incident having ${ux.colors.reset.green(
+      '→',
+    )}`,
+    choices: [
+      'All customers are affected.',
+      'Large segment of customers are affected.',
+      'Small segment of customers are affected.',
+      'Site performance degraded for some customers.',
+      'Potential issue, but customers are currently unaware.',
+      'All customers are affected.',
+      'Large segment of customers are affected.',
+      'Small segment of customers are affected.',
+      'Site performance degraded for some customers.',
+      'All customers are affected.',
+      'Large segment of customers are affected.',
+      'Small segment of customers are affected.',
+      'Site performance degraded for some customers.',
+    ],
+    afterMessage: `${ux.colors.reset.green('✓')} Incident added!`,
+  },
+]
+
+const confirmQuestions = [
+  {
+    type: 'confirm',
+    name: 'confirm',
+    message: `\nIs the incident closed ${ux.colors.reset.green('→')}\n\n`,
+    afterMessage: `${ux.colors.reset.green('✓')} Confirmation`,
+  },
+]
+
+const pressEnterToContinue = [
+  {
+    type: 'input',
+    name: 'continue',
+    message: `\nPress enter to continue →`,
+    afterMessage: ' ',
+    transformer: input => ' ',
+  },
+]
+
+const fuzzySearchQuestions = [
+  {
+    type: 'autocomplete',
+    name: 'autocomplete',
+    message: `\nSelect a state to travel from ${ux.colors.reset.green('→')} `,
+    source: (answers, input) => {
+      input = input || ''
+      return new Promise(function(resolve) {
+        setTimeout(function() {
+          var fuzzyResult = fuzzy.filter(input, states)
+          resolve(
+            fuzzyResult.map(function(el) {
+              return el.original
+            }),
+          )
+        })
+      })
+    },
+    afterMessage: `${ux.colors.reset.green('✓')} State selected!`,
+  },
+]
+
+const datePickerQuestions = [
+  {
+    type: 'datepicker',
+    name: 'datepicker',
+    message: `\nWhen are you going ${ux.colors.reset.green('→')}`,
+    format: ['m', '/', 'd', '/', 'yy', ' ', 'h', ':', 'MM', ' ', 'TT'],
+    afterMessage: `${ux.colors.reset.green('✓')} Date Selected`,
+  },
+]
+
 const coloredTreeString = () => {
   const treeString = 'Colored Tree'
   let coloredString = ''
@@ -436,53 +467,104 @@ const main = async () => {
   const arguments = argv && argv.length ? getArgs(argv) : []
   const flags = argv && argv.length ? getFlags(argv) : []
 
-  if (arguments.length && arguments[0])
-    console.log('The username is ', arguments[0])
-  if (arguments.length && arguments[1])
-    console.log('The email is ', arguments[1])
-
-  if (flags.length) console.log('Received flags of: ', flags)
-
   // Trigger prompt
   // https://github.com/SBoudrias/Inquirer.js/#examples-run-it-and-see-it
-  console.log(ux.colors.bold.underline('\n Prompts \n'))
-  const answers = await ux.prompt(questions)
+  sdk.log(ux.colors.bold.underline('\n\n Prompts '))
+  sdk.log(promptsDescription)
 
-  console.log(ux.colors.bold.underline('\n Logs \n'))
-  answers.password = '*****'
+  // INPUT
+  const { email, password } = await ux.prompt(inputQuestions)
 
-  await ux.wait(2000)
-  console.log(ux.colors.bold.underline('\n Current User \n'))
+  // LIST
+  sdk.log(
+    `\n💬 ${ux.colors.bold(
+      ux.colors.primary('Create lists for users to select from:'),
+    )}`,
+  )
+  const { list } = await ux.prompt(listQuestions)
+
+  // CONFIRM
+  sdk.log(
+    `\n💬 ${ux.colors.bold(
+      ux.colors.primary('Create boolean yes/no prompts:'),
+    )}`,
+  )
+  const { confirm } = await ux.prompt(confirmQuestions)
+
+  // FUZZY SEARCH
+  sdk.log(
+    `\n💬 ${ux.colors.bold(
+      ux.colors.primary(
+        'Add a fuzzy search feature to your lists! Try typing and using the arrow keys.',
+      ),
+    )}`,
+  )
+  const { autocomplete } = await ux.prompt(fuzzySearchQuestions)
+
+  // DATE PICKER
+  sdk.log(`\n💬 ${ux.colors.bold(ux.colors.primary('And specify times:'))}`)
+  const { datepicker } = await ux.prompt(datePickerQuestions)
+
+  // Trigger logs
+  const logsSection = [
+    `\nCreate logs of events to easily share through the CLI.`,
+    `For example, here's the ${ux.colors.bold('Current User')}:\n`,
+  ].join('\n')
+  sdk.log(ux.colors.bold.underline('\n\n Logs '))
+  sdk.log(logsSection)
+
   const currentUser = await sdk.user().catch(err => {
-    console.log('unable to retrieve current user')
+    sdk.log('unable to retrieve current user')
   })
-  console.log(currentUser)
-
+  sdk.log(currentUser)
   sdk.track(['demo', 'track'], {
     currentUser,
-    answers,
+    answers: { email, password, list, autocomplete, datepicker },
   })
+  await ux.prompt(pressEnterToContinue)
 
-  // Spinner Action
-  // https://github.com/oclif/cli-ux#cliaction
-  await ux.wait(2000)
-  console.log(ux.colors.bold.underline('\n Spinner \n'))
-  ux.spinner.start(ux.colors.blue('Computing UX'))
+  // Trigger spinner and progress bar
+  const progressIndicatorsSection = [
+    '\nAdd spinners & progress bars to your Op',
+    ' to keep your users informed that a process is taking place.\n',
+  ].join('')
+  sdk.log(ux.colors.bold.underline('\n Progress Indicators '))
+  sdk.log(progressIndicatorsSection)
+
+  ux.spinner.start(ux.colors.blue(' Computing UX'))
   // Wait
   // https://github.com/oclif/cli-ux#clitable
   await ux.wait(2000)
   ux.spinner.stop(ux.colors.green('Done!'))
 
+  // Progress Bar
+  // https://github.com/AndiDittrich/Node.CLI-Progress#usage
+  sdk.log(
+    ux.colors.white('\n Downloading'),
+    ux.colors.callOutCyan('Ops CLI 0.1.5'),
+  )
+  const bar1 = ux.progress.init()
+  bar1.start(200, 0)
+  for (let i = 0; i < 100; i++) {
+    bar1.update((i + 1) * 2)
+    await ux.wait(25)
+  }
+  bar1.stop()
+  await ux.prompt(pressEnterToContinue)
+
   // Url
   // https://github.com/oclif/cli-ux#cliurltext-uri
-  await ux.wait(1000)
-  console.log(ux.colors.bold.underline('\n Url \n'))
-  console.log(ux.url('cto.ai', 'https://cto.ai'))
+  sdk.log(ux.colors.bold.underline('\n Url '))
+  sdk.log(
+    `\nLink users to relevant data directly from the command line for users to click.\n`,
+  )
+  sdk.log(ux.url('cto.ai', 'https://cto.ai'))
+  await ux.prompt(pressEnterToContinue)
 
   // Table
   // https://github.com/oclif/cli-ux#clitable
-  await ux.wait(2000)
-  console.log(ux.colors.bold.underline('\n Table \n'))
+  sdk.log(ux.colors.bold.underline('\n Table '))
+  sdk.log(`\nAdd tables to display information in a neat and organized way.\n`)
   ux.table(users, {
     name: { header: '🙎‍ Name' },
     company: {
@@ -491,6 +573,7 @@ const main = async () => {
     },
     id: { header: '🆔' },
   })
+  await ux.prompt(pressEnterToContinue)
 
   // Tree && Colors
   // https://github.com/chalk/chalk
@@ -500,24 +583,16 @@ const main = async () => {
   for (let i = 0; i < allColors.length; i++) {
     tree.nodes[Object.keys(tree.nodes)[0]].insert(getColorsColor(i))
   }
-  await ux.wait(2000)
-  console.log(ux.colors.bold.underline('\n Tree && Colors \n'))
+  sdk.log(ux.colors.bold.underline('\n Colors & Tree Structures '))
+  sdk.log(
+    `\nAdd colous to customizable text to indicate importance and/or action.\n`,
+  )
   tree.display()
 
-  // Progress Bar
-  // https://github.com/AndiDittrich/Node.CLI-Progress#usage
-  await ux.wait(2000)
-  console.log(
-    ux.colors.white('\n Downloading'),
-    ux.colors.callOutCyan('Ops CLI 0.1.5'),
+  await ux.prompt(pressEnterToContinue)
+  sdk.log(
+    `🏁 That's it! All these components can be found within the demo.js folder of the op.\n`,
   )
-  const bar1 = ux.progress.init()
-  bar1.start(200, 0)
-  for (let i = 0; i < 100; i++) {
-    bar1.update((i + 1) * 2)
-    await ux.wait(50)
-  }
-  bar1.stop()
 }
 
 main()
