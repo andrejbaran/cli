@@ -2,10 +2,10 @@ const { sdk } = require('@cto.ai/sdk')
 
 async function main() {
   const res = await sdk.user().catch(err => console.log(err))
-  const greeting = res && res.me ? `👋 Hi, ${res.me.username}!` : `👋 Hi there!`
+  const person = res && res.me ? `, ${res.me.username}` : ' there'
+  const greeting = `\n👋 Hi${person}! This template will run the demo for CTO.ai CLI SDK where you'll see some basic interactions that are included. This will allow you to easily create a simple-to-use automation.`
 
-  console.log(greeting)
-  console.log(`🏁 Here is a demo of the SDK...`)
+  sdk.log(greeting)
 
   require('./demo')
 }
