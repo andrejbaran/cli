@@ -31,10 +31,14 @@ export default class Init extends Command {
       name: 'opName',
       message: `\n Provide a name for your new op ${ux.colors.reset.green(
         '→',
-      )}  \n🏷  ${ux.colors.white('Name:')}`,
-      afterMessage: `${ux.colors.reset.green('✓')}`,
-      afterMessageAppend: `${ux.colors.reset(' added!')}`,
+      )}\n${ux.colors.reset(
+        ux.colors.secondary('Names must be lowercase'),
+      )}\n\n🏷  ${ux.colors.white('Name:')}`,
+      afterMessage: ux.colors.reset.green('✓'),
+      afterMessageAppend: ux.colors.reset(' added!'),
       validate: this._validateName,
+      transformer: input => ux.colors.cyan(input.toLocaleLowerCase()),
+      filter: input => input.toLowerCase(),
     },
     opDescription: {
       type: 'input',
@@ -42,8 +46,8 @@ export default class Init extends Command {
       message: `\nProvide a description ${ux.colors.reset.green(
         '→',
       )}  \n📝 ${ux.colors.white('Description:')}`,
-      afterMessage: `${ux.colors.reset.green('✓')}`,
-      afterMessageAppend: `${ux.colors.reset(' added!')}`,
+      afterMessage: ux.colors.reset.green('✓'),
+      afterMessageAppend: ux.colors.reset(' added!'),
       validate: this._validateDescription,
     },
     workflowName: {
@@ -51,19 +55,23 @@ export default class Init extends Command {
       name: 'workflowName',
       message: `\n Provide a name for your new workflow ${ux.colors.reset.green(
         '→',
-      )}  \n🏷  ${ux.colors.white('Name:')}`,
-      afterMessage: `${ux.colors.reset.green('✓')}`,
-      afterMessageAppend: `${ux.colors.reset(' added!')}`,
+      )}\n${ux.colors.reset(
+        ux.colors.secondary('Names must be lowercase'),
+      )}\n\n🏷  ${ux.colors.white('Name:')}`,
+      afterMessage: ux.colors.reset.green('✓'),
+      afterMessageAppend: ux.colors.reset(' added!'),
       validate: this._validateName,
+      transformer: input => ux.colors.cyan(input.toLocaleLowerCase()),
+      filter: input => input.toLowerCase(),
     },
     workflowDescription: {
       type: 'input',
       name: 'workflowDescription',
       message: `\nProvide a description ${ux.colors.reset.green(
         '→',
-      )}  \n📝 ${ux.colors.white('Description:')}`,
-      afterMessage: `${ux.colors.reset.green('✓')}`,
-      afterMessageAppend: `${ux.colors.reset(' added!')}`,
+      )}\n\n📝 ${ux.colors.white('Description:')}`,
+      afterMessage: ux.colors.reset.green('✓'),
+      afterMessageAppend: ux.colors.reset(' added!'),
       validate: this._validateDescription,
     },
   }
@@ -86,6 +94,7 @@ export default class Init extends Command {
         },
       ],
       afterMessage: `${ux.colors.reset.green('✓')}`,
+      validate: input => input.length != 0,
     })
     return { prompts, templates }
   }
