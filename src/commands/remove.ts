@@ -8,20 +8,24 @@ export default class Remove extends Command {
   static description = 'Remove an op from a team.'
 
   static args = [
-    { name: 'opName', description: 'Name of the op you want to remove.' },
+    {
+      name: 'opFilter',
+      description:
+        'A part of the name or description of the op you want to remove.',
+    },
   ]
 
   static flags = {
     help: flags.help({ char: 'h' }),
   }
 
-  getNamePrompt(opsResponse: { data: Op[] }): Question {
+  getOpPrompt(filteredOpsResponse: Op[]): Question {
     return {
       type: 'list',
       name: 'selected',
       pageSize: 100,
       message: '\n 🗑  Which op would you like to remove?',
-      choices: opsResponse.data.map(l => {
+      choices: filteredOpsResponse.map(l => {
         return {
           name: `${ux.colors.callOutCyan(l.name)} ${ux.colors.white(
             l.description,
@@ -36,15 +40,16 @@ export default class Remove extends Command {
     try {
       this.isLoggedIn()
 
-      const {
-        args: { opName },
-      } = this.parse(Remove)
+      // If no argument is given, prompt it instead
+      const opFilter =
+        this.parse(Remove).args.opFilter || (await _promptOpFilter())
 
-      const query = opName
-        ? { search: opName, team_id: this.team.id }
-        : { team_id: this.team.id }
+      const query =
+        opFilter && opFilter.length
+          ? { search: opFilter, team_id: this.team.id }
+          : { team_id: this.team.id }
 
-      const opsResponse: { data: Op[] } = await this.api
+      const allResponse: { data: Op[] } = await this.api
         .find('ops', {
           query,
           headers: {
@@ -56,18 +61,22 @@ export default class Remove extends Command {
           throw new Error(err)
         })
 
-      if (!opsResponse.data.length) {
+      const filteredOpsResponse = (allResponse.data || []).filter(
+        op => op.teamID === this.team.id,
+      )
+
+      if (!filteredOpsResponse.length) {
         throw new NoOpFoundForDeletion()
       }
 
       let op: Op
-      if (!opName) {
+      if (filteredOpsResponse.length === 1) {
+        op = filteredOpsResponse[0]
+      } else {
         const { selected } = await ux.prompt<{
           selected: Op
-        }>(this.getNamePrompt(opsResponse))
+        }>(this.getOpPrompt(filteredOpsResponse))
         op = selected
-      } else {
-        op = opsResponse.data[0]
       }
 
       this.log('\n 🗑  Removing from registry...')
@@ -110,4 +119,17 @@ export default class Remove extends Command {
       this.config.runHook('error', { err })
     }
   }
+}
+
+const _promptOpFilter = async (): Promise<{ opFilter: string }> => {
+  return ux.prompt<{ opFilter: string }>({
+    type: 'input',
+    name: 'opFilter',
+    message: `\n Please type in the name or description of the op you want to remove ${ux.colors.reset.green(
+      '→',
+    )}\n ${ux.colors.reset(
+      ux.colors.secondary('Leave blank to return all ops you can remove'),
+    )} \n\n 🗑  ${ux.colors.reset.white('Name or Description')}`,
+    afterMessage: `${ux.colors.reset.green('✔')} Searching for`,
+  })
 }

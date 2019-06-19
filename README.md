@@ -42,7 +42,7 @@ USAGE
 * [`ops help [COMMAND]`](#ops-help-command)
 * [`ops init`](#ops-init)
 * [`ops publish [PATH]`](#ops-publish-path)
-* [`ops remove [OPNAME]`](#ops-remove-opname)
+* [`ops remove [OPFILTER]`](#ops-remove-opfilter)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
 * [`ops team:create`](#ops-teamcreate)
@@ -170,7 +170,7 @@ OPTIONS
   --all  see all commands in CLI
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.1.6/src/commands/help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.0/src/commands/help.ts)_
 
 ## `ops init`
 
@@ -203,16 +203,16 @@ OPTIONS
 
 _See code: [src/commands/publish.ts](https://github.com/cto.ai/ops/blob/v1.4.13/src/commands/publish.ts)_
 
-## `ops remove [OPNAME]`
+## `ops remove [OPFILTER]`
 
 Remove an op from a team.
 
 ```
 USAGE
-  $ ops remove [OPNAME]
+  $ ops remove [OPFILTER]
 
 ARGUMENTS
-  OPNAME  Name of the op you want to remove.
+  OPFILTER  A part of the name or description of the op you want to remove.
 
 OPTIONS
   -h, --help  show CLI help
