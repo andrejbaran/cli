@@ -1,4 +1,4 @@
-import { Op } from './Op'
+import { Op } from './OpsYml'
 
 // TODO: Add type for error
 export type FindResponse = {

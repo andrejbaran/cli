@@ -199,6 +199,24 @@ export class DockerPublishNoImageFound extends ErrorTemplate {
   }
 }
 
+export class NoOpsFound extends ErrorTemplate {
+  constructor() {
+    super(`✋ We couldn't find any ops in the ops.yml!`, undefined, {
+      source: EXPECTED,
+      exit: true,
+    })
+  }
+}
+
+export class NoStepsFound extends ErrorTemplate {
+  constructor() {
+    super(`✋ We couldn't find any workflow steps in the ops.yml!`, undefined, {
+      source: EXPECTED,
+      exit: true,
+    })
+  }
+}
+
 export class ImageNotFoundError extends ErrorTemplate {
   constructor() {
     super(

@@ -22,7 +22,7 @@ beforeEach(async () => {
   try {
     await run(['account:signout'])
   } catch (err) {
-    console.error(err)
+    throw err
   }
 })
 
@@ -54,7 +54,7 @@ test('it should signin, run existing op', async () => {
     }
     await sleep(500)
   } catch (error) {
-    console.error(error)
+    throw error
   }
 
   await sleep(500)

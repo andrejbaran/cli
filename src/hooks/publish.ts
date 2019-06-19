@@ -19,24 +19,21 @@ import { DockerPublishNoImageFound } from '../errors/customErrors'
 export default async function publish(
   this: any,
   options: {
-    op: Op
+    apiOp: Op
     registryAuth: RegistryAuth
   },
 ) {
   const {
-    op,
+    apiOp: op,
     registryAuth: { authconfig, projectFullName },
   } = options
 
   const imageUniqueId = `${projectFullName}/${op.id.toLowerCase()}`
-  // reg.local.hc.ai/jplew/ae2f60b1-4edd-4660-a087-7b530869df0f
 
   const imageName = `${projectFullName}/${op.name}`
-  // reg.local.hc.ai/jplew/banana
 
   const self = this
   const docker = await getDocker(self, 'publish')
-
   try {
     if (!docker) {
       throw new Error('Could not initialize Docker.')

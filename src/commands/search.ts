@@ -12,6 +12,7 @@ import {
   FindQuery,
   FindResponse,
   Workflow,
+  OpsYml,
 } from '../types'
 import { asyncPipe } from '../utils/asyncPipe'
 import { AnalyticsError, APIError } from '../errors/customErrors'
@@ -92,7 +93,7 @@ export default class Search extends Command {
         return { apiOps, workflows: [] }
       }
 
-      const { ops: workflows = [] }: { ops: Workflow[] } = yaml.parse(manifest)
+      const { workflows: workflows = [] }: OpsYml = yaml.parse(manifest)
       return { apiOps, workflows }
     } catch {
       return { apiOps, workflows: [] }

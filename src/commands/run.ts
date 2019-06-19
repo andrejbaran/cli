@@ -42,18 +42,12 @@ import {
   CouldNotGetRegistryToken,
   MissingRequiredArgument,
   CouldNotMakeDir,
+  NoStepsFound,
 } from '~/errors/customErrors'
 import { OP_FILE } from '~/constants/opConfig'
 import { onExit, asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
 import { WorkflowPipelineError } from '~/types/ChildProcessError'
 import getDocker from '~/utils/get-docker'
-
-type WorkflowHook = 'main command' | 'before-hook' | 'after-hook'
-
-export interface CommandInfo {
-  hookType: WorkflowHook
-  command: string
-}
 
 export default class Run extends Command {
   static description = 'Run an op from the registry.'
@@ -111,22 +105,33 @@ export default class Run extends Command {
     return { args, flags, opParams: argv.slice(1) }
   }
 
-  getOpFromFs = async (
-    manifestPath: string,
-    opParams: string[],
-    { team }: Config,
-  ) => {
+  getOpFromFs = async (manifestPath: string, { team }: Config) => {
     const manifestYML = await fs.readFile(manifestPath, 'utf8')
-    const manifestObj: Op = yaml.parse(manifestYML)
-
+    const { ops }: { ops: Op[] } = yaml.parse(manifestYML)
+    let op: Op
+    if (ops.length > 1) {
+      const answers = await ux.prompt<{ op: Op }>({
+        type: 'list',
+        name: 'op',
+        message: `\n Which ops would you like to build ${ux.colors.reset.green(
+          '→',
+        )}`,
+        choices: ops.map(op => {
+          return {
+            value: op,
+            name: `${op.name} - ${op.description}`,
+          }
+        }),
+      })
+      op = answers.op
+    } else {
+      op = ops[0]
+    }
     // This allows any flags aside from -h to be passed into the op's run command
 
-    const image = path.join(
-      OPS_REGISTRY_HOST,
-      `${team.name}/${manifestObj.name}`,
-    )
+    const image = path.join(OPS_REGISTRY_HOST, `${team.name}/${op.name}`)
 
-    return { op: { ...manifestObj, image }, isPublished: false }
+    return { op: { ...op, image }, isPublished: false }
   }
 
   getOpFromAPI = async (opNameOrPath: string, config: Config) => {
@@ -235,7 +240,7 @@ export default class Run extends Command {
     const dirPath = path.resolve(process.cwd(), `${nameOrPath}`)
     const manifestPath = path.join(dirPath, OP_FILE)
     const { op, isPublished } = fs.existsSync(manifestPath)
-      ? await this.getOpFromFs(manifestPath, opParams, config)
+      ? await this.getOpFromFs(manifestPath, config)
       : await this.getOpFromAPI(nameOrPath, config)
 
     if (!op || !op.name) throw new Error('Unable to find Op')
@@ -731,9 +736,9 @@ export default class Run extends Command {
 
   async findWorkflow(manifestPath: string, nameOrPath: string) {
     const manifest = await fs.readFile(manifestPath, 'utf8')
-    const { ops }: { ops: Workflow[] } = yaml.parse(manifest)
-    if (!ops) return
-    return ops.find(({ name }) => name === nameOrPath)
+    const { workflows }: { workflows: Workflow[] } = yaml.parse(manifest)
+    if (!workflows) return
+    return workflows.find(({ name }) => name === nameOrPath)
   }
 
   printMessage(bold: string, normal: string = '') {
@@ -752,21 +757,16 @@ export default class Run extends Command {
 
   _runWorkflow = (options: SpawnOptions) => this._runWorkflowHof(options)
 
-  _runWorkflowHof = (options: SpawnOptions) => (
-    commandInfo: CommandInfo,
-  ) => async ({
+  _runWorkflowHof = (options: SpawnOptions) => (runCommand: string) => async ({
     errors,
     args,
   }: {
     errors: WorkflowPipelineError[]
     args: string[]
   }) => {
-    const { hookType, command } = commandInfo
+    this.printMessage(`🏃  Running ${runCommand}`)
 
-    this.printMessage(`🏃  Running ${hookType}:`, command)
-
-    const params = args && hookType === 'main command' ? args : []
-    const childProcess = spawn(command, params, options)
+    const childProcess = spawn(runCommand, [], options)
 
     const exitResponse: void | ChildProcessError = await onExit(childProcess)
 
@@ -775,47 +775,21 @@ export default class Run extends Command {
     }
 
     const newErrors = exitResponse
-      ? [...errors, { exitResponse, commandInfo }]
+      ? [...errors, { exitResponse, runCommand }]
       : [...errors]
     return { errors: newErrors, args }
   }
 
-  labelTheCommand = (hookType: WorkflowHook) => (
-    command: string,
-  ): CommandInfo => ({
-    hookType,
-    command,
-  })
-
-  createArrayOfAllWorkflowCommands = (
-    { before, run, after }: Workflow,
-    options: SpawnOptions,
-  ) => {
-    const beforeCommands = before
-      ? before.map(this.labelTheCommand('before-hook'))
-      : []
-    const runCommand = [run].map(this.labelTheCommand('main command'))
-    const afterCommands = after
-      ? after.map(this.labelTheCommand('after-hook'))
-      : []
-    const flattenedCommands = [
-      ...beforeCommands,
-      ...runCommand,
-      ...afterCommands,
-    ]
-    return flattenedCommands.map(this.convertCommandToSpawnFunction(options))
-  }
-
   convertCommandToSpawnFunction = (options: SpawnOptions) => (
-    commandInfo: CommandInfo,
-  ): Function => this._runWorkflow(options)(commandInfo)
+    runCommand: string,
+  ): Function => this._runWorkflow(options)(runCommand)
 
   async runWorkflow(
     workflow: Workflow,
     parsedArgs: RunCommandArgs,
     config: Config,
   ) {
-    const { name } = workflow
+    const { name, steps } = workflow
 
     //TODO: both local & container ops should set the same envs in the same place
     process.env.OPS_OP_NAME = workflow.name
@@ -832,13 +806,12 @@ export default class Run extends Command {
       env: process.env,
     }
 
-    const workflowComands = this.createArrayOfAllWorkflowCommands(
-      workflow,
-      options,
+    const workflowCommands = steps.map(
+      this.convertCommandToSpawnFunction(options),
     )
 
     const errors: WorkflowPipelineError[] = []
-    const workflowPipeline = asyncPipe(...workflowComands)
+    const workflowPipeline = asyncPipe(...workflowCommands)
 
     const finalOutput: {
       errors: WorkflowPipelineError[]
@@ -847,28 +820,19 @@ export default class Run extends Command {
       errors,
       args: parsedArgs.opParams,
     })
-
     const { errors: finalErrors } = finalOutput
-
-    finalErrors.forEach((error: WorkflowPipelineError, i: number) => {
-      if (i === 0) {
-        this.log(`\n❗️  Workflow ${this.ux.colors.callOutCyan(name)} failed.`)
+    if (finalErrors.length) {
+      this.log(`\n❗️  Workflow ${this.ux.colors.callOutCyan(name)} failed.`)
+      finalErrors.forEach((error: WorkflowPipelineError, i: number) => {
         this.log(
           this.ux.colors.redBright(
             `🤔  There was a problem with the ${this.ux.colors.whiteBright(
-              error.commandInfo.command,
-            )} command in the ${this.ux.colors.whiteBright(
-              error.commandInfo.hookType,
+              error.runCommand,
             )}.\n`,
           ),
         )
-        // additional error logging, probably not necessary
-        // if (error.exitResponse) {
-        //   this.printErrorMessage(error.exitResponse)
-        // }
-      }
-    })
-
+      })
+    }
     !finalErrors.length &&
       this.printMessage(
         `😌  Workflow ${this.ux.colors.callOutCyan(
@@ -894,9 +858,6 @@ export default class Run extends Command {
       localManifest,
       nameOrPath,
     )
-    // if (localOp && !localOp.run) {
-    //   throw new Error('ops.yml must specify a run command')
-    // }
 
     if (workflow) {
       workflow.runId = runId
@@ -927,19 +888,20 @@ export default class Run extends Command {
   }
 
   interpolateRunCmd = (
-    { run, runId, name }: Partial<Workflow>,
+    { steps, runId, name }: Pick<Workflow, 'steps' | 'runId' | 'name'>,
     teamName: string,
-  ): string => {
-    if (!run) {
-      throw new Error('No run command found')
+  ): string[] => {
+    if (!steps.length) {
+      throw new NoStepsFound()
     }
-
-    return run
-      .replace(
-        '{{OPS_STATE_DIR}}',
-        path.resolve(`/${teamName}/${name}/${runId}`),
-      )
-      .replace('{{OPS_CONFIG_DIR}}', path.resolve(`/${teamName}/${name}`))
+    return steps.map(step => {
+      return step
+        .replace(
+          '{{OPS_STATE_DIR}}',
+          path.resolve(`/${teamName}/${name}/${runId}`),
+        )
+        .replace('{{OPS_CONFIG_DIR}}', path.resolve(`/${teamName}/${name}`))
+    })
   }
 
   async run() {
@@ -958,7 +920,7 @@ export default class Run extends Command {
       if (workflow) {
         const interpolatedWorkflow = {
           ...workflow,
-          run: this.interpolateRunCmd(workflow, config.team.name),
+          steps: this.interpolateRunCmd(workflow, config.team.name),
         }
         return await this.runWorkflow(interpolatedWorkflow, parsedArgs, config)
       }

@@ -10,17 +10,13 @@ import {
   CopyTemplateFilesError,
   CouldNotInitializeOp,
 } from '~/errors/customErrors'
-import { WORKFLOW, OP } from '~/constants/opConfig'
+import { WORKFLOW, OP, OpTypes } from '~/constants/opConfig'
+import { classProperty } from '@babel/types'
 
 export default class Init extends Command {
   static description = 'Easily create a new op.'
   static flags = {
     help: flags.help({ char: 'h' }),
-    name: flags.string({ char: 'n', description: 'Name of the op.' }),
-    description: flags.string({
-      char: 'd',
-      description: 'Description of the op.',
-    }),
   }
   questions: object[] = []
 
@@ -30,9 +26,52 @@ export default class Init extends Command {
   opDescription = ''
 
   initPrompts: Container<Question> = {
-    template: {
-      type: 'list',
-      name: 'template',
+    opName: {
+      type: 'input',
+      name: 'opName',
+      message: `\n Provide a name for your new op ${ux.colors.reset.green(
+        '→',
+      )}  \n🏷  ${ux.colors.white('Name:')}`,
+      afterMessage: `${ux.colors.reset.green('✓')}`,
+      afterMessageAppend: `${ux.colors.reset(' added!')}`,
+      validate: this._validateName,
+    },
+    opDescription: {
+      type: 'input',
+      name: 'opDescription',
+      message: `\nProvide a description ${ux.colors.reset.green(
+        '→',
+      )}  \n📝 ${ux.colors.white('Description:')}`,
+      afterMessage: `${ux.colors.reset.green('✓')}`,
+      afterMessageAppend: `${ux.colors.reset(' added!')}`,
+      validate: this._validateDescription,
+    },
+    workflowName: {
+      type: 'input',
+      name: 'workflowName',
+      message: `\n Provide a name for your new workflow ${ux.colors.reset.green(
+        '→',
+      )}  \n🏷  ${ux.colors.white('Name:')}`,
+      afterMessage: `${ux.colors.reset.green('✓')}`,
+      afterMessageAppend: `${ux.colors.reset(' added!')}`,
+      validate: this._validateName,
+    },
+    workflowDescription: {
+      type: 'input',
+      name: 'workflowDescription',
+      message: `\nProvide a description ${ux.colors.reset.green(
+        '→',
+      )}  \n📝 ${ux.colors.white('Description:')}`,
+      afterMessage: `${ux.colors.reset.green('✓')}`,
+      afterMessageAppend: `${ux.colors.reset(' added!')}`,
+      validate: this._validateDescription,
+    },
+  }
+
+  determineTemplate = async (prompts: Container<Question>) => {
+    const { templates } = await ux.prompt<Partial<InitParams>>({
+      type: 'checkbox',
+      name: 'templates',
       message: `\n What type of op would you like to create ${ux.colors.reset.green(
         '→',
       )}`,
@@ -47,90 +86,90 @@ export default class Init extends Command {
         },
       ],
       afterMessage: `${ux.colors.reset.green('✓')}`,
-    },
-    name: {
-      type: 'input',
-      name: 'name',
-      message: `\n Provide a name for your new op ${ux.colors.reset.green(
-        '→',
-      )}  \n🏷  ${ux.colors.white('Name:')}`,
-      afterMessage: `${ux.colors.reset.green('✓')}`,
-      afterMessageAppend: `${ux.colors.reset(' added!')}`,
-      validate: this._validateName,
-    },
-    description: {
-      type: 'input',
-      name: 'description',
-      message: `\nProvide a description ${ux.colors.reset.green(
-        '→',
-      )}  \n📝 ${ux.colors.white('Description:')}`,
-      afterMessage: `${ux.colors.reset.green('✓')}`,
-      afterMessageAppend: `${ux.colors.reset(' added!')}`,
-      validate: this._validateDescription,
-    },
+    })
+    return { prompts, templates }
   }
 
   determineQuestions = ({
     prompts,
-    flags,
+    templates,
   }: {
     prompts: Container<Question>
-    flags: Partial<InitParams>
+    templates: OpTypes[]
   }) => {
-    const removeIfPassedToFlags = ([key, _question]: [string, Question]) =>
-      !Object.entries(flags)
-        .map(([flagKey]) => flagKey)
-        .includes(key)
-
+    // Filters initPrompts based on the templates selected in determineTemplate
+    const removeIfNotSelectedTemplate = prompt => {
+      return (
+        prompt[0].includes(templates[0]) || prompt[0].includes(templates[1])
+      )
+    }
     const questions = Object.entries(prompts)
-      .filter(removeIfPassedToFlags)
+      .filter(removeIfNotSelectedTemplate)
       .map(([_key, question]) => question)
-
-    return questions
+    return { questions, templates }
   }
 
-  askQuestions = async (questions: Question[]) => {
-    return ux.prompt<Partial<InitParams>>(questions)
+  askQuestions = async ({
+    questions,
+    templates,
+  }: {
+    questions: Question[]
+    templates: OpTypes[]
+  }) => {
+    const answers = await ux.prompt<Partial<InitParams>>(questions)
+    return { answers, templates }
   }
 
-  determineInitPaths = (flags: Partial<InitParams>) => (
-    answers: Partial<InitParams>,
-  ) => {
-    const initParams = { ...flags, ...answers }
-    const { template, name } = initParams
-    const templateDir = `${this.srcDir}/${template}`
+  determineInitPaths = ({
+    answers,
+    templates,
+  }: {
+    answers: Partial<InitParams>
+    templates: OpTypes[]
+  }) => {
+    const initParams = { ...answers, templates }
+    const { name } = this.getNameAndDescription(initParams)
     const sharedDir = `${this.srcDir}/shared`
     const destDir = `${this.destDir}/${name}`
-    const initPaths = { templateDir, sharedDir, destDir }
+    const initPaths = { sharedDir, destDir }
     return { initPaths, initParams }
   }
 
-  copyTemplateFiles = async (input: {
+  copyTemplateFiles = async ({
+    initPaths,
+    initParams,
+  }: {
     initPaths: InitPaths
     initParams: InitParams
   }) => {
     try {
-      const { destDir, templateDir, sharedDir } = input.initPaths
+      const { templates } = initParams
+      const { destDir, sharedDir } = initPaths
 
       await fs.ensureDir(destDir)
-      // copies select template files
-      await fs.copy(templateDir, destDir)
-      // copies shared files for both
+      // copies op files if selected
+      if (templates.includes(OP)) {
+        await fs.copy(`${this.srcDir}/${OP}`, destDir)
+      }
+      // copies shared files
       await fs.copy(sharedDir, destDir)
-      return input
+      return { initPaths, initParams }
     } catch (err) {
       this.debug('%O', err)
       throw new CopyTemplateFilesError(err)
     }
   }
 
-  customizePackageJson = async (input: {
+  customizePackageJson = async ({
+    initPaths,
+    initParams,
+  }: {
     initPaths: InitPaths
     initParams: InitParams
   }) => {
     try {
-      const { destDir, sharedDir } = input.initPaths
-      const { name, description } = input.initParams
+      const { destDir, sharedDir } = initPaths
+      const { name, description } = this.getNameAndDescription(initParams)
       const packageObj = JSON.parse(
         fs.readFileSync(`${sharedDir}/package.json`, 'utf8'),
       )
@@ -138,45 +177,68 @@ export default class Init extends Command {
       packageObj.description = description
       const newPackageString = JSON.stringify(packageObj, null, 2)
       fs.writeFileSync(`${destDir}/package.json`, newPackageString)
-      return input
+      return { initPaths, initParams }
     } catch (err) {
       this.debug('%O', err)
       throw new CouldNotInitializeOp(err)
     }
   }
 
-  customizeOpsYaml = async (input: {
+  customizeYaml = async ({
+    initPaths,
+    initParams,
+  }: {
     initPaths: InitPaths
     initParams: InitParams
   }) => {
     try {
-      const { destDir } = input.initPaths
-      const { name, description, template } = input.initParams
+      const { destDir } = initPaths
+
       const opsYamlObj = yaml.parse(
         fs.readFileSync(`${destDir}/ops.yml`, 'utf8'),
       )
-      if (template === WORKFLOW) {
-        opsYamlObj.ops[0].name = name
-        opsYamlObj.ops[0].description = description
-      } else {
-        opsYamlObj.name = name
-        opsYamlObj.description = description
-      }
+      await this.customizeOpsYaml(initParams, opsYamlObj)
+      await this.customizeWorkflowYaml(initParams, opsYamlObj)
+
       const newOpsString = yaml.stringify(opsYamlObj)
       fs.writeFileSync(`${destDir}/ops.yml`, newOpsString)
-      return input
+      return { initPaths, initParams }
     } catch (err) {
       this.debug('%O', err)
       throw new CouldNotInitializeOp(err)
     }
   }
 
-  logMessages = async (input: {
+  customizeOpsYaml = async (initParams, opsYamlObj) => {
+    const { templates, opName, opDescription } = initParams
+    if (!templates.includes(OP)) {
+      delete opsYamlObj.ops
+      return
+    }
+    opsYamlObj.ops[0].name = opName
+    opsYamlObj.ops[0].description = opDescription
+  }
+
+  customizeWorkflowYaml = async (initParams, opsYamlObj) => {
+    const { templates, workflowName, workflowDescription } = initParams
+    if (!templates.includes(WORKFLOW)) {
+      delete opsYamlObj.workflows
+      return
+    }
+    opsYamlObj.workflows[0].name = workflowName
+    opsYamlObj.workflows[0].description = workflowDescription
+  }
+
+  logMessages = async ({
+    initPaths,
+    initParams,
+  }: {
     initPaths: InitPaths
     initParams: InitParams
   }) => {
-    const { destDir } = input.initPaths
-    const { name = '', template } = input.initParams
+    const { destDir } = initPaths
+    const { templates } = initParams
+    const { name } = this.getNameAndDescription(initParams)
     this.log('\n🎉 Success! Your op is ready to start coding... \n')
     fs.readdirSync(`${destDir}`).forEach((file: any) => {
       let callout = ''
@@ -193,25 +255,50 @@ export default class Init extends Command {
       )
       this.log(`📁 .${msg}`)
     })
-    let workflowStep = ''
-    if (template === WORKFLOW) {
-      workflowStep = `cd ${name} && npm install && `
+
+    if (templates.includes(OP)) {
+      this.logOpsMessage(initParams)
     }
-    this.log(
-      `\n🚀 Now test your op with: ${ux.colors.green(
-        '$',
-      )} ${ux.colors.callOutCyan(`${workflowStep}ops run ${name}`)}\n`,
-    )
-    return input
+
+    if (templates.includes(WORKFLOW)) {
+      this.logWorkflowMessage(initParams)
+    }
+
+    return { initPaths, initParams }
   }
 
-  trackAnalytics = async (input: {
+  logOpsMessage = initParams => {
+    const { opName } = initParams
+    this.log(
+      `\n🚀 To test your op run: ${ux.colors.green(
+        '$',
+      )} ${ux.colors.callOutCyan(`ops run ${opName}`)}`,
+    )
+  }
+
+  logWorkflowMessage = initParams => {
+    const { workflowName } = initParams
+    const { name } = this.getNameAndDescription(initParams)
+    this.log(
+      `\n🚀 To test your workflow run: ${ux.colors.green(
+        '$',
+      )} ${ux.colors.callOutCyan(
+        `cd ${name} && npm install && ops run ${workflowName}`,
+      )}`,
+    )
+  }
+
+  trackAnalytics = async ({
+    initPaths,
+    initParams,
+  }: {
     initPaths: InitPaths
     initParams: InitParams
   }) => {
     try {
-      const { destDir } = input.initPaths
-      const { name, description, template } = input.initParams
+      const { destDir } = initPaths
+      const { templates } = initParams
+      const { name, description } = this.getNameAndDescription(initParams)
       this.analytics.track({
         userId: this.user.email,
         event: 'Ops CLI Init',
@@ -221,12 +308,19 @@ export default class Init extends Command {
           path: destDir,
           name,
           description,
-          template,
+          templates,
         },
       })
     } catch (err) {
       this.debug('%O', err)
       throw new AnalyticsError(err)
+    }
+  }
+
+  private getNameAndDescription = (initParams: Partial<InitParams>) => {
+    return {
+      name: initParams.opName || initParams.workflowName,
+      description: initParams.opDescription || initParams.workflowDescription,
     }
   }
 
@@ -246,21 +340,21 @@ export default class Init extends Command {
 
   async run() {
     try {
-      const { flags } = this.parse(Init)
       this.isLoggedIn()
 
       const initPipeline = asyncPipe(
+        this.determineTemplate,
         this.determineQuestions,
         this.askQuestions,
-        this.determineInitPaths(flags),
+        this.determineInitPaths,
         this.copyTemplateFiles,
         this.customizePackageJson,
-        this.customizeOpsYaml,
+        this.customizeYaml,
         this.logMessages,
         this.trackAnalytics,
       )
 
-      await initPipeline({ prompts: this.initPrompts, flags })
+      await initPipeline(this.initPrompts)
     } catch (err) {
       this.debug('%O', err)
       this.config.runHook('error', { err })
