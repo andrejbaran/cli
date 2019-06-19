@@ -11,7 +11,7 @@ import * as path from 'path'
 import Docker from 'dockerode'
 
 import Command, { flags } from '../base'
-import { Op } from '../types'
+import { Container, Op, OpsYml } from '../types'
 
 import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
@@ -20,6 +20,7 @@ import {
   FileNotFoundError,
   InvalidInputCharacter,
   MissingRequiredArgument,
+  NoOpsFound,
 } from '../errors/customErrors'
 import { getOpUrl, getOpImageTag } from '../utils/getOpUrl'
 import { OPS_REGISTRY_HOST } from '../constants/env'
@@ -60,9 +61,38 @@ export default class Build extends Command {
           this.debug('%O', err)
           throw new FileNotFoundError(err, opPath, OP_FILE)
         })
-      const op: Op = manifest && yaml.parse(manifest)
+      let { ops }: OpsYml = manifest && yaml.parse(manifest)
+      if (!ops) {
+        throw new NoOpsFound()
+      }
 
-      // await this.config.runHook('validate', op)
+      if (ops.length > 1) {
+        const answers = await ux.prompt<Container<Op[]>>({
+          type: 'checkbox',
+          name: 'ops',
+          message: `\n Which ops would you like to build ${ux.colors.reset.green(
+            '→',
+          )}`,
+          choices: ops.map(op => {
+            return {
+              value: op,
+              name: `${op.name} - ${op.description}`,
+            }
+          }),
+          validate: input => input.length > 0,
+        })
+        ops = answers.ops
+      }
+
+      await this.opsBuildLoop(ops, opPath)
+    } catch (err) {
+      this.debug('%O', err)
+      this.config.runHook('error', { err })
+    }
+  }
+
+  opsBuildLoop = async (ops, opPath) => {
+    for (const op of ops) {
       if (!isValidOpName(op)) throw new InvalidInputCharacter('Op Name')
 
       this.log(
@@ -87,9 +117,6 @@ export default class Build extends Command {
           image: `${OPS_REGISTRY_HOST}/${op.name}`,
         },
       })
-    } catch (err) {
-      this.debug('%O', err)
-      this.config.runHook('error', { err })
     }
   }
 }

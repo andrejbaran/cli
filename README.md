@@ -181,9 +181,7 @@ USAGE
   $ ops init
 
 OPTIONS
-  -d, --description=description  Description of the op.
-  -h, --help                     show CLI help
-  -n, --name=name                Name of the op.
+  -h, --help  show CLI help
 ```
 
 _See code: [src/commands/init.ts](https://github.com/cto.ai/ops/blob/v1.4.13/src/commands/init.ts)_

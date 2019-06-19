@@ -6,8 +6,6 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-import { CommandInfo } from '~/commands/run'
-
 export interface ChildProcessError {
   code: number
   signal: string
@@ -15,5 +13,5 @@ export interface ChildProcessError {
 
 export interface WorkflowPipelineError {
   exitResponse: ChildProcessError | void
-  commandInfo: CommandInfo
+  runCommand: string
 }

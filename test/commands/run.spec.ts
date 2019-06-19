@@ -118,13 +118,16 @@ test.skip('should run a local op', () => {
 })
 
 test('should interpolate run command for workflow', () => {
-  const workflowInput: Partial<Workflow> = {
-    run: '{{OPS_STATE_DIR}}/TWO',
+  const workflowInput: Workflow = {
+    steps: ['{{OPS_STATE_DIR}}/TWO'],
     name: 'mock-name',
     runId: 'mock-id',
   }
 
-  const runCmd: string = cmd.interpolateRunCmd(workflowInput, 'mock-team-name')
+  const runCmd: string[] = cmd.interpolateRunCmd(
+    workflowInput,
+    'mock-team-name',
+  )
 
-  expect(runCmd).toBe('/mock-team-name/mock-name/mock-id/TWO')
+  expect(runCmd).toStrictEqual(['/mock-team-name/mock-name/mock-id/TWO'])
 })

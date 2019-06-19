@@ -8,7 +8,7 @@
  *
  */
 
-import { Op } from './Op'
+import { Op } from './OpsYml'
 
 export interface Fuzzy {
   original: {

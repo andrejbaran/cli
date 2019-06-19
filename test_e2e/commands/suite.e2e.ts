@@ -10,6 +10,8 @@ import fs from 'fs-extra'
 import { run, sleep, cleanup, signin, signup } from '../utils/cmd'
 import {
   ENTER,
+  SPACE,
+  DOWN,
   NEW_OP_NAME,
   NEW_OP_DESCRIPTION,
   NEW_USER_EMAIL,
@@ -66,12 +68,12 @@ test('it should signup, signin, init, build, publish, search', async () => {
   try {
     const initRes = await run(
       ['init'],
-      [ENTER, NEW_OP_NAME, ENTER, NEW_OP_DESCRIPTION, ENTER],
+      [SPACE, ENTER, NEW_OP_NAME, ENTER, NEW_OP_DESCRIPTION, ENTER],
     )
     expect(initRes.toLowerCase()).toContain('success')
-    expect(initRes).toContain('test your op with')
+    expect(initRes).toContain('🚀 To test your op run: $ ops run t_my_new_op')
   } catch (e) {
-    console.error('init', e)
+    throw e
   }
 
   await sleep(500)
@@ -81,7 +83,7 @@ test('it should signup, signin, init, build, publish, search', async () => {
     const buildRes = await run(['build', NEW_OP_NAME])
     expect(buildRes.toLowerCase()).toContain('successfully built')
   } catch (e) {
-    console.error('build', e)
+    throw e
   }
 
   await sleep(500)
@@ -92,7 +94,7 @@ test('it should signup, signin, init, build, publish, search', async () => {
     expect(publishRes.toLowerCase()).toContain('preparing:')
     expect(publishRes).toContain('has been published!')
   } catch (e) {
-    console.error('publish', e)
+    throw e
   }
   await sleep(500)
 
@@ -103,7 +105,7 @@ test('it should signup, signin, init, build, publish, search', async () => {
 
     expect(searchRes).toContain(NEW_OP_NAME)
   } catch (e) {
-    console.error('publish', e)
+    throw e
   }
   await sleep(500)
 

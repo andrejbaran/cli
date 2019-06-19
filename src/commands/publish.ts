@@ -10,17 +10,19 @@
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
+import { ux } from '@cto.ai/sdk'
 import Docker from 'dockerode'
 import Command, { flags } from '../base'
 import { OPS_REGISTRY_HOST } from '../constants/env'
 import { OP_FILE } from '../constants/opConfig'
-import { Op, RegistryAuth } from '../types'
+import { Container, Op, RegistryAuth, OpsYml } from '../types'
 import {
   CouldNotCreateOp,
   DockerPublishNoImageFound,
   MissingRequiredArgument,
   FileNotFoundError,
   InvalidInputCharacter,
+  NoOpsFound,
 } from '../errors/customErrors'
 import { isValidOpName } from '../utils/validate'
 import getDocker from '~/utils/get-docker'
@@ -70,41 +72,72 @@ export default class Publish extends Command {
           throw new FileNotFoundError(err, opPath, OP_FILE)
         })
 
-      const pkg: Op = manifest && yaml.parse(manifest)
+      let { ops, version }: OpsYml = manifest && yaml.parse(manifest)
+      if (!ops) {
+        throw new NoOpsFound()
+      }
 
-      // await this.config.runHook('validate', pkg)
-      if (!isValidOpName(pkg)) throw new InvalidInputCharacter('Op Name')
+      if (ops.length > 1) {
+        const answers = await ux.prompt<Container<Op[]>>({
+          type: 'checkbox',
+          name: 'ops',
+          message: `\n Which ops would you like to publish ${ux.colors.reset.green(
+            '→',
+          )}`,
+          choices: ops.map(op => {
+            return {
+              value: op,
+              name: `${op.name} - ${op.description}`,
+            }
+          }),
+          validate: input => input.length > 0,
+        })
+        ops = answers.ops
+      }
+      await this.opsPublishLoop(ops, registryAuth, version)
+    } catch (err) {
+      this.debug('%O', err)
+      this.config.runHook('error', { err })
+    }
+  }
+
+  opsPublishLoop = async (
+    ops: Op[],
+    registryAuth: RegistryAuth,
+    version: string,
+  ) => {
+    for (let op of ops) {
+      if (!isValidOpName(op)) throw new InvalidInputCharacter('Op Name')
 
       if (!this.docker) throw new Error('No docker container')
       const list: Docker.ImageInfo[] = await this.docker.listImages()
-      const repo = `${OPS_REGISTRY_HOST}/${this.team.name}/${pkg.name}:latest`
+      const repo = `${OPS_REGISTRY_HOST}/${this.team.name}/${op.name}:latest`
 
       const localImage = list
         .map(this.imageFilterPredicate(repo))
         .find((repoTag: string) => !!repoTag)
       if (!localImage) {
-        throw new DockerPublishNoImageFound(pkg.name, this.team.name)
+        throw new DockerPublishNoImageFound(op.name, this.team.name)
       }
-      let publishOpResponse = await this.api.create(
-        'ops',
-        { ...pkg, teamID: this.team.id },
-        {
-          headers: {
-            Authorization: this.accessToken,
+      let publishOpResponse
+      try {
+        publishOpResponse = await this.api.create(
+          'ops',
+          { ...op, version, teamID: this.team.id },
+          {
+            headers: {
+              Authorization: this.accessToken,
+            },
           },
-        },
-      )
-      if (!publishOpResponse || !publishOpResponse.data) {
-        throw new CouldNotCreateOp(
-          `There might be a duplicate key violation in the ops table. Also check that you are signed-in correctly. ${
-            publishOpResponse.message
-          }`,
         )
+      } catch (err) {
+        this.debug('%O', err)
+        throw new CouldNotCreateOp(err.message)
       }
-      const { data: op }: { data: Op } = publishOpResponse
+      const { data: apiOp }: { data: Op } = publishOpResponse
 
       await this.config.runHook('publish', {
-        op,
+        apiOp,
         registryAuth,
       })
 
@@ -114,15 +147,12 @@ export default class Publish extends Command {
         properties: {
           email: this.user.email,
           username: this.user.username,
-          name: op.name,
-          description: op.description,
-          image: `${OPS_REGISTRY_HOST}/${op.id.toLowerCase()}`,
+          name: apiOp.name,
+          description: apiOp.description,
+          image: `${OPS_REGISTRY_HOST}/${apiOp.id.toLowerCase()}`,
           tag: 'latest',
         },
       })
-    } catch (err) {
-      this.debug('%O', err)
-      this.config.runHook('error', { err })
     }
   }
 }
