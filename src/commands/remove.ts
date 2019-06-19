@@ -39,10 +39,9 @@ export default class Remove extends Command {
   async run() {
     try {
       this.isLoggedIn()
-
+      const { args } = this.parse(Remove)
       // If no argument is given, prompt it instead
-      const opFilter =
-        this.parse(Remove).args.opFilter || (await _promptOpFilter())
+      const opFilter = args.opFilter || (await _promptOpFilter())
 
       const query =
         opFilter && opFilter.length
