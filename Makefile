@@ -30,3 +30,5 @@ install:
 
 .PHONY: install prepack test
 
+pretty:
+	npm run pretty
