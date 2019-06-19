@@ -14,6 +14,7 @@ import Command, { flags } from '@oclif/command'
 import * as OClifConfig from '@oclif/config'
 import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
+import jwt from 'jsonwebtoken'
 import { asyncPipe, _trace } from './utils/asyncPipe'
 import { handleMandatory, handleUndefined } from './utils/guards'
 
@@ -66,12 +67,31 @@ abstract class CTOCommand extends Command {
       const config = await this.readConfig()
 
       const { user, accessToken, team } = config
+      await this.checkValidAccessToken(accessToken)
       this.accessToken = accessToken
       this.user = user
       this.team = team
       this.state = { config }
     } catch (err) {
       this.config.runHook('error', { err })
+    }
+  }
+
+  checkValidAccessToken = async (accessToken: string): Promise<void> => {
+    if (!accessToken) return
+    const { exp } = jwt.decode(accessToken)
+    const clockTimestamp = Math.floor(Date.now() / 1000)
+    if (clockTimestamp >= exp) {
+      await this.clearConfig(accessToken)
+      this.log('')
+      this.log('⚠️  Sorry your session has expired.')
+      this.log(
+        `👨‍💻 You can sign in with ${this.ux.colors.green(
+          '$',
+        )} ${this.ux.colors.callOutCyan('ops account:signin')}`,
+      )
+      this.log('')
+      process.exit()
     }
   }
 
