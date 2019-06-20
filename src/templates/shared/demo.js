@@ -483,7 +483,7 @@ const main = async () => {
   const person = res && res.me ? `, ${res.me.username}` : ' there'
   const greeting = `\n👋  ${ux.colors.bgRed(
     'Welcome to the CTO.ai CLI SDK Demo',
-  )} 👋\n\nHi${person}! This is a demo for CTO.ai CLI SDK that will take you through a tour of the user interactions that are included. Use these elements to customize your own Ops!`
+  )} 👋\n\nHi${person}! This is a demo for CTO.ai CLI SDK that will take you through a tour of the user interactions that are included.\nUse these elements to customize your own Ops!`
 
   sdk.log(logo)
   sdk.log(greeting)
@@ -561,10 +561,7 @@ const main = async () => {
 
   // Progress Bar
   // https://github.com/AndiDittrich/Node.CLI-Progress#usage
-  sdk.log(
-    ux.colors.white('\n Downloading'),
-    ux.colors.callOutCyan('Ops CLI 0.1.5'),
-  )
+  sdk.log(ux.colors.white('\n Downloading Progress Bar'))
   const bar1 = ux.progress.init()
   bar1.start(200, 0)
   for (let i = 0; i < 100; i++) {
@@ -609,7 +606,7 @@ const main = async () => {
   }
   sdk.log(ux.colors.bold.underline('\n⭐ Colors & Tree Structures '))
   sdk.log(
-    `\nℹ️  Add colous to customizable text to indicate importance and/or action.\n`,
+    `\nℹ️  Add colors to customizable text to indicate importance and/or action.\n`,
   )
   tree.display()
 
