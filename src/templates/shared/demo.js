@@ -1,5 +1,17 @@
 const { ux, sdk } = require('@cto.ai/sdk')
 const fuzzy = require('fuzzy')
+
+const logo = `
+     [94m██████[39m[33m╗[39m [94m████████[39m[33m╗[39m  [94m██████[39m[33m╗ [39m      [94m█████[39m[33m╗[39m  [94m██[39m[33m╗[39m
+    [94m██[39m[33m╔════╝[39m [33m╚══[39m[94m██[39m[33m╔══╝[39m [94m██[39m[33m╔═══[39m[94m██[39m[33m╗[39m     [94m██[39m[33m╔══[39m[94m██[39m[33m╗[39m [94m██[39m[33m║[39m
+    [94m██[39m[33m║     [39m [94m   ██[39m[33m║   [39m [94m██[39m[33m║[39m[94m   ██[39m[33m║[39m     [94m███████[39m[33m║[39m [94m██[39m[33m║[39m
+    [94m██[39m[33m║     [39m [94m   ██[39m[33m║   [39m [94m██[39m[33m║[39m[94m   ██[39m[33m║[39m     [94m██[39m[33m╔══[39m[94m██[39m[33m║[39m [94m██[39m[33m║[39m
+    [33m╚[39m[94m██████[39m[33m╗[39m [94m   ██[39m[33m║   [39m [33m╚[39m[94m██████[39m[33m╔╝[39m [94m██[39m[33m╗[39m [94m██[39m[33m║[39m[94m  ██[39m[33m║[39m [94m██[39m[33m║[39m
+    [33m ╚═════╝[39m [33m   ╚═╝   [39m [33m ╚═════╝ [39m [33m╚═╝[39m [33m╚═╝  ╚═╝[39m [33m╚═╝[39m
+
+We’re building the world’s best developer experiences.
+`
+
 const states = [
   'Alabama',
   'Alaska',
@@ -332,30 +344,30 @@ const allColors = [
 ]
 
 const promptsDescription = [
-  `\nCreate prompts to capture information or details.`,
+  `\nℹ️  Create prompts to capture information or details.`,
   ` Press enter for examples, type anything when asked, it's just for fun.`,
-  `\n💬 ${ux.colors.bold(
+  `\n\n💬 ${ux.colors.bold(
     ux.colors.primary('Ask for information through a form:'),
   )}`,
-].join('\n')
+].join('')
 
 const inputQuestions = [
   {
     type: 'input',
     name: 'email',
-    message: `\nPlease enter your email ${ux.colors.reset.green(
+    message: `\nYou can prompt the user for input ${ux.colors.reset.green(
       '→',
-    )}\n${ux.colors.white('Enter Email')}`,
-    afterMessage: `${ux.colors.reset.green('✓')} Email`,
+    )}\n${ux.colors.white('Type input here')}`,
+    afterMessage: `${ux.colors.reset.green('✓')} Input`,
     afterMessageAppend: `${ux.colors.reset(' added!')}`,
   },
   {
     type: 'password',
     name: 'password',
     mask: '*',
-    message: `\nLet's create a password next ${ux.colors.reset.green(
+    message: `\nYou can also prompt the user for a password ${ux.colors.reset.green(
       '→',
-    )}\n${ux.colors.white('Enter your password')}`,
+    )}\n${ux.colors.white('Enter password here')}`,
     afterMessage: `${ux.colors.reset.green('✓')} Password added!`,
   },
 ]
@@ -467,9 +479,19 @@ const main = async () => {
   const arguments = argv && argv.length ? getArgs(argv) : []
   const flags = argv && argv.length ? getFlags(argv) : []
 
+  const res = await sdk.user().catch(err => console.log(err))
+  const person = res && res.me ? `, ${res.me.username}` : ' there'
+  const greeting = `\n👋  ${ux.colors.bgRed(
+    'Welcome to the CTO.ai CLI SDK Demo',
+  )} 👋\n\nHi${person}! This is a demo for CTO.ai CLI SDK that will take you through a tour of the user interactions that are included. Use these elements to customize your own Ops!`
+
+  sdk.log(logo)
+  sdk.log(greeting)
+  await ux.prompt(pressEnterToContinue)
+
   // Trigger prompt
   // https://github.com/SBoudrias/Inquirer.js/#examples-run-it-and-see-it
-  sdk.log(ux.colors.bold.underline('\n\n Prompts '))
+  sdk.log(ux.colors.bold.underline('\n⭐ Prompts '))
   sdk.log(promptsDescription)
 
   // INPUT
@@ -507,10 +529,10 @@ const main = async () => {
 
   // Trigger logs
   const logsSection = [
-    `\nCreate logs of events to easily share through the CLI.`,
-    `For example, here's the ${ux.colors.bold('Current User')}:\n`,
+    `\nℹ️  Create logs of events to easily share through the CLI.`,
+    `\nFor example, here's the ${ux.colors.bold('Current User')}:\n`,
   ].join('\n')
-  sdk.log(ux.colors.bold.underline('\n\n Logs '))
+  sdk.log(ux.colors.bold.underline('\n\n⭐ Logs '))
   sdk.log(logsSection)
 
   const currentUser = await sdk.user().catch(err => {
@@ -525,10 +547,10 @@ const main = async () => {
 
   // Trigger spinner and progress bar
   const progressIndicatorsSection = [
-    '\nAdd spinners & progress bars to your Op',
+    '\nℹ️  Add spinners & progress bars to your Op',
     ' to keep your users informed that a process is taking place.\n',
   ].join('')
-  sdk.log(ux.colors.bold.underline('\n Progress Indicators '))
+  sdk.log(ux.colors.bold.underline('\n⭐ Progress Indicators '))
   sdk.log(progressIndicatorsSection)
 
   ux.spinner.start(ux.colors.blue(' Computing UX'))
@@ -554,17 +576,19 @@ const main = async () => {
 
   // Url
   // https://github.com/oclif/cli-ux#cliurltext-uri
-  sdk.log(ux.colors.bold.underline('\n Url '))
+  sdk.log(ux.colors.bold.underline('\n⭐ Url '))
   sdk.log(
-    `\nLink users to relevant data directly from the command line for users to click.\n`,
+    `\nℹ️  Link users to relevant data directly from the command line for users to click.\n`,
   )
   sdk.log(ux.url('cto.ai', 'https://cto.ai'))
   await ux.prompt(pressEnterToContinue)
 
   // Table
   // https://github.com/oclif/cli-ux#clitable
-  sdk.log(ux.colors.bold.underline('\n Table '))
-  sdk.log(`\nAdd tables to display information in a neat and organized way.\n`)
+  sdk.log(ux.colors.bold.underline('\n⭐ Table '))
+  sdk.log(
+    `\nℹ️  Add tables to display information in a neat and organized way.\n`,
+  )
   ux.table(users, {
     name: { header: '🙎‍ Name' },
     company: {
@@ -583,9 +607,9 @@ const main = async () => {
   for (let i = 0; i < allColors.length; i++) {
     tree.nodes[Object.keys(tree.nodes)[0]].insert(getColorsColor(i))
   }
-  sdk.log(ux.colors.bold.underline('\n Colors & Tree Structures '))
+  sdk.log(ux.colors.bold.underline('\n⭐ Colors & Tree Structures '))
   sdk.log(
-    `\nAdd colous to customizable text to indicate importance and/or action.\n`,
+    `\nℹ️  Add colous to customizable text to indicate importance and/or action.\n`,
   )
   tree.display()
 
