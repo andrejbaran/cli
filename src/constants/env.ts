@@ -22,6 +22,8 @@ export const NODE_ENV = process.env.NODE_ENV || 'production'
 
 export const DEBUG = process.env.DEBUG
 
+export const OPS_DEBUG = !!process.env.OPS_DEBUG
+
 export const HOME = process.env.HOME || '~'
 
 export const INTERCOM_EMAIL =

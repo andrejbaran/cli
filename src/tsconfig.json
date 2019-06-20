@@ -3,6 +3,7 @@
   "compilerOptions": {
     "incremental": true,
     "tsBuildInfoFile": "../lib/tsconfig.tsbuildinfo",
+    "noEmitOnError": true,
     "outDir": "../lib",
     "watch": true,
     "baseUrl": ".",

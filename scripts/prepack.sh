@@ -22,7 +22,13 @@ link-module-alias
 # create a new ./lib dir and populate it
 rm -rf lib
 tsc -b src
+if [ $? -gt 0 ]
+then
+  exit 1
 
+else
+  echo "Compiled successfully"
+fi
 # search through ./lib and replace all the path aliases (~/base.ts) with relative paths (../../base.ts)
 tscpaths -p src/tsconfig.json -s ./src -o ./lib 1>/dev/null
 

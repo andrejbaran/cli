@@ -37,7 +37,7 @@ import {
   OPS_REGISTRY_HOST,
   OPS_SEGMENT_KEY,
   INTERCOM_EMAIL,
-  DEBUG,
+  OPS_DEBUG,
 } from './constants/env'
 
 import { FeathersClient } from './services/feathers'
@@ -190,7 +190,7 @@ abstract class CTOCommand extends Command {
     return team || this.handleTeamNotFound()
   }
 
-  _includeRegistryHost = (debug: number | boolean | string) =>
+  _includeRegistryHost = (debug: boolean) =>
     debug ? { registryHost: OPS_REGISTRY_HOST, nodeEnv: NODE_ENV } : {}
 
   formatConfigObject = (signinData: SigninPipeline) => {
@@ -209,7 +209,7 @@ abstract class CTOCommand extends Command {
         _id: id,
         email: emails[0].address,
         username: username,
-        ...this._includeRegistryHost(DEBUG),
+        ...this._includeRegistryHost(OPS_DEBUG),
       },
     }
     return configObj
