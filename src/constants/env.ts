@@ -20,7 +20,7 @@ export const OPS_REGISTRY_HOST: string =
 
 export const NODE_ENV = process.env.NODE_ENV || 'production'
 
-export const DEBUG = process.env.DEBUG || 'false'
+export const DEBUG = process.env.DEBUG
 
 export const HOME = process.env.HOME || '~'
 

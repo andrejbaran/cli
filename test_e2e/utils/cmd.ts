@@ -1,9 +1,10 @@
 import { spawn, ChildProcess } from 'child_process'
 import concat from 'concat-stream'
 import axios from 'axios'
-import { DEBUG } from '../../src/constants/env'
-import { isTruthy } from '../../src/utils'
+import createDebug from 'debug'
 import { ENTER } from './constants'
+
+const debug = createDebug('cmd')
 
 const command = process.env.npm_config_prefix
   ? `${process.env.npm_config_prefix}/bin/ops`
@@ -11,7 +12,6 @@ const command = process.env.npm_config_prefix
 
 const defaultEnv = {
   NODE_ENV: 'test',
-  DEBUG: 'false',
   PATH: process.env.PATH,
   OPS_REGISTRY_HOST: 'registry.stg-platform.hc.ai',
   OPS_API_HOST: 'https://www.stg-platform.hc.ai/',
@@ -22,7 +22,6 @@ const defaultEnv = {
 const setEnv = (
   defaultEnv: NodeJS.ProcessEnv,
   processEnv: NodeJS.ProcessEnv,
-  DEBUG?: string,
 ) => {
   return { ...defaultEnv, ...processEnv }
   /*
@@ -30,7 +29,7 @@ const setEnv = (
    * existing op (write_a_file_op)... Therefore, I'm merging the env by default
    * until we figure out why
    */
-  // return isTruthy(DEBUG) ? { ...defaultEnv, ...processEnv } : defaultEnv
+  // return DEBUG ? { ...defaultEnv, ...processEnv } : defaultEnv
 }
 
 function run(
@@ -46,22 +45,18 @@ function run(
 
   return new Promise(resolve => {
     // for verbose logs set DEBUG to a truthy value
-    if (isTruthy(DEBUG)) {
-      childProcess.stderr.on('data', errChunk => {
-        console.log('errChunk', errChunk.toString())
-      })
+    childProcess.stderr.on('data', errChunk => {
+      debug('errChunk', errChunk.toString())
+    })
 
-      childProcess.stdout.on('data', chunk => {
-        console.log({ chunk: chunk.toString() })
-      })
-    }
+    childProcess.stdout.on('data', chunk => {
+      debug({ chunk: chunk.toString() })
+    })
 
     childProcess.stdout.pipe(
       concat((buffer: Buffer) => {
         const result = buffer.toString()
-        if (isTruthy(DEBUG)) {
-          console.log(result)
-        }
+        debug(result)
         resolve(result)
       }),
     )

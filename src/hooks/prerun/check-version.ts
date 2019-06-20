@@ -3,13 +3,7 @@ import { ux } from '@cto.ai/sdk'
 
 import getLatestVersion from '../../utils/get-latest-version'
 
-import { DEBUG } from '~/constants/env'
-
 const hook: Hook<'prerun'> = async function(opts) {
-  if (DEBUG) {
-    return
-  }
-
   try {
     if (opts.Command.id === 'update') return
     const latest = await getLatestVersion()
