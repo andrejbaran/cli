@@ -7,6 +7,5 @@
  */
 
 export { asyncPipe, _trace } from './asyncPipe'
-export { isTruthy } from './isTruthy'
 export { onExit } from './onExit'
 export { getOpImageTag, getOpUrl } from './getOpUrl'
