@@ -257,12 +257,10 @@ export default class Run extends Command {
     return RepoTags.find((repoTag: string) => repoTag.includes(repo))
   }
 
-  findLocalImage = async ({ id, name }: Op, { team }: Config) => {
+  findLocalImage = async (op: Op, config: Config, isPublished: boolean) => {
     if (!this.docker) throw new Error('No docker container')
-
     const list: Docker.ImageInfo[] = await this.docker.listImages()
-    const repo = `${OPS_REGISTRY_HOST}/${team.name}/${id || name}:latest`
-
+    const repo = this.setOpUrl(op, config, isPublished)
     const localImage = list
       .map(this.imageFilterPredicate(repo))
       .find((repoTag: string) => !!repoTag)
@@ -389,7 +387,7 @@ export default class Run extends Command {
         args: { nameOrPath },
         flags: { build },
       } = parsedArgs
-      const localImage = await this.findLocalImage(op, config)
+      const localImage = await this.findLocalImage(op, config, isPublished)
       if (!localImage || build) {
         const opUrl = isPublished
           ? await this.pullImageFromRegistry(op, isPublished)
