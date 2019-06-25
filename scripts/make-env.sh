@@ -4,7 +4,6 @@ cat << EOF > .env
 OPS_REGISTRY_HOST="reg.local.hc.ai"
 OPS_API_HOST="http://localhost:3030"
 OPS_API_PATH="api/v1"
-OPS_SEGMENT_KEY="12341234"
 EOF
 
 cat << EOF > .env.development

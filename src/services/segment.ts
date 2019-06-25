@@ -7,7 +7,7 @@
  */
 
 import Analytics from 'analytics-node'
-import { OPS_SEGMENT_KEY, NODE_ENV } from '../constants/env'
+import { OPS_SEGMENT_KEY, NODE_ENV, OPS_DEBUG } from '../constants/env'
 
 interface SegmentIdentify {
   userId?: string | number
@@ -35,20 +35,17 @@ export class SegmentClient {
     this.segmentClient = new Analytics(writeKey)
   }
 
-  isNotProduction = (NODE_ENV: string) => NODE_ENV !== 'production'
-
   /* The identify method lets you tie a user to their actions and record traits about them. */
   identify(payload: SegmentIdentify) {
-    if (this.isNotProduction(NODE_ENV)) {
+    if (OPS_DEBUG) {
       return null
     }
-
     return this.segmentClient.identify(payload)
   }
 
   /* The track method lets you record the actions your users perform. */
   track(payload: SegmentTrack) {
-    if (this.isNotProduction(NODE_ENV)) {
+    if (OPS_DEBUG) {
       return null
     }
     return this.segmentClient.track(payload)
