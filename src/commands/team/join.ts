@@ -53,7 +53,7 @@ export default class TeamJoin extends Command {
         "You've been automatically switched to this team.",
       )}\n`,
     )
-    this.log(`Try these commands to get started:\n\n$ ops list\n$ ops search`)
+    this.log(`Try running this command to get started:\n\n$ ops search`)
 
     this.analytics.track({
       userId: this.user.email,
