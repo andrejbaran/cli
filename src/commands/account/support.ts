@@ -9,6 +9,8 @@ export default class AccountSupport extends Command {
   }
 
   async run(this: any) {
+    this.isLoggedIn()
+
     this.log('')
     this.log('❔ Please reach out to us with questions anytime!')
     this.log(
