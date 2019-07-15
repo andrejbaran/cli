@@ -80,6 +80,18 @@ export class CouldNotCreateOp extends ErrorTemplate {
   }
 }
 
+export class CouldNotCreateWorkflow extends ErrorTemplate {
+  constructor(err) {
+    super(
+      '🤚 This workflow already exists, please remove it and republish to update.',
+      err,
+      {
+        source: EXPECTED,
+      },
+    )
+  }
+}
+
 export class CouldNotInitializeOp extends ErrorTemplate {
   constructor(err) {
     super('Failed to initialize op.', err)
@@ -202,6 +214,14 @@ export class DockerPublishNoImageFound extends ErrorTemplate {
 export class NoOpsFound extends ErrorTemplate {
   constructor() {
     super(`✋ We couldn't find any ops in the ops.yml!`, undefined, {
+      source: EXPECTED,
+      exit: true,
+    })
+  }
+}
+export class NoWorkflowsFound extends ErrorTemplate {
+  constructor() {
+    super(`✋ We couldn't find any workflows in the ops.yml!`, undefined, {
       source: EXPECTED,
       exit: true,
     })

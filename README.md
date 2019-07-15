@@ -41,7 +41,7 @@ USAGE
 * [`ops cleanup [OPNAME]`](#ops-cleanup-opname)
 * [`ops help [COMMAND]`](#ops-help-command)
 * [`ops init`](#ops-init)
-* [`ops publish [PATH]`](#ops-publish-path)
+* [`ops publish PATH`](#ops-publish-path)
 * [`ops remove [OPFILTER]`](#ops-remove-opfilter)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
@@ -186,13 +186,13 @@ OPTIONS
 
 _See code: [src/commands/init.ts](https://github.com/cto.ai/ops/blob/v1.4.22/src/commands/init.ts)_
 
-## `ops publish [PATH]`
+## `ops publish PATH`
 
 Publish an op to a team.
 
 ```
 USAGE
-  $ ops publish [PATH]
+  $ ops publish PATH
 
 ARGUMENTS
   PATH  Path to the op you want to publish.

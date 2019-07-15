@@ -12,10 +12,6 @@ export interface Op extends BaseFields {
   src: string[]
   mountCwd: boolean
   mountHome: boolean
-  // API
-  id: string
-  createdAt: string
-  updatedAt: string
   // RUN CMD
   image: string | void
   isPublic?: boolean
@@ -39,4 +35,8 @@ interface BaseFields {
     arguments: { [key: string]: string }
     options: { [key: string]: string }
   }
+  // API
+  id: string
+  createdAt: string
+  updatedAt: string
 }
