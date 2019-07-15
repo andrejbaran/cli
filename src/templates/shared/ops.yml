@@ -28,6 +28,7 @@ ops:
 workflows:
   - name: hello-world
     description: Your first hello-world op
+    remote: false
     steps:
       - node ./index.js
     env:
