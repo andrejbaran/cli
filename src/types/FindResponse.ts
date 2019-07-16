@@ -1,13 +1,24 @@
-import { Op } from './OpsYml'
+import { Op, Workflow } from './OpsYml'
 
 // TODO: Add type for error
-export type FindResponse = {
-  data: Op[] | null
+export type OpsFindResponse = {
+  data: Op[]
   error: object[] | null
 }
 
-export type FindQuery = {
+export type OpsFindQuery = {
   team_id: string
+  name?: string
+  search?: string
+}
+
+export type WorkflowsFindResponse = {
+  data: Workflow[]
+  error: object[] | null
+}
+
+export type WorkflowsFindQuery = {
+  teamId: string
   name?: string
   search?: string
 }

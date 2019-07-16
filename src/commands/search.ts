@@ -6,17 +6,26 @@ import Command, { flags } from '../base'
 import {
   Answers,
   SourceResult,
-  Question,
   Op,
   Fuzzy,
-  FindQuery,
-  FindResponse,
   Workflow,
   OpsYml,
+  OpsFindQuery,
+  WorkflowsFindQuery,
+  OpsFindResponse,
+  WorkflowsFindResponse,
 } from '../types'
 import { asyncPipe } from '../utils/asyncPipe'
 import { AnalyticsError, APIError } from '../errors/customErrors'
-import { WORKFLOW, OP_FILE } from '../constants/opConfig'
+import { OP_FILE, PUBLIC, PRIVATE, LOCAL } from '../constants/opConfig'
+
+interface SearchInputs {
+  filter: string
+  searchTypes: string[]
+  apiOps: Op[]
+  apiWorkflows: Workflow[]
+  localWorkflows: Workflow[]
+}
 
 export default class Search extends Command {
   static description = 'Search for ops in your workspaces.'
@@ -32,43 +41,53 @@ export default class Search extends Command {
     help: flags.help({ char: 'h' }),
   }
 
-  ops: Op[] = []
+  opsAndWorkflows: (Op | Workflow)[] = []
 
-  searchPrompt: Question = {
-    type: 'autocomplete',
-    name: 'runOp',
-    pageSize: 5,
-    message: `\nSelect a ${this.ux.colors.errorRed(
-      '\u2749',
-    )} team ${this.ux.colors.multiBlue(
-      '\u2749',
-    )} public or ${this.ux.colors.successGreen(
-      '\u2749',
-    )} local op to run ${this.ux.colors.reset.green('→')}`,
-    source: this._autocompleteSearch.bind(this),
-    bottomContent: `\n \n${this.ux.colors.white(
-      `Or, run ${this.ux.colors.callOutCyan(
-        'ops help',
-      )} for usage information.`,
-    )}`,
+  searchTypePrompt = async (
+    filter: string,
+  ): Promise<Pick<SearchInputs, 'filter' | 'searchTypes'>> => {
+    const choices = [PUBLIC, PRIVATE, LOCAL]
+    const { searchTypes } = await this.ux.prompt<{ searchTypes: string[] }>({
+      type: 'checkbox',
+      name: 'searchTypes',
+      message: `Start by selecting the types of ${this.ux.colors.multiBlue(
+        'Ops',
+      )} or ${this.ux.colors.multiOrange(
+        'Workflows',
+      )} to search ${this.ux.colors.reset.green('→')}\n`,
+      choices,
+      default: choices,
+      validate: input => {
+        return input.length > 0
+      },
+    })
+    return { filter, searchTypes }
   }
 
-  showSearchMessage = (filter: string) => {
+  showSearchMessage = (
+    inputs: Pick<SearchInputs, 'searchTypes' | 'filter'>,
+  ): Pick<SearchInputs, 'searchTypes' | 'filter'> => {
+    const { filter, searchTypes } = inputs
+    const workspaceText = searchTypes.length > 1 ? 'workspaces' : 'workspace'
+    const searchText = `Searching ${searchTypes
+      .join(', ')
+      .replace(/,(?!.*,)/gim, ' and')} ${workspaceText} for`
     this.log(
-      `\n🔍 ${this.ux.colors.white(
-        'Searching team, public & local workspaces for ',
-      )} ${this.ux.colors.callOutCyan(filter || 'all ops')}.`,
+      `\n🔍 ${this.ux.colors.white(searchText)} ${this.ux.colors.callOutCyan(
+        filter || 'all ops and workflows',
+      )}.`,
     )
-    return filter
+    return inputs
   }
 
-  getApiOps = async (filter: string) => {
+  getApiOps = async (inputs: SearchInputs): Promise<SearchInputs> => {
     try {
-      const query: FindQuery = filter
+      const { filter } = inputs
+      const query: OpsFindQuery = filter
         ? { search: filter, team_id: this.team.id }
         : { team_id: this.team.id }
 
-      const findResponse: FindResponse = await this.api.find('ops', {
+      const findResponse: OpsFindResponse = await this.api.find('ops', {
         query,
         headers: {
           Authorization: this.accessToken,
@@ -76,89 +95,158 @@ export default class Search extends Command {
       })
 
       const { data: apiOps } = findResponse
-      return { apiOps }
+      return { apiOps, ...inputs }
     } catch (err) {
       this.debug('error: %O', err)
       throw new APIError(err)
     }
   }
 
-  getWorkflows = async ({ apiOps }: { apiOps: Op[] }) => {
+  filterApiOps = (inputs: SearchInputs): SearchInputs => {
+    let { searchTypes, apiOps = [] } = inputs
+
+    if (!searchTypes.includes(PUBLIC)) {
+      apiOps = apiOps.filter(apiOp => {
+        return apiOp.teamID === this.team.id
+      })
+    }
+    if (!searchTypes.includes(PRIVATE)) {
+      apiOps = apiOps.filter(apiOp => {
+        return apiOp.teamID !== this.team.id
+      })
+    }
+
+    return { ...inputs, apiOps }
+  }
+
+  getApiWorkflows = async (inputs: SearchInputs): Promise<SearchInputs> => {
     try {
+      const { filter } = inputs
+      const query: WorkflowsFindQuery = filter
+        ? { search: filter, teamId: this.team.id }
+        : { teamId: this.team.id }
+
+      const findResponse: WorkflowsFindResponse = await this.api.find(
+        'workflows',
+        {
+          query,
+          headers: {
+            Authorization: this.accessToken,
+          },
+        },
+      )
+
+      const { data: apiWorkflows } = findResponse
+      return { apiWorkflows, ...inputs }
+    } catch (err) {
+      this.debug(`error: %O`, err.error)
+      throw new APIError(err)
+    }
+  }
+
+  filterApiWorkflows = (inputs): SearchInputs => {
+    let { searchTypes, apiWorkflows } = inputs
+    if (!searchTypes.includes(PUBLIC)) {
+      apiWorkflows = apiWorkflows.filter(apiWorkflow => {
+        return apiWorkflow.teamID === this.team.id
+      })
+    }
+    if (!searchTypes.includes(PRIVATE)) {
+      apiWorkflows = apiWorkflows.filter(apiWorkflow => {
+        return apiWorkflow.teamID !== this.team.id
+      })
+    }
+    apiWorkflows
+    return { ...inputs, apiWorkflows }
+  }
+
+  getLocalWorkflows = async (inputs: SearchInputs): Promise<SearchInputs> => {
+    const localWorkflows = []
+    try {
+      const { searchTypes } = inputs
+      if (!searchTypes.includes(LOCAL)) return { ...inputs, localWorkflows }
+
       const manifest = await fs.readFile(
         path.join(process.cwd(), OP_FILE),
         'utf8',
       )
-      if (!manifest) {
-        return { apiOps, workflows: [] }
-      }
+      if (!manifest) return inputs
 
-      const { workflows: workflows = [] }: OpsYml = yaml.parse(manifest)
-      return { apiOps, workflows }
+      const { workflows = [] }: OpsYml = yaml.parse(manifest)
+
+      workflows.forEach(workflow => (workflow.local = true))
+      return { ...inputs, localWorkflows: workflows }
     } catch {
-      return { apiOps, workflows: [] }
+      return { ...inputs, localWorkflows }
     }
   }
 
-  _removeIfNameOrDescriptionDontContainQuery = (filterQuery: string) => (
+  _removeIfNameOrDescriptionDontContainQuery = (filter: string) => (
     workflow: Workflow,
-  ) =>
-    workflow.name.includes(filterQuery) ||
-    workflow.description.includes(filterQuery)
-
-  _setTeamIdToLocal = (workflow: Workflow) => ({
-    ...workflow,
-    teamID: WORKFLOW,
-  })
-
-  filterWorkflows = (filterQuery: string = '') => ({
-    apiOps,
-    workflows,
-  }: {
-    apiOps: Op[]
-    workflows: Workflow[]
-  }) => {
-    if (!workflows.length) {
-      return { apiOps, workflows }
-    }
-
-    const filteredWorkflows = workflows
-      .filter(this._removeIfNameOrDescriptionDontContainQuery(filterQuery))
-      .map(this._setTeamIdToLocal)
-
-    return { apiOps, workflows: filteredWorkflows }
+  ): boolean => {
+    return (
+      workflow.name.includes(filter) || workflow.description.includes(filter)
+    )
   }
 
+  filterLocalWorkflows = (inputs: SearchInputs) => {
+    let { localWorkflows, filter } = inputs
+    if (!localWorkflows.length) return inputs
+
+    localWorkflows = localWorkflows.filter(
+      this._removeIfNameOrDescriptionDontContainQuery(filter),
+    )
+
+    return { ...inputs, localWorkflows }
+  }
   _removeIfLocalExists = (workflows: Workflow[]) => (apiOp: Op) => {
     const match = workflows.find(workflow => workflow.name === apiOp.name)
     return !match
   }
 
-  resolveLocalAndApiOps = ({
-    apiOps,
-    workflows,
-  }: {
-    apiOps: Op[]
-    workflows: Workflow[]
-  }) => {
-    const filteredApiOps = apiOps.filter(this._removeIfLocalExists(workflows))
-    return [...filteredApiOps, ...workflows]
+  resolveLocalAndApi = (inputs: SearchInputs) => {
+    const { apiOps, localWorkflows, apiWorkflows } = inputs
+    const ops = apiOps.filter(this._removeIfLocalExists(localWorkflows))
+    this.opsAndWorkflows = [...ops, ...localWorkflows, ...apiWorkflows].sort(
+      (a, b) => {
+        if (a.name < b.name) return -1
+        if (b.name < a.name) return 1
+        return 0
+      },
+    )
+    return inputs
   }
 
-  checkData = async (filteredOps: Op[]) => {
-    if (!filteredOps.length) {
+  checkData = async (inputs: SearchInputs) => {
+    if (!this.opsAndWorkflows.length) {
       this.log(
         `\n 😞 No ops found in your team, public or local workspaces. Try again or run ${this.ux.colors.callOutCyan(
           'ops publish',
         )} to create an op. \n`,
       )
-      process.exit()
     }
-    this.ops = filteredOps
+    return inputs
   }
 
-  askQuestion = async () => {
-    return this.ux.prompt<{ runOp: SourceResult }>(this.searchPrompt)
+  selectOpOrWorkflowPrompt = async (inputs: SearchInputs) => {
+    return this.ux.prompt<{ runOp: SourceResult }>({
+      type: 'autocomplete',
+      name: 'runOp',
+      pageSize: 5,
+      message: `\nSelect a ${this.ux.colors.multiBlue(
+        '\u2022Op',
+      )} or ${this.ux.colors.multiOrange(
+        '\u2022Workflow',
+      )} to run ${this.ux.colors.reset.green('→')}\n${this.ux.colors.reset.dim(
+        '🌎 = Public 🔑 = Private 🖥  = Local  🔍 Search:',
+      )} `,
+      source: this._autocompleteSearch.bind(this),
+      bottomContent: `\n \n${this.ux.colors.white(
+        `Or, run ${this.ux.colors.callOutCyan(
+          'ops help',
+        )} for usage information.`,
+      )}`,
+    })
   }
 
   showRunMessage = (answer: { runOp: SourceResult }) => {
@@ -178,7 +266,7 @@ export default class Search extends Command {
         properties: {
           email: this.user.email,
           username: this.user.username,
-          results: this.ops.length,
+          results: this.opsAndWorkflows.length,
           filter,
         },
       })
@@ -188,39 +276,44 @@ export default class Search extends Command {
     }
   }
 
-  private async _autocompleteSearch(_: Answers, input = '') {
+  _autocompleteSearch = async (_: Answers, input = '') => {
     const { list, options } = this.fuzzyFilterParams()
     const fuzzyResult: Fuzzy[] = fuzzy.filter(input, list, options)
     return fuzzyResult.map(result => result.original)
   }
 
   private fuzzyFilterParams = () => {
-    const list = this.ops.map(op => {
-      const opName = this._formatOpName(op)
+    const list = this.opsAndWorkflows.map(opOrWorkflow => {
+      const name = this._formatOpOrWorkflowName(opOrWorkflow)
       return {
-        name: `${opName} - ${op.description}`,
-        value: op,
+        name: `${name} - ${opOrWorkflow.description}`,
+        value: opOrWorkflow,
       }
     })
     const options = { extract: el => el.name }
     return { list, options }
   }
 
-  private _formatOpName = (op: Op) => {
-    const opName = this.ux.colors.reset.white(op.name)
-    switch (op.teamID) {
-      case this.team.id:
-        return `${this.ux.colors.reset(
-          this.ux.colors.errorRed('\u2749'),
-        )} ${opName}`
-      case WORKFLOW:
-        return `${this.ux.colors.reset(
-          this.ux.colors.successGreen('\u2749'),
-        )} ${opName} `
-      default:
-        return `${this.ux.colors.reset(
-          this.ux.colors.multiBlue('\u2749'),
-        )} ${opName} `
+  private _formatOpOrWorkflowName = (opOrWorkflow: Op | Workflow) => {
+    const name = this.ux.colors.reset.white(opOrWorkflow.name)
+    if ('steps' in opOrWorkflow) {
+      return `${this.ux.colors.reset(
+        this.ux.colors.multiOrange('\u2022'),
+      )} ${this._formatOpOrWorkflowEmoji(opOrWorkflow)} ${name}`
+    } else {
+      return `${this.ux.colors.reset(
+        this.ux.colors.multiBlue('\u2022'),
+      )} ${this._formatOpOrWorkflowEmoji(opOrWorkflow)} ${name}`
+    }
+  }
+
+  private _formatOpOrWorkflowEmoji = (opOrWorkflow: Workflow | Op): string => {
+    if (opOrWorkflow.teamID == this.team.id) {
+      return '🔑 '
+    } else if ('local' in opOrWorkflow) {
+      return '🖥  '
+    } else {
+      return '🌎 '
     }
   }
 
@@ -233,13 +326,17 @@ export default class Search extends Command {
       } = this.parse(Search)
 
       const searchPipeline = asyncPipe(
+        this.searchTypePrompt,
         this.showSearchMessage,
         this.getApiOps,
-        this.getWorkflows,
-        this.filterWorkflows(filter),
-        this.resolveLocalAndApiOps,
+        this.filterApiOps,
+        this.getApiWorkflows,
+        this.filterApiWorkflows,
+        this.getLocalWorkflows,
+        this.filterLocalWorkflows,
+        this.resolveLocalAndApi,
         this.checkData,
-        this.askQuestion,
+        this.selectOpOrWorkflowPrompt,
         this.showRunMessage,
         this.sendAnalytics(filter),
       )

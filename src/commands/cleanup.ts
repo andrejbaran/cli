@@ -3,7 +3,7 @@ import Docker from 'dockerode'
 import Command, { flags } from '../base'
 import { ImageNotFoundError } from '../errors/customErrors'
 import { OPS_REGISTRY_HOST } from '../constants/env'
-import { FindResponse } from '../types'
+import { OpsFindResponse } from '../types'
 import { FeathersClient } from '../services/feathers'
 import getDocker from '~/utils/get-docker'
 
@@ -13,7 +13,7 @@ export const getOps = async (
   teamId: string,
   accessToken: string,
   api: FeathersClient,
-): Promise<FindResponse> => {
+): Promise<OpsFindResponse> => {
   return api.find('ops', {
     query: {
       name: opName,
@@ -79,7 +79,7 @@ export class Cleanup extends Command {
         process.exit()
       }
 
-      const ops: FindResponse = await getOps(
+      const ops: OpsFindResponse = await getOps(
         opName,
         this.team.id,
         this.accessToken,
