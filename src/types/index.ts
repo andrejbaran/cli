@@ -10,7 +10,12 @@ export { Question, Answers, SourceResult } from '@cto.ai/inquirer'
 
 export { AccessToken } from './AccessToken'
 export { ApiService } from './ApiService'
-export { FindResponse, FindQuery } from './FindResponse'
+export {
+  OpsFindResponse,
+  OpsFindQuery,
+  WorkflowsFindResponse,
+  WorkflowsFindQuery,
+} from './FindResponse'
 export { Config } from './Config'
 export { Container } from './Container'
 export { ChildProcessError } from './ChildProcessError'
