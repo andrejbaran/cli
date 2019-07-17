@@ -42,7 +42,7 @@ USAGE
 * [`ops help [COMMAND]`](#ops-help-command)
 * [`ops init`](#ops-init)
 * [`ops publish PATH`](#ops-publish-path)
-* [`ops remove [OPFILTER]`](#ops-remove-opfilter)
+* [`ops remove [FILTER]`](#ops-remove-filter)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
 * [`ops team:create`](#ops-teamcreate)
@@ -203,16 +203,16 @@ OPTIONS
 
 _See code: [src/commands/publish.ts](https://github.com/cto.ai/ops/blob/v1.4.22/src/commands/publish.ts)_
 
-## `ops remove [OPFILTER]`
+## `ops remove [FILTER]`
 
 Remove an op from a team.
 
 ```
 USAGE
-  $ ops remove [OPFILTER]
+  $ ops remove [FILTER]
 
 ARGUMENTS
-  OPFILTER  A part of the name or description of the op you want to remove.
+  FILTER  A part of the name or description of the op or workflow you want to remove.
 
 OPTIONS
   -h, --help  show CLI help
