@@ -187,10 +187,10 @@ export class MissingRequiredArgument extends ErrorTemplate {
   }
 }
 
-export class NoOpFoundForDeletion extends ErrorTemplate {
-  constructor() {
+export class NoResultsFoundForDeletion extends ErrorTemplate {
+  constructor(opOrWorkflow: string) {
     super(
-      `🤔 We couldn't remove that op because we couldn't find it in the registry. Please check the name and try again.`,
+      `🤔 We couldn't remove that ${opOrWorkflow} because we couldn't find it in the registry. Please check the name and try again.`,
       undefined,
       { source: EXPECTED },
     )
