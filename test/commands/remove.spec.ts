@@ -5,10 +5,12 @@ import { Op, Workflow } from '~/types'
 import { OP, WORKFLOW } from '~/constants/opConfig'
 import { APIError, NoResultsFoundForDeletion } from '~/errors/customErrors'
 import { createMockOp } from '../mocks'
-import { create } from 'domain'
 
 let cmd: Remove
-
+let config
+beforeEach(async () => {
+  config = await Config.load()
+})
 describe('getApiOpsOrWorkflows', () => {
   test('should successfully retrieve ops from the api', async () => {
     //MOCK FEATHERS
@@ -21,7 +23,7 @@ describe('getApiOpsOrWorkflows', () => {
       removeType: OP,
     }
     const fakeToken = 'FAKETOKEN'
-    const config = await Config.load()
+
     cmd = new Remove([], config, mockFeathersService, undefined)
     cmd.accessToken = fakeToken
     cmd.team = {

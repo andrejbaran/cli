@@ -14,7 +14,6 @@ export interface Op extends BaseFields {
   mountHome: boolean
   // RUN CMD
   image: string | void
-  isPublic?: boolean
 }
 
 export interface Workflow extends BaseFields {
@@ -36,6 +35,8 @@ interface BaseFields {
     arguments: { [key: string]: string }
     options: { [key: string]: string }
   }
+  isPublic?: boolean
+  isPublished?: boolean
   // API
   id: string
   createdAt: string

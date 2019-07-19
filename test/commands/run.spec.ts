@@ -1,133 +1,339 @@
-/**
- * @author: JP Lew (jp@cto.ai)
- * @date: Monday, 6th May 2019 11:06:29 am
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Wednesday, 15th May 2019 1:24:42 pm
- * @copyright (c) 2019 CTO.ai
- */
-
 import * as Config from '@oclif/config'
-import Run from '~/commands/run'
-
-import { defaultApiHost } from '~/constants/env'
-import { Workflow } from '../../lib/types'
+import * as path from 'path'
+import Run, { RunInputs } from '~/commands/run'
+import { FeathersClient } from '~/services/feathers'
+import { WorkflowService } from '~/services/Workflow'
+import { OpService } from '~/services/Op'
+import { Op, Workflow } from '~/types'
+import { OPS_REGISTRY_HOST } from '~/constants/env'
+import { APIError } from '~/errors/customErrors'
+import { createMockOp, createMockWorkflow } from '../mocks'
 
 let cmd: Run
-
-/*
- * reference https://github.com/oclif/command/blob/master/src/command.ts
- * https://github.com/oclif/config/blob/master/src/plugin.ts *
- */
-beforeAll(async () => {
-  jest.mock('~/commands/run')
-  const config = await Config.load()
-  cmd = new Run([], config)
+const nameOrPath = './src/templates/shared/'
+let config
+beforeEach(async () => {
+  config = await Config.load()
 })
 
-test.skip('setEnvs should override default envs with process.env values', () => {
-  // accessToken in config.json should be overriden by process.env access token
-  const accessToken = '2222222222'
+describe('checkPathOpsYmlExists', () => {
+  test('should return true if path to ops.yml resolves', async () => {
+    const config = await Config.load()
+    cmd = new Run([], config, undefined, undefined)
 
-  const fakeAccessToken = '123456789'
-  const fakeApiPath = '/test/path'
-  const fakeNodeEnv = 'production'
-  const fakeBool = 'false'
-  const fakeUser = 'frank'
-  const fakeApiHost = 'http://localhost:3030/'
+    expect(cmd.checkPathOpsYmlExists(nameOrPath)).toBeTruthy()
+  })
+})
 
-  const opsYamlEnv = [
-    `USER=${fakeUser}`,
-    'LOGGER_PLUGINS_STDOUT_ENABLED=true',
-    'OPS_ACCESS_TOKEN',
-  ]
+describe('getOpsAndWorkflowsFromFileSystem', () => {
+  test('should return ops and workflows from the parsed yaml', async () => {
+    const inputs: Pick<RunInputs, 'parsedArgs'> = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams: [''],
+        flags: {},
+      },
+    }
 
-  const processEnv = {
-    NODE_ENV: fakeNodeEnv,
-    LOGGER_PLUGINS_STDOUT_ENABLED: fakeBool,
-    OPS_ACCESS_TOKEN: fakeAccessToken,
-    OPS_API_PATH: fakeApiPath,
-    OPS_API_HOST: fakeApiHost,
-    USELESS_ENV: 'uselessvalue',
-  }
+    cmd = new Run([], config, undefined, undefined)
+    const testRes = await cmd.getOpsAndWorkflowsFromFileSystem(inputs)
+    expect(testRes.opsAndWorkflows.length).toBe(2)
+  })
+})
 
-  // we are expecting
-  const expected = [
-    `NODE_ENV=${fakeNodeEnv}`,
-    `LOGGER_PLUGINS_STDOUT_ENABLED=${fakeBool}`,
-    `OPS_ACCESS_TOKEN=${fakeAccessToken}`,
-    `OPS_API_PATH=${fakeApiPath}`,
-    `OPS_API_HOST=${fakeApiHost}`,
-    `USER=${fakeUser}`,
-  ]
+describe('checkForHelpMessage', () => {
+  test('should call printCustomHelp if help is true and opOrWorkflow is op', async () => {
+    const mockOp = createMockOp({})
+    const inputs: RunInputs = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams: [''],
+        flags: { help: true },
+      },
+      config,
+      opsAndWorkflows: [mockOp],
+      opOrWorkflow: mockOp,
+    }
+    cmd = new Run([], config, undefined, undefined)
+    cmd.printCustomHelp = jest.fn()
+    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {})
 
-  // @ts-ignore
-  const received = cmd.setEnvs(processEnv)({
-    op: { env: opsYamlEnv },
-    config: { accessToken },
+    await cmd.checkForHelpMessage(inputs)
+    expect(cmd.printCustomHelp).toHaveBeenCalled()
+    expect(mockExit).toHaveBeenCalledWith()
+  })
+  test('should not call printCustomHelp if help is false', async () => {
+    const mockOp = createMockOp({})
+    const inputs: RunInputs = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams: [''],
+        flags: { help: false },
+      },
+      config,
+      opsAndWorkflows: [mockOp],
+      opOrWorkflow: mockOp,
+    }
+
+    cmd = new Run([], config)
+    cmd.printCustomHelp = jest.fn()
+    await cmd.checkForHelpMessage(inputs)
+    expect(cmd.printCustomHelp).not.toBeCalled()
+  })
+  test('should not call printCustomHelp if opOrWorkflow is a workflow', async () => {
+    const mockWorkflow = createMockWorkflow({})
+    const inputs: RunInputs = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams: [''],
+        flags: { help: true },
+      },
+      config,
+      opsAndWorkflows: [mockWorkflow],
+      opOrWorkflow: mockWorkflow,
+    }
+    cmd = new Run([], config)
+    cmd.printCustomHelp = jest.fn()
+    await cmd.checkForHelpMessage(inputs)
+    expect(cmd.printCustomHelp).not.toBeCalled()
+  })
+})
+
+describe('executeOpOrWorkflowService', () => {
+  test('should call the WorkflowService if opOrWorkflow is a workflow', async () => {
+    const mockWorkflowService = new WorkflowService()
+    mockWorkflowService.run = jest.fn()
+    const mockWorkflow = createMockWorkflow({})
+    const opParams = ['arg1', 'arg2']
+    const inputs: RunInputs = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams,
+        flags: {},
+      },
+      config,
+      opsAndWorkflows: [mockWorkflow],
+      opOrWorkflow: mockWorkflow,
+    }
+    cmd = new Run([], config, undefined, undefined, mockWorkflowService)
+    cmd.executeOpOrWorkflowService(inputs)
+    expect(mockWorkflowService.run).toHaveBeenCalledWith(
+      mockWorkflow,
+      opParams,
+      config,
+    )
+  })
+  test('should call the OpService if opOrWorkflow is a op', async () => {
+    const mockOpService = new OpService()
+    mockOpService.run = jest.fn()
+    const mockOp = createMockOp({ isPublished: true })
+    const opParams = ['arg1', 'arg2']
+    const inputs: RunInputs = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams,
+        flags: {},
+      },
+      config,
+      opsAndWorkflows: [mockOp],
+      opOrWorkflow: mockOp,
+    }
+    cmd = new Run([], config, undefined, undefined, undefined, mockOpService)
+    cmd.executeOpOrWorkflowService(inputs)
+    expect(mockOpService.run).toHaveBeenCalledWith(
+      mockOp,
+      inputs.parsedArgs,
+      config,
+    )
+  })
+  test('should set the image if the  opOrWorkflow is a op and not published', async () => {
+    config.team = {
+      name: 'FAKE_TEAM_NAME',
+    }
+    const mockOpService = new OpService()
+    mockOpService.run = jest.fn()
+    const mockOp = createMockOp({ isPublished: false, name: 'FAKE_OP_NAME' })
+    const opParams = ['arg1', 'arg2']
+    const inputs: RunInputs = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams,
+        flags: {},
+      },
+      config,
+      opsAndWorkflows: [mockOp],
+      opOrWorkflow: mockOp,
+    }
+    cmd = new Run([], config, undefined, undefined, undefined, mockOpService)
+    cmd.executeOpOrWorkflowService(inputs)
+    mockOp.image = path.join(
+      OPS_REGISTRY_HOST,
+      `${config.team.name}/${mockOp.name}`,
+    )
+    expect(mockOpService.run).toHaveBeenCalledWith(
+      mockOp,
+      inputs.parsedArgs,
+      config,
+    )
+  })
+})
+
+describe('getApiOps', () => {
+  test('should successfully retrieve ops from the api', async () => {
+    //MOCK FEATHERS
+    const mockOp = createMockOp({})
+    const mockFeathersService = new FeathersClient()
+    mockFeathersService.find = jest.fn()
+    mockFeathersService.find.mockReturnValue({ data: [mockOp] })
+    const fakeToken = 'FAKETOKEN'
+    const nameOrPath = 'FAKE_OP_NAME'
+    config = {
+      accessToken: fakeToken,
+      team: { id: 'FAKE_TEAM_ID', name: 'FAKE_TEAM_NAME' },
+      user: {
+        username: 'FAKE_USERNAME',
+        email: 'FAKE_EMAIL',
+        _id: 'FAKE_ID',
+      },
+    }
+    const inputs: Omit<RunInputs, 'opsAndWorkflows' | 'opOrWorkflow'> = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams: [''],
+        flags: {},
+      },
+      config,
+    }
+
+    cmd = new Run([], config, mockFeathersService)
+    await cmd.getApiOps(inputs)
+    expect(mockFeathersService.find).toHaveBeenCalledWith('ops', {
+      query: {
+        search: nameOrPath,
+        team_id: config.team.id,
+      },
+      headers: {
+        Authorization: fakeToken,
+      },
+    })
   })
 
-  expect(received.op.env).toStrictEqual(expected)
+  test('should handle errors thrown from the api', async () => {
+    //MOCK FEATHERS
+    const mockFeathersService = new FeathersClient()
+    mockFeathersService.find = jest.fn()
+    mockFeathersService.find.mockRejectedValue(new Error())
+    const fakeToken = 'FAKE_TOKEN'
+    config = {
+      accessToken: fakeToken,
+      team: { id: 'FAKE_TEAM_ID', name: 'FAKE_TEAM_NAME' },
+      user: {
+        username: 'FAKE_USERNAME',
+        email: 'FAKE_EMAIL',
+        _id: 'FAKE_ID',
+      },
+    }
+    const inputs: Omit<RunInputs, 'opsAndWorkflows' | 'opOrWorkflow'> = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams: [''],
+        flags: {},
+      },
+      config,
+    }
+
+    cmd = new Run([], config, mockFeathersService)
+    await expect(cmd.getApiOps(inputs)).rejects.toThrow(APIError)
+  })
 })
 
-test.skip('setBinds should replace $HOME and ~ with home directory', () => {
-  const home = process.env.HOME
+describe('getApiWorkflows', () => {
+  test('should successfully retrieve workflows from the api', async () => {
+    const mockWorkflow = createMockWorkflow({})
+    const mockFeathersService = new FeathersClient()
+    mockFeathersService.find = jest.fn()
+    mockFeathersService.find.mockReturnValue({ data: [mockWorkflow] })
+    const fakeToken = 'FAKETOKEN'
+    const nameOrPath = 'FAKE_OP_NAME'
+    config = {
+      accessToken: fakeToken,
+      team: { id: 'FAKE_TEAM_ID', name: 'FAKE_TEAM_NAME' },
+      user: {
+        username: 'FAKE_USERNAME',
+        email: 'FAKE_EMAIL',
+        _id: 'FAKE_ID',
+      },
+    }
+    const inputs: Omit<RunInputs, 'opOrWorkflow'> = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams: [''],
+        flags: {},
+      },
+      opsAndWorkflows: [],
+      config,
+    }
 
-  const expected = ['/tmp:/tmp', `${home}/.aws:/.aws`, `${home}/.ssh:/mnt/.ssh`]
-
-  // @ts-ignore
-  const received = cmd.setBinds({
-    op: {
-      bind: ['/tmp:/tmp', '$HOME/.aws:/.aws', '~/.ssh:/mnt/.ssh'],
-    },
+    cmd = new Run([], config, mockFeathersService)
+    await cmd.getApiWorkflows(inputs)
+    expect(mockFeathersService.find).toHaveBeenCalledWith('workflows', {
+      query: {
+        search: nameOrPath,
+        teamId: config.team.id,
+      },
+      headers: {
+        Authorization: fakeToken,
+      },
+    })
   })
 
-  expect(received.op.env).toStrictEqual(expected)
-})
+  test('should handle errors thrown from the api', async () => {
+    //MOCK FEATHERS
+    const mockFeathersService = new FeathersClient()
+    mockFeathersService.find = jest.fn()
+    mockFeathersService.find.mockRejectedValue(new Error())
+    const fakeToken = 'FAKE_TOKEN'
+    config = {
+      accessToken: fakeToken,
+      team: { id: 'FAKE_TEAM_ID', name: 'FAKE_TEAM_NAME' },
+      user: {
+        username: 'FAKE_USERNAME',
+        email: 'FAKE_EMAIL',
+        _id: 'FAKE_ID',
+      },
+    }
+    const inputs: Omit<RunInputs, 'opsAndWorkflows' | 'opOrWorkflow'> = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams: [''],
+        flags: {},
+      },
+      config,
+    }
 
-// test('user should be prompted if they have not opted out of warnings', () => {
-//   const mockConfirm = jest.fn()
-//   cmd._confirmHomeDirectoryBindMount = mockConfirm
-
-//   cmd._doConfirmation(true)
-
-//   expect(mockConfirm).toBeCalled()
-// })
-
-// test('user should not be prompted if they have opted out of warnings', () => {
-//   const mockConfirm = jest.fn()
-//   cmd._confirmHomeDirectoryBindMount = mockConfirm
-
-//   cmd._doConfirmation(false)
-
-//   expect(mockConfirm).not.toBeCalled()
-// })
-
-test.skip('should run a local op', () => {
-  const home = process.env.HOME
-
-  const expected = ['/tmp:/tmp', `${home}/.aws:/.aws`, `${home}/.ssh:/mnt/.ssh`]
-
-  // @ts-ignore
-  const received = cmd.setBinds({
-    op: {
-      bind: ['/tmp:/tmp', '$HOME/.aws:/.aws', '~/.ssh:/mnt/.ssh'],
-    },
+    cmd = new Run([], config, mockFeathersService)
+    await expect(cmd.getApiWorkflows(inputs)).rejects.toThrow(APIError)
   })
-
-  expect(received.op.env).toStrictEqual(expected)
-})
-
-test('should interpolate run command for workflow', () => {
-  const workflowInput: Workflow = {
-    steps: ['{{OPS_STATE_DIR}}/TWO'],
-    name: 'mock-name',
-    runId: 'mock-id',
-  }
-
-  const runCmd: string[] = cmd.interpolateRunCmd(
-    workflowInput,
-    'mock-team-name',
-  )
-
-  expect(runCmd).toStrictEqual(['/mock-team-name/mock-name/mock-id/TWO'])
 })

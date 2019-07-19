@@ -229,7 +229,7 @@ USAGE
   $ ops run [NAMEORPATH]
 
 ARGUMENTS
-  NAMEORPATH  Name or path of the op you want to run.
+  NAMEORPATH  Name or path of the op or workflow you want to run.
 
 OPTIONS
   -b, --build  Builds the op before running. Must provide a path to the op.

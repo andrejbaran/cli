@@ -1,6 +1,6 @@
 import { Op, Workflow } from '~/types'
 
-export const createMockOp = (opInputs: Partial<Op>): Op => {
+export const createMockOp = (inputs: Partial<Op>): Op => {
   return Object.assign(
     {
       src: [],
@@ -26,11 +26,11 @@ export const createMockOp = (opInputs: Partial<Op>): Op => {
       createdAt: '',
       updatedAt: '',
     },
-    opInputs,
+    inputs,
   )
 }
 
-export const createMockWorkflow = (opInputs: Partial<Workflow>): Workflow => {
+export const createMockWorkflow = (inputs: Partial<Workflow>): Workflow => {
   return Object.assign(
     {
       name: '',
@@ -51,6 +51,6 @@ export const createMockWorkflow = (opInputs: Partial<Workflow>): Workflow => {
       createdAt: '',
       updatedAt: '',
     },
-    opInputs,
+    inputs,
   )
 }
