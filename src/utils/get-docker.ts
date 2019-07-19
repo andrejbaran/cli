@@ -187,9 +187,11 @@ async function confirmReadyContinue(): Promise<{ answer: boolean }> {
  * @param self Is the instance of 'this'
  * @param type Is the context of the caller, so we know which error to log
  */
-export default async function getDocker(self: any, type: string) {
+export default async function getDocker(
+  self: any,
+  type: string,
+): Promise<Docker> {
   // Point to the docker socket
-
   /**
    * Checks whether docker is installed on the machine
    * Keep repeating until the socket is available
@@ -220,11 +222,9 @@ export default async function getDocker(self: any, type: string) {
    */
   numRepeats = 0 // Re-initialize the flag for repeat
   let isDockerRunning = false // Flag to indicate whether docker is running or not
-  let docker: Docker | undefined // Initialize return variable
-
+  const docker = new Docker({ socketPath: DOCKER_SOCKET })
   while (!isDockerRunning) {
     // Instantiate a new docker client
-    docker = new Docker({ socketPath: DOCKER_SOCKET })
     try {
       await docker.ping() // Try to ping the docker daemon
       // If successful, set flag to true to exit the while loop

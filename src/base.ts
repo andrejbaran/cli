@@ -44,6 +44,8 @@ import { FeathersClient } from './services/feathers'
 import { SegmentClient } from './services/segment'
 import { UserUnauthorized, APIError, SignInError } from './errors/customErrors'
 import { ErrorResponse } from './errors/ErrorTemplate'
+import { WorkflowService } from './services/Workflow'
+import { OpService } from './services/Op'
 
 abstract class CTOCommand extends Command {
   accessToken!: string
@@ -58,6 +60,8 @@ abstract class CTOCommand extends Command {
     config: OClifConfig.IConfig,
     protected api: ApiService = new FeathersClient(),
     protected analytics = new SegmentClient(OPS_SEGMENT_KEY),
+    protected workflowService = new WorkflowService(),
+    protected opService = new OpService(),
   ) {
     super(argv, config)
   }
