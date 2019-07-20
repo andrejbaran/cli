@@ -9,6 +9,7 @@ import {
   Config,
   WorkflowPipelineError,
   ChildProcessError,
+  Container,
 } from '~/types'
 import { NoStepsFound, CouldNotMakeDir } from '~/errors/customErrors'
 import { onExit, asyncPipe } from '~/utils'
@@ -94,15 +95,39 @@ const getRunEnv = (workflow: Workflow, config: Config): Workflow => {
   }
   return workflow
 }
-
+// TODO this should be refactored so with the opService setEnv to make it dry
 const setRunEnv = (workflow: Workflow, config: Config): void => {
-  process.env.STATE_DIR = workflow.stateDir
-  process.env.CONFIG_DIR = workflow.configDir
-  process.env.RUN_ID = workflow.runId
-  process.env.OPS_OP_NAME = workflow.name
-  process.env.OPS_TEAM_NAME = config.team.name
-  process.env.OPS_ACCESS_TOKEN = config.accessToken
+  const defaultEnv: Container<string> = {
+    STATE_DIR: workflow.stateDir,
+    CONFIG_DIR: workflow.configDir,
+    RUN_ID: workflow.runId,
+    OPS_OP_NAME: workflow.name,
+    OPS_TEAM_NAME: config.team.name,
+    OPS_ACCESS_TOKEN: config.accessToken,
+  }
+  const opsYamlEnv: Container<string> = workflow.env
+    ? workflow.env.reduce(convertEnvStringsToObject, {})
+    : []
+
+  workflow.env = Object.entries({ ...defaultEnv, ...opsYamlEnv })
+    .map(overrideEnvWithProcessEnv(process.env))
+    .map(([key, val]: [string, string]) => `${key}=${val}`)
+  workflow.env.forEach(env => {
+    const envParts = env.split('=')
+    process.env[envParts[0]] = envParts[1]
+  })
 }
+
+const convertEnvStringsToObject = (acc: Container<string>, curr: string) => {
+  const [key, val] = curr.split('=')
+  if (!val) {
+    return { ...acc }
+  }
+  return { ...acc, [key]: val }
+}
+const overrideEnvWithProcessEnv = (
+  processEnv: Container<string | undefined>,
+) => ([key, val]: [string, string]) => [key, processEnv[key] || val]
 
 const interpolateRunCmd = (
   { steps, runId, name }: Pick<Workflow, 'steps' | 'runId' | 'name'>,
@@ -140,7 +165,7 @@ const _runWorkflowHof = (options: SpawnOptions) => (
   const exitResponse: void | ChildProcessError = await onExit(childProcess)
 
   if (exitResponse) {
-    this.printMessage(`🏃  Running ${runCommand}`)
+    _printMessage(`🏃  Running ${runCommand}`)
   }
 
   const newErrors = exitResponse

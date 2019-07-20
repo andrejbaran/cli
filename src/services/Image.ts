@@ -11,7 +11,7 @@ const debug = Debug('ops:ImageService')
 
 export class ImageService {
   log = console.log
-  checkLocalImage = async (opImageUrl: string, config: Config) => {
+  checkLocalImage = async (opImageUrl: string) => {
     const docker = await getDocker(console, 'ImageService')
 
     const list: Docker.ImageInfo[] = await docker.listImages()

@@ -78,10 +78,7 @@ export class OpService {
     } = inputs
     try {
       op.image = this.setOpImageUrl(op, config)
-      const localImage = await this.imageService.checkLocalImage(
-        op.image,
-        config,
-      )
+      const localImage = await this.imageService.checkLocalImage(op.image)
       if (!localImage || build) {
         op.isPublished
           ? await this.pullImageFromRegistry(op, config)
