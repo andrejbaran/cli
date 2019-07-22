@@ -1,79 +1,114 @@
 import { ux } from '@cto.ai/sdk'
-import { Question } from '~/types'
-import Command from '../../base'
-import { InviteCodeInvalid } from '../../errors/CustomErrors'
+import Command from '~/base'
+import { InviteCodeInvalid } from '~/errors/CustomErrors'
+import { asyncPipe } from '~/utils'
+import { Team, User } from '~/types'
 
-const inviteCodePrompt: Question = {
-  type: 'input',
-  name: 'inviteCode',
-  message: `Please enter the invite code you received via email to join a team:\n\n🔑  ${ux.colors.white(
-    'Invite code    ',
-  )}`,
+const {
+  white,
+  successGreen,
+  primary,
+  secondary,
+  callOutCyan,
+  errorRed,
+} = ux.colors
+export interface JoinInputs {
+  inviteCode: string
+  newTeam: Team
 }
 
 export default class TeamJoin extends Command {
   public static description = 'Accept an invite to join a team.'
 
-  public startSpinner() {
+  inviteCodePrompt = async (): Promise<Pick<JoinInputs, 'inviteCode'>> => {
+    const { inviteCode } = await ux.prompt<{ inviteCode: string }>({
+      type: 'input',
+      name: 'inviteCode',
+      message: `Please enter the invite code you received via email to join a team:\n\n🔑  ${white(
+        'Invite code    ',
+      )}`,
+      validate: (input: string): boolean => !!input,
+    })
+    return { inviteCode }
+  }
+  startSpinner = (inputs: JoinInputs): JoinInputs => {
     this.log('')
-    ux.spinner.start(`${ux.colors.white('Working on it')}`)
+    ux.spinner.start(`${white('Working on it')}`)
+    return inputs
+  }
+  joinTeam = async (inputs: JoinInputs): Promise<JoinInputs> => {
+    try {
+      const { inviteCode } = inputs
+      const { data: newTeam } = await this.api.create(
+        'teams/accept',
+        { inviteCode },
+        { headers: { Authorization: this.accessToken } },
+      )
+      if (!newTeam) throw new InviteCodeInvalid(null)
+      return { ...inputs, newTeam }
+    } catch (err) {
+      this.debug('%0', err)
+      throw new InviteCodeInvalid(err)
+    }
   }
 
-  public async run() {
-    this.isLoggedIn()
-    const { inviteCode } = await ux.prompt<{ inviteCode: string }>(
-      inviteCodePrompt,
-    )
-    this.startSpinner()
-    if (!inviteCode) {
-      throw new Error('no invite code')
-    }
-    const res = await this.joinTeam(inviteCode).catch(err => {
-      this.debug('%O', err)
-      throw new InviteCodeInvalid(err)
-    })
-
-    // On failure
-    if (!res || !res.data) {
-      throw new InviteCodeInvalid(null)
-    }
-
-    // On success
-    const { id, name } = res.data
+  setActiveTeam = async (inputs: JoinInputs): Promise<JoinInputs> => {
+    const {
+      newTeam: { id, name },
+    } = inputs
     const oldConfig = await this.readConfig()
     await this.writeConfig(oldConfig, { team: { name, id } })
-
-    ux.spinner.stop(`${ux.colors.successGreen('✔︎')}\n`)
-
-    this.log(
-      `${ux.colors.primary(
-        "Success! You've been added to team, ",
-      )}${ux.colors.callOutCyan(name)} ${ux.colors.secondary('(Active)')}`,
-    )
-    this.log(
-      `${ux.colors.secondary(
-        "You've been automatically switched to this team.",
-      )}\n`,
-    )
-    this.log(`Try running this command to get started:\n\n$ ops search`)
-
-    this.analytics.track({
-      userId: this.user.email,
-      event: 'Ops CLI team:join',
-      properties: {
-        email: this.user.email,
-        username: this.user.username,
-        team: { id, name },
-      },
-    })
-    return
+    return inputs
   }
 
-  public async joinTeam(inviteCode: string) {
-    return this.api.create(
-      'teams/accept',
-      { inviteCode },
-      { headers: { Authorization: this.accessToken } },
+  logMessage = (inputs: JoinInputs): JoinInputs => {
+    const {
+      newTeam: { name },
+    } = inputs
+    ux.spinner.stop(`${successGreen('✔︎')}\n`)
+
+    this.log(
+      `${primary("Success! You've been added to team, ")}${callOutCyan(
+        name,
+      )} ${secondary('(Active)')}`,
     )
+    this.log(
+      `${secondary("You've been automatically switched to this team.")}\n`,
+    )
+    this.log(`Try running this command to get started:\n\n$ ops search`)
+    return inputs
+  }
+
+  sendAnalytics = (user: User) => (inputs: JoinInputs): void => {
+    const { newTeam: team } = inputs
+    const { email, username } = user
+    this.analytics.track({
+      userId: email,
+      event: 'Ops CLI team:join',
+      properties: {
+        email,
+        username,
+        team,
+      },
+    })
+  }
+
+  async run() {
+    try {
+      this.isLoggedIn()
+      const joinPipeline = asyncPipe(
+        this.inviteCodePrompt,
+        this.startSpinner,
+        this.joinTeam,
+        this.setActiveTeam,
+        this.logMessage,
+        this.sendAnalytics(this.user),
+      )
+      await joinPipeline()
+    } catch (err) {
+      ux.spinner.stop(`${errorRed('failed')}\n`)
+      this.debug('%0', err)
+      this.config.runHook('error', { err })
+    }
   }
 }
