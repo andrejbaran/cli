@@ -36,6 +36,11 @@ export class WriteConfigError extends ErrorTemplate {
     super('Error while writing config', err)
   }
 }
+export class ReadConfigError extends ErrorTemplate {
+  constructor(err) {
+    super('Error while reading config', err)
+  }
+}
 
 export class CopyTemplateFilesError extends ErrorTemplate {
   constructor(err) {

@@ -1,9 +1,19 @@
-import Command, { flags } from '../../base'
-import { Question, Team } from '../../types'
 import { ux } from '@cto.ai/sdk'
+import Command, { flags } from '~/base'
+import { User, Team } from '~/types'
+import { asyncPipe } from '~/utils'
+import { ReadConfigError, APIError } from '~/errors/CustomErrors'
 
+const { white, italic, blue, dim, callOutCyan } = ux.colors
 interface displayTeam extends Team {
   displayName: string
+}
+
+export interface SwitchInputs {
+  activeTeam: Team
+  teams: Team[]
+  displayTeams: displayTeam[]
+  teamSelected: Team
 }
 
 export default class TeamSwitch extends Command {
@@ -13,102 +23,114 @@ export default class TeamSwitch extends Command {
     help: flags.help({ char: 'h' }),
   }
 
-  async run() {
-    this.isLoggedIn()
-    this.log("Here's the list of your teams:\n")
-
-    // Gets the active team from the config
-    const configData = await this.readConfig()
-    const activeTeam = configData
-      ? configData.team
-      : {
-          id: '',
-          name: '',
-        }
-
-    // Gets the list of teams from the backend
-    const response = await this.api.find('teams', {
-      headers: { Authorization: this.accessToken },
-    })
-    const teams: Team[] = response.data
-
-    // Adds necessary variables (e.g. displaynName) to each team
-    const parsedTeams = this._setTeamsDisplayName(teams, activeTeam)
-
-    // Gets the desired team by either the argument or the parsedTeams
-    const teamSelected = await this._getSelectedTeamPrompt(parsedTeams)
-
-    // Gets the desired team from the user's input
-    const team: displayTeam = parsedTeams.find(
-      t => t.name === teamSelected,
-    ) || {
-      name: '',
-      id: '',
-      displayName: '',
+  getActiveTeam = async (): Promise<Pick<SwitchInputs, 'activeTeam'>> => {
+    try {
+      const { team: activeTeam } = await this.readConfig()
+      if (!activeTeam) throw new Error()
+      return { activeTeam }
+    } catch (err) {
+      this.debug('%0', err)
+      throw new ReadConfigError(err)
     }
-
-    // Breaks if there is no matching team
-    if (!team || !team.name) {
-      this.log(
-        `\n❌ There is no team with that name. Please select a different team`,
-      )
-      process.exit()
-    }
-
-    this.log(`\n⏱ Switching teams`)
-
-    // Writes the desired team into the config
-    await this.writeConfig(configData, {
-      team: { name: team.name, id: team.id },
-    })
-
-    this.log(
-      `\n🚀 Huzzah! ${ux.colors.callOutCyan(
-        team.name,
-      )} is now the active team.\n`,
-    )
   }
 
-  /**
-   * Displays the prompt to the user and returns the selection
-   * @param teams The desired teams returned from the database
-   * @returns The intended name, which is guaranteed to be unique
-   */
-  private async _getSelectedTeamPrompt(teams: displayTeam[]): Promise<string> {
-    // The prompt to show to the user
-    const prompt: Question = {
-      type: 'list',
-      name: 'teamSelected',
-      message: 'Select a team',
-      choices: teams.map(team => {
-        return { name: team.displayName, value: team.name }
-      }),
-      bottomContent: `\n \n${ux.colors.white(
-        `Or, run ${ux.colors.italic.dim('ops help')} for usage information.`,
-      )}`,
+  getTeamsFromApi = async (inputs: SwitchInputs): Promise<SwitchInputs> => {
+    try {
+      const { data: teams } = await this.api.find('teams', {
+        headers: { Authorization: this.accessToken },
+      })
+      return { ...inputs, teams }
+    } catch (err) {
+      this.debug('%0')
+      throw new APIError(err)
     }
-
-    // Destructures and returns the desired input from the user
-    const { teamSelected } = await ux.prompt<{ teamSelected: string }>(prompt)
-    return teamSelected
   }
 
-  /**
-   * Assigns a display name to the teams. Desired teams will have custom styling
-   * @param teams The teams that the user has access to
-   * @param activeTeam The team that is currently active
-   */
-  private _setTeamsDisplayName(teams: Team[], activeTeam: Team): displayTeam[] {
-    return teams.map(t => {
+  setTeamsDisplayName = (inputs: SwitchInputs): SwitchInputs => {
+    const { teams, activeTeam } = inputs
+    const displayTeams = teams.map(t => {
       // If the team is the user's active team, add custom styling to it
       if (activeTeam && t.name === activeTeam.name) {
         return {
           ...t,
-          displayName: `${ux.colors.blue(t.name)} ${ux.colors.dim('[Active]')}`,
+          displayName: `${blue(t.name)} ${dim('[Active]')}`,
         }
       }
       // If the team isn't the user's active team, simply copy the display name from the team name
       return { ...t, displayName: t.name }
     })
+    return { ...inputs, displayTeams }
+  }
+
+  getSelectedTeamPrompt = async (
+    inputs: SwitchInputs,
+  ): Promise<SwitchInputs> => {
+    this.log("Here's the list of your teams:\n")
+    const { displayTeams } = inputs
+    const { teamSelected } = await ux.prompt<{ teamSelected: Team }>({
+      type: 'list',
+      name: 'teamSelected',
+      message: 'Select a team',
+      choices: displayTeams.map(team => {
+        return { name: team.displayName, value: team }
+      }),
+      bottomContent: `\n \n${white(
+        `Or, run ${italic.dim('ops help')} for usage information.`,
+      )}`,
+    })
+    this.log(`\n⏱ Switching teams`)
+    return { ...inputs, teamSelected }
+  }
+
+  updateActiveTeam = async (inputs: SwitchInputs): Promise<SwitchInputs> => {
+    const {
+      teamSelected: { name, id },
+    } = inputs
+    const configData = await this.readConfig()
+    await this.writeConfig(configData, {
+      team: { name, id },
+    })
+    return inputs
+  }
+
+  logMessage = (inputs: SwitchInputs): SwitchInputs => {
+    const {
+      teamSelected: { name },
+    } = inputs
+    this.log(`\n🚀 Huzzah! ${callOutCyan(name)} is now the active team.\n`)
+    return inputs
+  }
+
+  sendAnalytics = (user: User) => (inputs: SwitchInputs) => {
+    const { email, username } = user
+    const { activeTeam, teamSelected } = inputs
+    this.analytics.track({
+      userId: email,
+      event: 'Ops CLI Team:Switch',
+      properties: {
+        email,
+        username,
+        oldTeam: activeTeam,
+        newTeam: teamSelected,
+      },
+    })
+  }
+
+  async run() {
+    this.isLoggedIn()
+
+    try {
+      const switchPipeline = asyncPipe(
+        this.getActiveTeam,
+        this.getTeamsFromApi,
+        this.setTeamsDisplayName,
+        this.getSelectedTeamPrompt,
+        this.updateActiveTeam,
+        this.sendAnalytics(this.user),
+      )
+      await switchPipeline()
+    } catch (err) {
+      this.debug('%0', err)
+    }
   }
 }
