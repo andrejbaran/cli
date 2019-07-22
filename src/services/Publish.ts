@@ -23,7 +23,7 @@ export class Publish {
     api: ApiService,
   ) => {
     try {
-      return api.create(
+      const res = await api.create(
         'ops',
         { ...op, version, teamID },
         {
@@ -32,6 +32,7 @@ export class Publish {
           },
         },
       )
+      return res
     } catch (err) {
       throw new CouldNotCreateOp(err.message)
     }
