@@ -58,8 +58,8 @@ export const createMockWorkflow = (inputs: Partial<Workflow>): Workflow => {
 export const createMockTeam = (inputs: Partial<Team>): Team => {
   return Object.assign(
     {
-      name: '',
       id: '',
+      name: '',
     },
     inputs,
   )
