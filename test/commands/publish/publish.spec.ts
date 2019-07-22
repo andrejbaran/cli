@@ -31,8 +31,6 @@ describe('BuildStep', () => {
       workflows: workflowArray,
     } as PublishInputs
 
-    console.log('DDDDDDDDDDDD', workflowArray[0])
-
     // MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
     mockFeathersService.create = jest.fn()
