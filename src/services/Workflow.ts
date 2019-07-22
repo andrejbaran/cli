@@ -11,7 +11,7 @@ import {
   ChildProcessError,
   Container,
 } from '~/types'
-import { NoStepsFound, CouldNotMakeDir } from '~/errors/customErrors'
+import { NoStepsFound, CouldNotMakeDir } from '~/errors/CustomErrors'
 import { onExit, asyncPipe } from '~/utils'
 import {
   replaceStateDirEnv,

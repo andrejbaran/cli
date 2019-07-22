@@ -1,6 +1,7 @@
 import { ux } from '@cto.ai/sdk'
-import { ErrorTemplate, ErrorResponse } from '../errors/ErrorTemplate'
+
 import { errorSource } from '../constants/errorSource'
+import { ErrorResponse, ErrorTemplate } from '../errors/ErrorTemplate'
 
 const { EXPECTED } = errorSource
 
@@ -237,6 +238,15 @@ export class NoStepsFound extends ErrorTemplate {
   }
 }
 
+export class InvalidStepsFound extends ErrorTemplate {
+  constructor(step: string) {
+    super(`✋ Workflow step: ${step} is invalid!`, undefined, {
+      source: EXPECTED,
+      exit: true,
+    })
+  }
+}
+
 export class ImageNotFoundError extends ErrorTemplate {
   constructor() {
     super(
@@ -264,6 +274,22 @@ export class SignInError extends ErrorTemplate {
 export class SignUpError extends ErrorTemplate {
   constructor(err: ErrorResponse) {
     super("🤔 We couldn't sign you up at this point in time.", err, {
+      source: EXPECTED,
+    })
+  }
+}
+
+export class ImageTagError extends ErrorTemplate {
+  constructor(err: ErrorResponse) {
+    super('🤔 Could not tag image.', err, {
+      source: EXPECTED,
+    })
+  }
+}
+
+export class ImagePushError extends ErrorTemplate {
+  constructor(err: ErrorResponse) {
+    super('🤔 Could not tag image.', err, {
       source: EXPECTED,
     })
   }

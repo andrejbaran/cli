@@ -1,7 +1,7 @@
-import { FeathersClient } from '../../src/services/feathers'
-import { formImageName, getOps, removeImage } from '../../src/commands/cleanup'
+import { FeathersClient } from '~/services/Feathers'
+import { formImageName, getOps } from './../../src/commands/cleanup'
 
-jest.mock('../../src/services/feathers')
+jest.mock('./../../src/services/Feathers')
 
 describe('cleanup', () => {
   const opName = 'test-op'

@@ -9,7 +9,7 @@ import {
   AnalyticsError,
   CopyTemplateFilesError,
   CouldNotInitializeOp,
-} from '~/errors/customErrors'
+} from '~/errors/CustomErrors'
 import { WORKFLOW, OP, OpTypes } from '~/constants/opConfig'
 import { classProperty } from '@babel/types'
 

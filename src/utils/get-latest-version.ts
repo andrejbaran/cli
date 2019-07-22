@@ -9,7 +9,7 @@
  */
 
 import axios from 'axios'
-import { CouldNotGetLatestVersion } from '../errors/customErrors'
+import { CouldNotGetLatestVersion } from '../errors/CustomErrors'
 
 export default async function getLatestVersion(): Promise<string | undefined> {
   try {

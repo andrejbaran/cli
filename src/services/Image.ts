@@ -1,17 +1,17 @@
 import { ux } from '@cto.ai/sdk'
-import Docker, { AuthConfig } from 'dockerode'
 import Debug from 'debug'
-import through from 'through2'
+import Docker, { AuthConfig } from 'dockerode'
 import json from 'JSONStream'
+import through from 'through2'
 
-import { Op, Config } from '~/types'
-import { ReadFileError, DockerBuildImageError } from '~/errors/customErrors'
+import { Op } from '~/types'
 import getDocker from '~/utils/get-docker'
+import { DockerBuildImageError, ReadFileError } from '~/errors/CustomErrors'
 const debug = Debug('ops:ImageService')
 
 export class ImageService {
-  log = console.log
-  checkLocalImage = async (opImageUrl: string) => {
+  public log = console.log
+  public checkLocalImage = async (opImageUrl: string) => {
     const docker = await getDocker(console, 'ImageService')
 
     const list: Docker.ImageInfo[] = await docker.listImages()
@@ -20,17 +20,24 @@ export class ImageService {
       .map(this.imageFilterPredicate(opImageUrl))
       .find((repoTag: string) => !!repoTag)
   }
-  imageFilterPredicate = (repo: string) => ({ RepoTags }: Docker.ImageInfo) => {
-    if (!RepoTags) return
+
+  public imageFilterPredicate = (repo: string) => ({
+    RepoTags,
+  }: Docker.ImageInfo) => {
+    if (!RepoTags) {
+      return
+    }
     return RepoTags.find((repoTag: string) => repoTag.includes(repo))
   }
 
-  pull = async (op: Op, authconfig: AuthConfig): Promise<void> => {
+  public pull = async (op: Op, authconfig: AuthConfig): Promise<void> => {
     this.log(`🔋 Pulling ${ux.colors.dim(op.name)} from registry...\n`)
     const docker = await getDocker(console, 'ImageServicePull')
     const stream = await docker.pull(op.image || '', { authconfig })
 
-    if (!stream) throw new Error('No stream')
+    if (!stream) {
+      throw new Error('No stream')
+    }
 
     const parser = await this.setParser(op, this.getProgressBarText)
     await new Promise(this.updateStatusBar(stream, parser))
@@ -40,7 +47,7 @@ export class ImageService {
     this.log(`\n🙌 Saved ${msg} locally! \n`)
   }
 
-  setParser = (
+  public setParser = (
     op: Op,
     getFn: (status: string, op: Op) => { speed: string },
   ) => {
@@ -58,8 +65,12 @@ export class ImageService {
       const progress = p && p.current ? (p.current / p.total) * 100 : 0
       const { speed } = getFn(status, op)
 
-      if (id) layers[id] = id
-      if (speed) bar.update(progress, { speed })
+      if (id) {
+        layers[id] = id
+      }
+      if (speed) {
+        bar.update(progress, { speed })
+      }
 
       callback()
     })
@@ -69,7 +80,7 @@ export class ImageService {
     return { parser, bar }
   }
 
-  getProgressBarText = (status: string, { name }: Op) => {
+  public getProgressBarText = (status: string, { name }: Op) => {
     const mapping = {
       [`Pulling from ${name}`]: `✅ Pulling from ${name}...`,
       'Already exists': '✅ Already exists!',
@@ -83,10 +94,10 @@ export class ImageService {
     return { speed: mapping[status] }
   }
 
-  updateStatusBar = (stream: NodeJS.ReadWriteStream, { parser, bar }) => async (
-    resolve: (data: any) => void,
-    reject: (err: Error) => void,
-  ) => {
+  public updateStatusBar = (
+    stream: NodeJS.ReadWriteStream,
+    { parser, bar },
+  ) => async (resolve: (data: any) => void, reject: (err: Error) => void) => {
     const allData: any[] = []
     const size = 100
 
@@ -106,10 +117,10 @@ export class ImageService {
       })
   }
 
-  build = async (tag: string, opPath: string, op: Op) => {
+  public build = async (tag: string, opPath: string, op: Op) => {
     const all: any[] = []
     const log = this.log
-    let parser = through.obj(function(
+    const parser = through.obj(function(
       this: any,
       chunk: any,
       _enc: any,

@@ -6,7 +6,7 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-import { FeathersClient } from './feathers'
+import { FeathersClient } from './Feathers'
 
 export class MockBadApiService extends FeathersClient {
   async get(): Promise<any> {

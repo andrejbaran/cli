@@ -1,10 +1,12 @@
 import { Output } from '@oclif/parser/lib'
 import Docker from 'dockerode'
 import Command, { flags } from '../base'
-import { ImageNotFoundError } from '../errors/customErrors'
+import { ImageNotFoundError } from '../errors/CustomErrors'
 import { OPS_REGISTRY_HOST } from '../constants/env'
+
 import { OpsFindResponse } from '../types'
-import { FeathersClient } from '../services/feathers'
+import { FeathersClient } from '../services/Feathers'
+
 import getDocker from '~/utils/get-docker'
 
 // get ops matching the provided name

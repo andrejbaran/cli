@@ -16,7 +16,7 @@ import {
   WorkflowsFindResponse,
 } from '../types'
 import { asyncPipe } from '../utils/asyncPipe'
-import { AnalyticsError, APIError } from '../errors/customErrors'
+import { AnalyticsError, APIError } from '../errors/CustomErrors'
 import { OP_FILE, PUBLIC, PRIVATE, LOCAL } from '../constants/opConfig'
 
 interface SearchInputs {

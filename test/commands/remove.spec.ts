@@ -1,9 +1,9 @@
 import * as Config from '@oclif/config'
 import Remove, { RemoveInputs } from '~/commands/remove'
-import { FeathersClient } from '~/services/feathers'
-import { Op, Workflow } from '~/types'
 import { OP, WORKFLOW } from '~/constants/opConfig'
-import { APIError, NoResultsFoundForDeletion } from '~/errors/customErrors'
+import { APIError, NoResultsFoundForDeletion } from '~/errors/CustomErrors'
+import { FeathersClient } from '~/services/Feathers'
+import { Op, Workflow } from '~/types'
 import { createMockOp } from '../mocks'
 
 let cmd: Remove
@@ -13,7 +13,6 @@ beforeEach(async () => {
 })
 describe('getApiOpsOrWorkflows', () => {
   test('should successfully retrieve ops from the api', async () => {
-    //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
     mockFeathersService.find = jest.fn()
     mockFeathersService.find.mockReturnValue({ data: <Op>{} })

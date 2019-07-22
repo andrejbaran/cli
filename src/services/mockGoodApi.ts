@@ -6,8 +6,8 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-import { FeathersClient } from './feathers'
 import { fakeToken } from '../constants/test'
+import { FeathersClient } from './Feathers'
 
 export class MockGoodApiService extends FeathersClient {
   async get(): Promise<any> {

@@ -17,7 +17,7 @@ import {
   APIError,
   AnalyticsError,
   PermissionsError,
-} from '../../src/errors/customErrors'
+} from '~/errors/CustomErrors'
 import { errorSource } from '../../src/constants/errorSource'
 
 const message = 'I am a javascript Error object message'

@@ -6,7 +6,7 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-import { UndefinedParameter, MandatoryParameter } from '../errors/customErrors'
+import { UndefinedParameter, MandatoryParameter } from '../errors/CustomErrors'
 
 export const handleUndefined = (undefinedParam: string) => {
   throw new UndefinedParameter(undefinedParam)

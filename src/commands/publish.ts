@@ -1,34 +1,33 @@
+import { ux } from '@cto.ai/sdk'
+import Docker from 'dockerode'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
-import { ux } from '@cto.ai/sdk'
-import Docker from 'dockerode'
-import { asyncPipe } from '~/utils/asyncPipe'
 import Command, { flags } from '../base'
 import { OPS_REGISTRY_HOST } from '../constants/env'
-import { OP_FILE } from '../constants/opConfig'
+import { OP, OP_FILE, WORKFLOW } from '../constants/opConfig'
 import {
-  Container,
-  Op,
-  Workflow,
-  RegistryAuth,
-  OpsYml,
-  SourceResult,
-} from '../types'
-import {
-  CouldNotCreateOp,
   CouldNotCreateWorkflow,
-  DockerPublishNoImageFound,
   FileNotFoundError,
   InvalidInputCharacter,
+  InvalidStepsFound,
   NoOpsFound,
   NoWorkflowsFound,
-} from '../errors/customErrors'
-import { WORKFLOW, OP } from '~/constants/opConfig'
+} from '../errors/CustomErrors'
+import {
+  Config,
+  Container,
+  Op,
+  OpsYml,
+  RegistryAuth,
+  SourceResult,
+  Workflow,
+} from '../types'
+import { asyncPipe } from '../utils/asyncPipe'
+import getDocker from '../utils/get-docker'
 import { isValidOpName } from '../utils/validate'
-import getDocker from '~/utils/get-docker'
 
-interface PublishInputs {
+export interface PublishInputs {
   opPath: string
   docker: Docker
   opsAndWorkflows: string
@@ -39,13 +38,13 @@ interface PublishInputs {
 }
 
 export default class Publish extends Command {
-  static description = 'Publish an op to a team.'
+  public static description = 'Publish an op to a team.'
 
-  static flags = {
+  public static flags = {
     help: flags.help({ char: 'h' }),
   }
 
-  static args = [
+  public static args = [
     {
       name: 'path',
       description: 'Path to the op you want to publish.',
@@ -53,19 +52,21 @@ export default class Publish extends Command {
     },
   ]
 
-  docker: Docker | undefined
+  public docker: Docker | undefined
 
-  resolvePath = async (opPath: string) => {
+  public resolvePath = async (opPath: string) => {
     return path.resolve(process.cwd(), opPath)
   }
 
-  checkDocker = async (opPath: string) => {
+  public checkDocker = async (opPath: string) => {
     const docker = await getDocker(this, 'publish')
-    if (!docker) throw new Error('No docker')
+    if (!docker) {
+      throw new Error('No docker')
+    }
     return { opPath, docker }
   }
 
-  determineQuestions = async (inputs: PublishInputs) => {
+  public determineQuestions = async (inputs: PublishInputs) => {
     const { opsAndWorkflows } = await ux.prompt<{
       opsAndWorkflows: SourceResult
     }>({
@@ -84,7 +85,7 @@ export default class Publish extends Command {
     return { ...inputs, opsAndWorkflows }
   }
 
-  getOpsAndWorkFlows = async ({
+  public getOpsAndWorkFlows = async ({
     opPath,
     opsAndWorkflows,
     docker,
@@ -96,20 +97,20 @@ export default class Publish extends Command {
         throw new FileNotFoundError(err, opPath, OP_FILE)
       })
 
-    let { ops, version, workflows }: OpsYml = manifest && yaml.parse(manifest)
-    if (!ops && (opsAndWorkflows == OP || opsAndWorkflows == 'Both')) {
+    const { ops, version, workflows }: OpsYml = manifest && yaml.parse(manifest)
+    if (!ops && (opsAndWorkflows === OP || opsAndWorkflows === 'Both')) {
       throw new NoOpsFound()
     }
     if (
       !workflows &&
-      (opsAndWorkflows == WORKFLOW || opsAndWorkflows == 'Both')
+      (opsAndWorkflows === WORKFLOW || opsAndWorkflows === 'Both')
     ) {
       throw new NoWorkflowsFound()
     }
     return { ops, workflows, docker, version, opsAndWorkflows }
   }
 
-  selectOpsAndWorkFlows = async ({
+  public selectOpsAndWorkFlows = async ({
     ops,
     workflows,
     version,
@@ -130,8 +131,10 @@ export default class Publish extends Command {
     return { ops, workflows, version, docker, opsAndWorkflows }
   }
 
-  selectOps = async (ops: Op[]) => {
-    if (ops.length <= 1) return ops
+  public selectOps = async (ops: Op[]) => {
+    if (ops.length <= 1) {
+      return ops
+    }
     const answers = await ux.prompt<Container<Op[]>>({
       type: 'checkbox',
       name: 'ops',
@@ -149,8 +152,10 @@ export default class Publish extends Command {
     return answers.ops
   }
 
-  selectWorkflows = async (workflows: Workflow[]) => {
-    if (workflows.length <= 1) return workflows
+  public selectWorkflows = async (workflows: Workflow[]) => {
+    if (workflows.length <= 1) {
+      return workflows
+    }
     const answers = await ux.prompt<Container<Workflow[]>>({
       type: 'checkbox',
       name: 'workflows',
@@ -168,7 +173,7 @@ export default class Publish extends Command {
     return answers.workflows
   }
 
-  checkRegistryAuth = async (inputs: PublishInputs) => {
+  public checkRegistryAuth = async (inputs: PublishInputs) => {
     const registryAuth: RegistryAuth | undefined = await this.getRegistryAuth(
       this.accessToken,
       this.team.name,
@@ -179,7 +184,7 @@ export default class Publish extends Command {
     return { ...inputs, registryAuth }
   }
 
-  publishOpsAndWorkflows = async (inputs: PublishInputs) => {
+  public publishOpsAndWorkflows = async (inputs: PublishInputs) => {
     switch (inputs.opsAndWorkflows) {
       case OP:
         await this.opsPublishLoop(inputs)
@@ -193,61 +198,92 @@ export default class Publish extends Command {
     }
   }
 
-  opsPublishLoop = async ({
+  public opsPublishLoop = async ({
     ops,
     registryAuth,
     docker,
     version,
   }: PublishInputs) => {
-    for (let op of ops) {
-      if (!isValidOpName(op)) throw new InvalidInputCharacter('Op Name')
+    for (const op of ops) {
+      if (!isValidOpName(op)) {
+        throw new InvalidInputCharacter('Op Name')
+      }
 
-      await this.checkLocalImage(op, docker)
-      const { data: apiOp }: { data: Op } = await this.publishOp(op, version)
+      await this.imageService.checkLocalImage(
+        `${OPS_REGISTRY_HOST}/${this.team.name}/${op.name}:latest`,
+      )
 
-      await this.config.runHook('publish', {
+      const {
+        data: apiOp,
+      }: { data: Op } = await this.publishService.publishOpToAPI(
+        op,
+        version,
+        this.team.id,
+        this.accessToken,
+        this.api,
+      )
+
+      await this.publishService.publishOpToRegistry(
         apiOp,
         registryAuth,
-      })
+        this.team.name,
+      )
+
       this.sendAnalytics('op', apiOp)
     }
   }
 
-  checkLocalImage = async (op: Op, docker: Docker) => {
-    const list: Docker.ImageInfo[] = await docker.listImages()
-    const repo = `${OPS_REGISTRY_HOST}/${this.team.name}/${op.name}:latest`
+  public workflowsPublishLoop = async ({
+    workflows,
+    version,
+  }: PublishInputs) => {
+    for (const workflow of workflows) {
+      if (workflow.remote) {
+        const newSteps: string[] = []
+        for (const step of workflow.steps) {
+          let newStep = ''
 
-    const localImage = list
-      .map(this.imageFilterPredicate(repo))
-      .find((repoTag: string) => !!repoTag)
-    if (!localImage) {
-      throw new DockerPublishNoImageFound(op.name, this.team.name)
-    }
-  }
-  imageFilterPredicate = (repo: string) => ({ RepoTags }: Docker.ImageInfo) => {
-    if (!RepoTags) return
-    return RepoTags.find((repoTag: string) => repoTag.includes(repo))
-  }
+          if (await this.buildStepService.isGlueCode(step)) {
+            const registryAuth = await this.getRegistryAuth(
+              this.accessToken,
+              this.team.name,
+            )
+            if (registryAuth === undefined) {
+              throw new InvalidStepsFound(newStep) // TODO: incorrect error message
+            }
 
-  publishOp = async (op: Op, version: string) => {
-    try {
-      return this.api.create(
-        'ops',
-        { ...op, version, teamID: this.team.id },
-        {
-          headers: {
-            Authorization: this.accessToken,
-          },
-        },
-      )
-    } catch (err) {
-      this.debug('%O', err)
-      throw new CouldNotCreateOp(err.message)
-    }
-  }
+            const opPath = path.resolve(
+              __dirname,
+              './../templates/workflowsteps/js/',
+            )
 
-  workflowsPublishLoop = async ({ workflows, version }: PublishInputs) => {
-    for (let workflow of workflows) {
+            newStep = await this.buildStepService.buildAndPublishGlueCode(
+              step,
+              this.team.id,
+              this.team.name,
+              this.accessToken,
+              opPath,
+              this.user,
+              this.publishService,
+              this.opService,
+              this.api,
+              registryAuth,
+              this.config,
+              this.analytics,
+            )
+          }
+
+          if (!this.buildStepService.isOpRun(newStep)) {
+            this.debug('InvalidStepsFound - Step:', newStep)
+            throw new InvalidStepsFound(newStep)
+          }
+
+          newSteps.push(newStep)
+        }
+
+        workflow.steps = newSteps
+      }
+
       try {
         const { data: apiWorkflow }: { data: Op } = await this.api.create(
           'workflows',
@@ -258,12 +294,13 @@ export default class Publish extends Command {
             },
           },
         )
+
         this.log(
           `\n🙌 ${ux.colors.callOutCyan(
             apiWorkflow.name,
           )} has been published! \n`,
         )
-        this.sendAnalytics('workflow', apiWorkflow)
+        // this.sendAnalytics('workflow', apiWorkflow)
       } catch (err) {
         this.debug('%O', err)
         throw new CouldNotCreateWorkflow(err.message)
@@ -271,7 +308,10 @@ export default class Publish extends Command {
     }
   }
 
-  sendAnalytics = async (publishType: string, opOrWorkflow: Op | Workflow) => {
+  public sendAnalytics = async (
+    publishType: string,
+    opOrWorkflow: Op | Workflow,
+  ) => {
     this.analytics.track({
       userId: this.user.email,
       event: 'Ops CLI Publish',
@@ -287,7 +327,7 @@ export default class Publish extends Command {
     })
   }
 
-  async run() {
+  public async run() {
     try {
       this.isLoggedIn()
       const { args } = this.parse(Publish)

@@ -1,17 +1,17 @@
 import * as Config from '@oclif/config'
 import * as path from 'path'
 import Run, { RunInputs } from '~/commands/run'
-import { FeathersClient } from '~/services/feathers'
+import { FeathersClient } from '~/services/Feathers'
 import { WorkflowService } from '~/services/Workflow'
 import { OpService } from '~/services/Op'
-import { Op, Workflow } from '~/types'
 import { OPS_REGISTRY_HOST } from '~/constants/env'
-import { APIError } from '~/errors/customErrors'
+import { APIError } from '~/errors/CustomErrors'
 import { createMockOp, createMockWorkflow } from '../mocks'
 
 let cmd: Run
 const nameOrPath = './src/templates/shared/'
 let config
+const apiError = new APIError('error')
 beforeEach(async () => {
   config = await Config.load()
 })
@@ -125,7 +125,16 @@ describe('executeOpOrWorkflowService', () => {
       opsAndWorkflows: [mockWorkflow],
       opOrWorkflow: mockWorkflow,
     }
-    cmd = new Run([], config, undefined, undefined, mockWorkflowService)
+    cmd = new Run(
+      [],
+      config,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      mockWorkflowService,
+    )
     cmd.executeOpOrWorkflowService(inputs)
     expect(mockWorkflowService.run).toHaveBeenCalledWith(
       mockWorkflow,
@@ -150,7 +159,17 @@ describe('executeOpOrWorkflowService', () => {
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
     }
-    cmd = new Run([], config, undefined, undefined, undefined, mockOpService)
+    cmd = new Run(
+      [],
+      config,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      mockOpService,
+    )
     cmd.executeOpOrWorkflowService(inputs)
     expect(mockOpService.run).toHaveBeenCalledWith(
       mockOp,
@@ -178,7 +197,17 @@ describe('executeOpOrWorkflowService', () => {
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
     }
-    cmd = new Run([], config, undefined, undefined, undefined, mockOpService)
+    cmd = new Run(
+      [],
+      config,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      mockOpService,
+    )
     cmd.executeOpOrWorkflowService(inputs)
     mockOp.image = path.join(
       OPS_REGISTRY_HOST,
@@ -261,7 +290,7 @@ describe('getApiOps', () => {
     }
 
     cmd = new Run([], config, mockFeathersService)
-    await expect(cmd.getApiOps(inputs)).rejects.toThrow(APIError)
+    await expect(cmd.getApiOps(inputs)).rejects.toThrow(apiError)
   })
 })
 
@@ -311,7 +340,7 @@ describe('getApiWorkflows', () => {
     //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
     mockFeathersService.find = jest.fn()
-    mockFeathersService.find.mockRejectedValue(new Error())
+    mockFeathersService.find.mockRejectedValue(apiError)
     const fakeToken = 'FAKE_TOKEN'
     config = {
       accessToken: fakeToken,
@@ -334,6 +363,6 @@ describe('getApiWorkflows', () => {
     }
 
     cmd = new Run([], config, mockFeathersService)
-    await expect(cmd.getApiWorkflows(inputs)).rejects.toThrow(APIError)
+    await expect(cmd.getApiWorkflows(inputs)).rejects.toThrow(apiError)
   })
 })

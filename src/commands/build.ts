@@ -21,11 +21,11 @@ import {
   InvalidInputCharacter,
   MissingRequiredArgument,
   NoOpsFound,
-} from '../errors/customErrors'
+} from '../errors/CustomErrors'
 import { getOpUrl, getOpImageTag } from '../utils/getOpUrl'
 import { OPS_REGISTRY_HOST } from '../constants/env'
 import { OP_FILE } from '../constants/opConfig'
-import { isValidOpName } from '../utils/validate'
+
 import getDocker from '~/utils/get-docker'
 import { thisExpression } from '@babel/types'
 
@@ -84,39 +84,16 @@ export default class Build extends Command {
         ops = answers.ops
       }
 
-      await this.opsBuildLoop(ops, opPath)
+      await this.buildService.opsBuildLoop(
+        ops,
+        opPath,
+        this.team.name,
+        this.config,
+        this.analytics,
+      )
     } catch (err) {
       this.debug('%O', err)
       this.config.runHook('error', { err })
-    }
-  }
-
-  opsBuildLoop = async (ops, opPath) => {
-    for (const op of ops) {
-      if (!isValidOpName(op)) throw new InvalidInputCharacter('Op Name')
-
-      this.log(
-        `🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`,
-      )
-      const opImageTag = getOpImageTag(this.team.name, op.name)
-
-      await this.config.runHook('build', {
-        tag: getOpUrl(OPS_REGISTRY_HOST, opImageTag),
-        opPath,
-        op,
-      })
-
-      this.analytics.track({
-        userId: this.user.email,
-        event: 'Ops CLI Build',
-        properties: {
-          email: this.user.email,
-          username: this.user.username,
-          name: op.name,
-          description: op.description,
-          image: `${OPS_REGISTRY_HOST}/${op.name}`,
-        },
-      })
     }
   }
 }

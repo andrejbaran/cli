@@ -1,7 +1,7 @@
-import Command from '../../base'
 import { ux } from '@cto.ai/sdk'
-import { InviteCodeInvalid } from '../../errors/customErrors'
 import { Question } from '~/types'
+import Command from '../../base'
+import { InviteCodeInvalid } from '../../errors/CustomErrors'
 
 const inviteCodePrompt: Question = {
   type: 'input',
@@ -12,14 +12,14 @@ const inviteCodePrompt: Question = {
 }
 
 export default class TeamJoin extends Command {
-  static description = 'Accept an invite to join a team.'
+  public static description = 'Accept an invite to join a team.'
 
-  startSpinner() {
+  public startSpinner() {
     this.log('')
     ux.spinner.start(`${ux.colors.white('Working on it')}`)
   }
 
-  async run() {
+  public async run() {
     this.isLoggedIn()
     const { inviteCode } = await ux.prompt<{ inviteCode: string }>(
       inviteCodePrompt,
@@ -34,7 +34,9 @@ export default class TeamJoin extends Command {
     })
 
     // On failure
-    if (!res || !res.data) throw new InviteCodeInvalid(null)
+    if (!res || !res.data) {
+      throw new InviteCodeInvalid(null)
+    }
 
     // On success
     const { id, name } = res.data
@@ -67,7 +69,7 @@ export default class TeamJoin extends Command {
     return
   }
 
-  async joinTeam(inviteCode: string) {
+  public async joinTeam(inviteCode: string) {
     return this.api.create(
       'teams/accept',
       { inviteCode },

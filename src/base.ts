@@ -7,8 +7,7 @@
  *
  */
 
-import { ux } from '@cto.ai/sdk'
-import _inquirer from '@cto.ai/inquirer'
+import { ux as UX } from '@cto.ai/sdk'
 
 import Command, { flags } from '@oclif/command'
 import * as OClifConfig from '@oclif/config'
@@ -16,6 +15,7 @@ import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
 import jwt from 'jsonwebtoken'
 import { asyncPipe, _trace } from './utils/asyncPipe'
+import _inquirer from '@cto.ai/inquirer'
 import { handleMandatory, handleUndefined } from './utils/guards'
 
 import {
@@ -40,10 +40,15 @@ import {
   OPS_DEBUG,
 } from './constants/env'
 
-import { FeathersClient } from './services/feathers'
-import { SegmentClient } from './services/segment'
-import { UserUnauthorized, APIError, SignInError } from './errors/customErrors'
+import { FeathersClient } from './services/Feathers'
+import { SegmentClient } from './services/Segment'
+import { UserUnauthorized, APIError, SignInError } from './errors/CustomErrors'
 import { ErrorResponse } from './errors/ErrorTemplate'
+
+import { Publish } from './services/Publish'
+import { BuildSteps } from './services/BuildSteps'
+import { ImageService } from './services/Image'
+
 import { WorkflowService } from './services/Workflow'
 import { OpService } from './services/Op'
 
@@ -53,12 +58,15 @@ abstract class CTOCommand extends Command {
   team!: Team
   state!: { config: Config }
 
-  ux = ux
+  ux = UX
 
   constructor(
     argv: string[],
     config: OClifConfig.IConfig,
     protected api: ApiService = new FeathersClient(),
+    protected publishService = new Publish(),
+    protected buildStepService = new BuildSteps(),
+    protected imageService = new ImageService(),
     protected analytics = new SegmentClient(OPS_SEGMENT_KEY),
     protected workflowService = new WorkflowService(),
     protected opService = new OpService(),
