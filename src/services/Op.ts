@@ -19,6 +19,7 @@ import {
   OPS_REGISTRY_HOST,
   OPS_API_PATH,
   OPS_API_HOST,
+  OPS_SEGMENT_KEY,
 } from '~/constants/env'
 import { CouldNotMakeDir, InvalidInputCharacter } from '~/errors/CustomErrors'
 import { isValidOpName } from '~/utils/validate'
@@ -36,16 +37,10 @@ export class OpService {
     protected registryAuthService = new RegistryAuthService(),
     protected imageService = new ImageService(),
     protected containerService = new ContainerService(),
+    protected analytics = new SegmentClient(OPS_SEGMENT_KEY),
   ) {}
 
-  public opsBuildLoop = async (
-    ops,
-    opPath,
-    teamName: string,
-    user: User,
-    config: IConfig,
-    analytics: SegmentClient,
-  ) => {
+  public opsBuildLoop = async (ops, opPath, teamName: string, user: User) => {
     for (const op of ops) {
       if (!isValidOpName(op)) {
         throw new InvalidInputCharacter('Op Name')
@@ -60,7 +55,7 @@ export class OpService {
         op,
       )
 
-      analytics.track({
+      this.analytics.track({
         userId: user.email,
         event: 'Ops CLI Build',
         properties: {
