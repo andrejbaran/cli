@@ -1,4 +1,4 @@
-import { Op, Workflow } from '~/types'
+import { Op, Workflow, Team } from '~/types'
 
 export const createMockOp = (inputs: Partial<Op>): Op => {
   return Object.assign(
@@ -50,6 +50,16 @@ export const createMockWorkflow = (inputs: Partial<Workflow>): Workflow => {
       id: '',
       createdAt: '',
       updatedAt: '',
+    },
+    inputs,
+  )
+}
+
+export const createMockTeam = (inputs: Partial<Team>): Team => {
+  return Object.assign(
+    {
+      name: '',
+      id: '',
     },
     inputs,
   )

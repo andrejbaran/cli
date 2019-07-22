@@ -1,10 +1,9 @@
 import Command, { flags } from '../base'
 import { ux } from '@cto.ai/sdk'
-import { asyncPipe } from '~/utils/asyncPipe'
+import { asyncPipe } from '~/utils'
 import { OPS_REGISTRY_HOST } from '../constants/env'
-
 import { APIError, NoResultsFoundForDeletion } from '../errors/CustomErrors'
-import { Op, Workflow } from '~/types'
+import { Op, Workflow, User } from '~/types'
 import { WORKFLOW, OP } from '~/constants/opConfig'
 
 export interface RemoveInputs {
@@ -193,17 +192,18 @@ export default class Remove extends Command {
     return inputs
   }
 
-  sendAnalytics = (inputs: RemoveInputs) => {
+  sendAnalytics = (user: User) => (inputs: RemoveInputs) => {
+    const { email, username } = user
     const {
       opOrWorkflow: { id, name, description },
       removeType,
     } = inputs
     this.analytics.track({
-      userId: this.user.email,
+      userId: email,
       event: 'Ops CLI Remove',
       properties: {
-        email: this.user.email,
-        username: this.user.username,
+        email,
+        username,
         type: removeType,
         id,
         name,
@@ -229,6 +229,7 @@ export default class Remove extends Command {
         this.confirmRemove,
         this.removeApiOpOrWorkflow,
         this.logMessage,
+        this.sendAnalytics(this.user),
       )
       await removePipeline(filter)
     } catch (err) {
