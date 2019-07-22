@@ -165,6 +165,12 @@ export class PermissionsError extends ErrorTemplate {
   }
 }
 
+export class InviteSendingInvite extends ErrorTemplate {
+  constructor(err) {
+    super('😞 Uh-oh, the invite failed to send. Please try again.', err)
+  }
+}
+
 export class InviteCodeInvalid extends ErrorTemplate {
   constructor(err) {
     super(

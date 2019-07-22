@@ -7,6 +7,6 @@
  */
 
 export { asyncPipe, _trace } from './asyncPipe'
-export { validChars } from './validate'
+export { validateEmail, validChars } from './validate'
 export { onExit } from './onExit'
 export { getOpImageTag, getOpUrl } from './getOpUrl'

@@ -279,10 +279,10 @@ USAGE
   $ ops team:invite
 
 OPTIONS
-  -h, --help                         show CLI help
+  -h, --help               show CLI help
 
-  -i, --inviteesInput=inviteesInput  A comma-separated string of usernames/emails we want to invite. E.g. ("user1,
-                                     user2@gmail.com, user3@something")
+  -i, --invitees=invitees  A comma-separated string of usernames/emails we want to invite. E.g. ("user1,
+                           user2@gmail.com, user3@something")
 ```
 
 _See code: [src/commands/team/invite.ts](https://github.com/cto.ai/ops/blob/v1.4.23/src/commands/team/invite.ts)_
