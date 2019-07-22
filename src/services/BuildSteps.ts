@@ -38,7 +38,7 @@ export class BuildSteps {
     async function main() {
       sdk.log('${step}')
     }
-    
+
     main()`,
     )
 
@@ -61,11 +61,9 @@ export class BuildSteps {
     const glueCodeClone: Op = JSON.parse(JSON.stringify(glueCodeOp))
     await opService.opsBuildLoop(
       [glueCodeClone],
-      '/Users/stevehiehn/cli/src/templates/workflowsteps/js',
+      path.resolve(__dirname, '../templates//workflowsteps/js'),
       teamName,
       user,
-      config,
-      analytics,
     )
 
     const { data: apiOp } = await publishService.publishOpToAPI(

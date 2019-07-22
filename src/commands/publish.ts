@@ -13,6 +13,7 @@ import {
   InvalidStepsFound,
   NoOpsFound,
   NoWorkflowsFound,
+  DockerPublishNoImageFound,
 } from '../errors/CustomErrors'
 import {
   Config,
@@ -209,9 +210,13 @@ export default class Publish extends Command {
         throw new InvalidInputCharacter('Op Name')
       }
 
-      await this.imageService.checkLocalImage(
+      const localImage = await this.imageService.checkLocalImage(
         `${OPS_REGISTRY_HOST}/${this.team.name}/${op.name}:latest`,
       )
+
+      if (!localImage) {
+        throw new DockerPublishNoImageFound(op.name, this.team.name)
+      }
 
       const {
         data: apiOp,
