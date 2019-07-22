@@ -1,8 +1,8 @@
 import Debug from 'debug'
-import { FeathersClient } from '~/services/feathers'
-import { ApiService, RegistryResponse, RegistryAuth } from '~/types'
 import { OPS_REGISTRY_HOST } from '~/constants/env'
-import { UserUnauthorized } from '~/errors/customErrors'
+import { UserUnauthorized } from '~/errors/CustomErrors'
+import { FeathersClient } from '~/services/Feathers'
+import { ApiService, RegistryAuth, RegistryResponse } from '~/types'
 const debug = Debug('ops:RegistryAuthService')
 
 export class RegistryAuthService {

@@ -18,7 +18,13 @@ import {
   WorkflowsFindQuery,
   WorkflowsFindResponse,
 } from '~/types'
-import { MissingRequiredArgument, APIError } from '~/errors/customErrors'
+
+import {
+  APIError,
+  CouldNotGetRegistryToken,
+  MissingRequiredArgument,
+} from '~/errors/CustomErrors'
+
 import { OP_FILE } from '~/constants/opConfig'
 import { OPS_REGISTRY_HOST } from '~/constants/env'
 import { asyncPipe } from '~/utils'

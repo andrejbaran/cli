@@ -48,14 +48,14 @@ const tokenErr = {
 }
 
 export default class AccountReset extends Command {
-  static description = 'Reset your password.'
+  public static description = 'Reset your password.'
 
-  startSpinner() {
+  public startSpinner() {
     this.log('')
     ux.spinner.start(`${ux.colors.white('Working on it')}`)
   }
 
-  async run() {
+  public async run() {
     const {
       args: [_, token],
     } = commander.parse(process.argv)

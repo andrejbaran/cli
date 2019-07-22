@@ -1,18 +1,18 @@
 import Command, { flags } from '../../base'
-import { InvalidTeamNameFormat } from '../../errors/customErrors'
+import { InvalidTeamNameFormat } from '../../errors/CustomErrors'
 import { validChars } from '../../utils/validate'
 
 import { Question, Team } from '~/types'
 
 export default class TeamCreate extends Command {
-  static description = 'Create your team.'
+  public static description = 'Create your team.'
 
-  static flags = {
+  public static flags = {
     help: flags.help({ char: 'h' }),
     name: flags.string({ char: 'n' }),
   }
 
-  teamNamePrompt: Question = {
+  public teamNamePrompt: Question = {
     type: 'input',
     name: 'teamName',
     message: `\nChoose a display name for your team and share ops ${this.ux.colors.reset.green(
@@ -22,22 +22,26 @@ export default class TeamCreate extends Command {
     validate: this.validateTeamName.bind(this),
   }
 
-  async promptForTeamName(): Promise<string> {
+  public async promptForTeamName(): Promise<string> {
     const { teamName } = await this.ux.prompt<{ teamName: string }>(
       this.teamNamePrompt,
     )
     return teamName
   }
 
-  async guardAgainstInvalidName(name: undefined | string): Promise<void> {
-    if (!name) return
+  public async guardAgainstInvalidName(
+    name: undefined | string,
+  ): Promise<void> {
+    if (!name) {
+      return
+    }
     const isValidName = await this.validateTeamName(name)
     if (!isValidName || typeof isValidName === 'string') {
       throw new InvalidTeamNameFormat(null)
     }
   }
 
-  async run(): Promise<void> {
+  public async run(): Promise<void> {
     try {
       this.isLoggedIn()
       const { flags } = this.parse(TeamCreate)
@@ -81,13 +85,15 @@ export default class TeamCreate extends Command {
     }
   }
 
-  async validateTeamName(input: string): Promise<boolean | string> {
+  public async validateTeamName(input: string): Promise<boolean | string> {
     try {
-      if (!validChars.test(input))
+      if (!validChars.test(input)) {
         return `Invalid team name. May contain only letters (case-sensitive), numbers, dashes (-), and underscores (_).`
+      }
       const unique = await this.validateUniqueField({ username: input })
-      if (!unique)
+      if (!unique) {
         return `😞 Sorry this name has already been taken. Try again with a different name.`
+      }
       return true
     } catch (err) {
       throw new InvalidTeamNameFormat(err)

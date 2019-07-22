@@ -2,8 +2,9 @@ import Command, { flags } from '../base'
 import { ux } from '@cto.ai/sdk'
 import { asyncPipe } from '~/utils/asyncPipe'
 import { OPS_REGISTRY_HOST } from '../constants/env'
-import { APIError, NoResultsFoundForDeletion } from '../errors/customErrors'
-import { Op, Workflow, Question } from '~/types'
+
+import { APIError, NoResultsFoundForDeletion } from '../errors/CustomErrors'
+import { Op, Workflow } from '~/types'
 import { WORKFLOW, OP } from '~/constants/opConfig'
 
 export interface RemoveInputs {
@@ -13,6 +14,7 @@ export interface RemoveInputs {
   opOrWorkflow: Op | Workflow
   confirmRemove: boolean
 }
+
 export default class Remove extends Command {
   static description = 'Remove an op from a team.'
 

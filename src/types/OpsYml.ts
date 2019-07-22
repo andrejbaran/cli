@@ -17,6 +17,7 @@ export interface Op extends BaseFields {
 }
 
 export interface Workflow extends BaseFields {
+  remote: boolean
   steps: string[]
   local?: boolean
 }

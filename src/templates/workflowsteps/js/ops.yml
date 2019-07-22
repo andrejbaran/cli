@@ -1,0 +1,26 @@
+version: "1"
+ops:
+  - name: js
+    description: js
+    run: node /ops/index.js
+    network: host
+    env:
+      - USER=world
+      - OPS_ACCESS_TOKEN
+    src:
+      - Dockerfile
+      - index.js
+      - package.json
+      - .dockerignore
+    mountCwd: false
+    mountHome: false
+    bind:
+      - /tmp:/tmp
+    help:
+      usage: Your first hello-world op
+      arguments:
+        username: Your username
+        email: Your email
+      options:
+        build: Build flag
+        clear: Clears

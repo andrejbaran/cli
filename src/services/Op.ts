@@ -1,12 +1,14 @@
-import { sdk } from '@cto.ai/sdk'
+import { sdk, ux } from '@cto.ai/sdk'
+import { IConfig } from '@oclif/config'
 import Debug from 'debug'
 import Docker from 'dockerode'
 import { v4 as uuid } from 'uuid'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import * as os from 'os'
+import { SegmentClient } from '~/services/Segment'
 
-import { Op, Config, Container } from '~/types'
+import { Op, Config, Container, User } from '~/types'
 import { asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
 import { RunCommandArgs } from '~/commands/run'
 import { ImageService } from '~/services/Image'
@@ -18,7 +20,8 @@ import {
   OPS_API_PATH,
   OPS_API_HOST,
 } from '~/constants/env'
-import { CouldNotMakeDir } from '~/errors/customErrors'
+import { CouldNotMakeDir, InvalidInputCharacter } from '~/errors/CustomErrors'
+import { isValidOpName } from '~/utils/validate'
 const debug = Debug('ops:OpService')
 
 interface OpRunInputs {
@@ -34,6 +37,43 @@ export class OpService {
     protected imageService = new ImageService(),
     protected containerService = new ContainerService(),
   ) {}
+
+  public opsBuildLoop = async (
+    ops,
+    opPath,
+    teamName: string,
+    user: User,
+    config: IConfig,
+    analytics: SegmentClient,
+  ) => {
+    for (const op of ops) {
+      if (!isValidOpName(op)) {
+        throw new InvalidInputCharacter('Op Name')
+      }
+      console.log(
+        `🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`,
+      )
+      const opImageTag = getOpImageTag(teamName, op.name)
+      await this.imageService.build(
+        getOpUrl(OPS_REGISTRY_HOST, opImageTag),
+        opPath,
+        op,
+      )
+
+      analytics.track({
+        userId: user.email,
+        event: 'Ops CLI Build',
+        properties: {
+          email: user.email,
+          username: user.username,
+          name: op.name,
+          description: op.description,
+          image: `${OPS_REGISTRY_HOST}/${op.name}`,
+        },
+      })
+    }
+  }
+
   async run(op: Op, parsedArgs: RunCommandArgs, config: Config): Promise<void> {
     try {
       const opServicePipeline = asyncPipe(

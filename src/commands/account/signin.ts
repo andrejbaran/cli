@@ -10,7 +10,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import Command, { flags } from '../../base'
 import { Question, Config, Container, UserCredentials } from '../../types'
 import { asyncPipe } from '../../utils/asyncPipe'
-import { AnalyticsError } from '../../errors/customErrors'
+import { AnalyticsError } from '../../errors/CustomErrors'
 
 export const signinPrompts: Container<Question> = {
   email: {

@@ -1,7 +1,7 @@
 import { Question, Config, UserCredentials } from '~/types'
 import Command, { flags } from '~/base'
 import { INTERCOM_EMAIL, NODE_ENV } from '~/constants/env'
-import { APIError, SignUpError, AnalyticsError } from '~/errors/customErrors'
+import { APIError, SignUpError, AnalyticsError } from '~/errors/CustomErrors'
 import {
   validChars,
   validateEmail,

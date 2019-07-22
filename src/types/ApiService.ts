@@ -6,6 +6,6 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-import { FeathersClient } from '../services/feathers'
+import { FeathersClient } from '../services/Feathers'
 
 export type ApiService = FeathersClient
