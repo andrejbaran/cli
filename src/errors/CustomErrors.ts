@@ -305,3 +305,25 @@ export class ImagePushError extends ErrorTemplate {
     })
   }
 }
+
+export class AlreadySignedOut extends ErrorTemplate {
+  constructor() {
+    super(
+      `\n🤷‍♂️ You are already signed out. Type \'${ux.colors.actionBlue(
+        'ops account:signin',
+      )}\' to sign back into your account.`,
+      undefined,
+      {
+        source: EXPECTED,
+      },
+    )
+  }
+}
+
+export class SignOutError extends ErrorTemplate {
+  constructor(err) {
+    super("🤔 We couldn't sign out up at this point in time.", err, {
+      source: EXPECTED,
+    })
+  }
+}

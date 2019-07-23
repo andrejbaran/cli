@@ -1,56 +1,80 @@
 import { ux } from '@cto.ai/sdk'
-import Command, { flags } from '../../base'
+import Command, { flags } from '~/base'
+import { AlreadySignedOut, SignOutError } from '~/errors/CustomErrors'
+import { asyncPipe } from '~/utils'
 
 export default class AccountSignout extends Command {
-  public static description = 'Log out from your account.'
+  static description = 'Log out from your account.'
 
-  public static flags = {
+  static flags = {
     help: flags.help({ char: 'h' }),
   }
 
-  public async run() {
-    try {
-      if (!this.accessToken) {
-        return this.log(
-          `\n🤷‍♂️ You are already signed out. Type \'${ux.colors.actionBlue(
-            'ops account:signin',
-          )}\' to sign back into your account.`,
-        )
-      }
+  checkForAccessToken = async () => {
+    if (!this.accessToken) {
+      throw new AlreadySignedOut()
+    }
+  }
 
-      this.log('')
-      ux.spinner.start(
-        `${ux.colors.white('Signing out of ')}${ux.colors.actionBlue(
-          'CTO.ai ops',
-        )}`,
+  startSpinner = () => {
+    this.log('')
+    ux.spinner.start(
+      `${ux.colors.white('Signing out of ')}${ux.colors.actionBlue(
+        'CTO.ai ops',
+      )}`,
+    )
+  }
+
+  signUserOut = async () => {
+    try {
+      await this.clearConfig(this)
+      const { accessToken } = await this.readConfig()
+      if (accessToken) {
+        throw new SignOutError(null)
+      }
+    } catch (err) {
+      throw new SignOutError(err)
+    }
+  }
+
+  stopSpinner = () => {
+    ux.spinner.stop(`${ux.colors.green('Done!')}`)
+    this.log('')
+  }
+
+  logMessage = () => {
+    this.log(
+      `${ux.colors.green('✓')} Signed out! Type \'ops ${ux.colors.actionBlue(
+        'account:signin',
+      )}\' to sign back into your account.\n`,
+    )
+  }
+
+  sendAnalytics = () => {
+    this.analytics.track({
+      userId: this.user.email,
+      event: 'Ops CLI Signout',
+      properties: {
+        email: this.user.email,
+        username: this.user.username,
+      },
+    })
+  }
+
+  async run() {
+    try {
+      const signoutPipeline = asyncPipe(
+        this.checkForAccessToken,
+        this.startSpinner,
+        this.signUserOut,
+        this.stopSpinner,
+        this.logMessage,
+        this.sendAnalytics,
       )
 
-      await this.clearConfig(this)
-
-      ux.spinner.stop(`${ux.colors.green('Done!')}`)
-      this.log('')
-
-      const { accessToken } = await this.readConfig()
-
-      if (!accessToken) {
-        this.log(
-          `${ux.colors.green(
-            '✓',
-          )} Signed out! Type \'ops ${ux.colors.actionBlue(
-            'account:signin',
-          )}\' to sign back into your account.\n`,
-        )
-      }
-
-      this.analytics.track({
-        userId: this.user.email,
-        event: 'Ops CLI Signout',
-        properties: {
-          email: this.user.email,
-          username: this.user.username,
-        },
-      })
+      await signoutPipeline()
     } catch (err) {
+      ux.spinner.stop(`${ux.colors.errorRed('Failed!')}`)
       this.debug('%O', err)
       this.config.runHook('error', { err })
     }
