@@ -237,7 +237,7 @@ export default class Remove extends Command {
       await removePipeline(filter)
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err })
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 }

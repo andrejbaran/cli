@@ -80,7 +80,7 @@ export default class AccountSignout extends Command {
     } catch (err) {
       ux.spinner.stop(`${ux.colors.errorRed('Failed!')}`)
       this.debug('%O', err)
-      this.config.runHook('error', { err })
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 }

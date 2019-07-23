@@ -130,7 +130,7 @@ export default class TeamCreate extends Command {
       await createPipeline(name)
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err })
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 }

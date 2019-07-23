@@ -26,7 +26,7 @@ export default class Update extends Command {
       this._trackAnalytics(latestVersion)
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err })
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 

@@ -11,6 +11,8 @@
 
 import { ErrorTemplate } from '../errors/ErrorTemplate'
 import { errorSource } from '../constants/errorSource'
+import { FeathersClient } from '~/services/Feathers'
+import { Config } from '~/types'
 
 const { UNEXPECTED } = errorSource
 
@@ -23,8 +25,30 @@ const { UNEXPECTED } = errorSource
  */
 export default async function error(
   this: any,
-  options: { err: ErrorTemplate },
+  options: { err: ErrorTemplate; accessToken?: string },
 ) {
+  const { accessToken } = options
+  if (accessToken) {
+    const api = new FeathersClient()
+    await api
+      .create(
+        '/log/event',
+        { metadata: options.err },
+        {
+          headers: {
+            Authorization: accessToken,
+          },
+        },
+      )
+      .catch(err => {
+        this.debug('%O', err)
+        this.log(
+          `\n 😰 We've encountered a problem. Please try again or contact support@cto.ai and we'll do our best to help. \n`,
+        )
+        process.exit(1)
+      })
+  }
+
   const { extra, message } = options.err
 
   if (extra && extra.source === UNEXPECTED) {
