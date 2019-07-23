@@ -51,14 +51,18 @@ export default class AccountSignout extends Command {
   }
 
   sendAnalytics = () => {
-    this.analytics.track({
-      userId: this.user.email,
-      event: 'Ops CLI Signout',
-      properties: {
-        email: this.user.email,
-        username: this.user.username,
+    this.analytics.track(
+      {
+        userId: this.user.email,
+        teamId: this.team.id,
+        event: 'Ops CLI Signout',
+        properties: {
+          email: this.user.email,
+          username: this.user.username,
+        },
       },
-    })
+      this.accessToken,
+    )
   }
 
   async run() {

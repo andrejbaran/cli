@@ -27,10 +27,14 @@ export default class AccountSupport extends Command {
     this.log("🖖 We'll get back to you as soon as we possibly can.")
     this.log('')
 
-    this.analytics.track({
-      userId: this.user.email,
-      event: 'Ops CLI Support',
-      properties: {},
-    })
+    this.analytics.track(
+      {
+        userId: this.user.email,
+        teamId: this.team.id,
+        event: 'Ops CLI Support',
+        properties: {},
+      },
+      this.accessToken,
+    )
   }
 }

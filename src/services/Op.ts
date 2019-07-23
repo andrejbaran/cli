@@ -6,7 +6,7 @@ import { v4 as uuid } from 'uuid'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import * as os from 'os'
-import { SegmentClient } from '~/services/Segment'
+import { AnalyticsService } from '~/services/Analytics'
 
 import { Op, Config, Container, User } from '~/types'
 import { asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
@@ -37,10 +37,15 @@ export class OpService {
     protected registryAuthService = new RegistryAuthService(),
     protected imageService = new ImageService(),
     protected containerService = new ContainerService(),
-    protected analytics = new SegmentClient(OPS_SEGMENT_KEY),
+    protected analytics = new AnalyticsService(OPS_SEGMENT_KEY),
   ) {}
 
-  public opsBuildLoop = async (ops, opPath, teamName: string, user: User) => {
+  public opsBuildLoop = async (ops: Op[], opPath: string, config: Config) => {
+    const {
+      team: { name: teamName },
+      user,
+      accessToken,
+    } = config
     for (const op of ops) {
       if (!isValidOpName(op)) {
         throw new InvalidInputCharacter('Op Name')
@@ -55,17 +60,20 @@ export class OpService {
         op,
       )
 
-      this.analytics.track({
-        userId: user.email,
-        event: 'Ops CLI Build',
-        properties: {
-          email: user.email,
-          username: user.username,
-          name: op.name,
-          description: op.description,
-          image: `${OPS_REGISTRY_HOST}/${op.name}`,
+      this.analytics.track(
+        {
+          userId: user.email,
+          event: 'Ops CLI Build',
+          properties: {
+            email: user.email,
+            username: user.username,
+            name: op.name,
+            description: op.description,
+            image: `${OPS_REGISTRY_HOST}/${op.name}`,
+          },
         },
-      })
+        accessToken,
+      )
     }
   }
 

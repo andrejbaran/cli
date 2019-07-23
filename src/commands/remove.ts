@@ -198,19 +198,22 @@ export default class Remove extends Command {
       opOrWorkflow: { id, name, description },
       removeType,
     } = inputs
-    this.analytics.track({
-      userId: email,
-      event: 'Ops CLI Remove',
-      properties: {
-        email,
-        username,
-        type: removeType,
-        id,
-        name,
-        description,
-        image: `${OPS_REGISTRY_HOST}/${name}`,
+    this.analytics.track(
+      {
+        userId: email,
+        event: 'Ops CLI Remove',
+        properties: {
+          email,
+          username,
+          type: removeType,
+          id,
+          name,
+          description,
+          image: `${OPS_REGISTRY_HOST}/${name}`,
+        },
       },
-    })
+      this.accessToken,
+    )
   }
 
   async run() {

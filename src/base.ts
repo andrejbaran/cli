@@ -41,7 +41,7 @@ import {
 } from './constants/env'
 
 import { FeathersClient } from './services/Feathers'
-import { SegmentClient } from './services/Segment'
+import { AnalyticsService } from './services/Analytics'
 import { UserUnauthorized, APIError, SignInError } from './errors/CustomErrors'
 import { ErrorResponse } from './errors/ErrorTemplate'
 
@@ -67,7 +67,7 @@ abstract class CTOCommand extends Command {
     protected publishService = new Publish(),
     protected buildStepService = new BuildSteps(),
     protected imageService = new ImageService(),
-    protected analytics = new SegmentClient(OPS_SEGMENT_KEY),
+    protected analytics = new AnalyticsService(OPS_SEGMENT_KEY),
     protected workflowService = new WorkflowService(),
     protected opService = new OpService(),
   ) {

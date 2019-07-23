@@ -1,6 +1,6 @@
 import { ux } from '@cto.ai/sdk'
 import Command, { flags } from '~/base'
-import { User, Team } from '~/types'
+import { Config, Team } from '~/types'
 import { asyncPipe } from '~/utils'
 import { ReadConfigError, APIError } from '~/errors/CustomErrors'
 
@@ -101,19 +101,27 @@ export default class TeamSwitch extends Command {
     return inputs
   }
 
-  sendAnalytics = (user: User) => (inputs: SwitchInputs) => {
-    const { email, username } = user
-    const { activeTeam, teamSelected } = inputs
-    this.analytics.track({
-      userId: email,
-      event: 'Ops CLI Team:Switch',
-      properties: {
-        email,
-        username,
-        oldTeam: activeTeam,
-        newTeam: teamSelected,
+  sendAnalytics = (config: Config) => (inputs: SwitchInputs) => {
+    const {
+      user: { email, username },
+    } = config
+    const {
+      activeTeam: { id: oldTeamId },
+      teamSelected: { id: newTeamId },
+    } = inputs
+    this.analytics.track(
+      {
+        userId: email,
+        event: 'Ops CLI Team:Switch',
+        properties: {
+          email,
+          username,
+          oldTeamId,
+          newTeamId,
+        },
       },
-    })
+      this.accessToken,
+    )
   }
 
   async run() {
@@ -126,7 +134,7 @@ export default class TeamSwitch extends Command {
         this.setTeamsDisplayName,
         this.getSelectedTeamPrompt,
         this.updateActiveTeam,
-        this.sendAnalytics(this.user),
+        this.sendAnalytics(this.state.config),
       )
       await switchPipeline()
     } catch (err) {

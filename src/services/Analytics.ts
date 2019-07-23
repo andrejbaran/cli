@@ -7,7 +7,12 @@
  */
 
 import Analytics from 'analytics-node'
+import Debug from 'debug'
 import { OPS_SEGMENT_KEY, NODE_ENV, OPS_DEBUG } from '../constants/env'
+import { FeathersClient } from './Feathers'
+import { ApiService } from '~/types'
+import { APIError } from '~/errors/CustomErrors'
+const debug = Debug('ops:AnalyticsService')
 
 interface SegmentIdentify {
   userId?: string | number
@@ -18,8 +23,9 @@ interface SegmentIdentify {
   integrations?: any
 }
 
-interface SegmentTrack {
+interface AnalyticsTrack {
   userId?: string | number
+  teamId?: string | number
   anonymousId?: string | number
   event: string
   properties?: any
@@ -28,11 +34,13 @@ interface SegmentTrack {
   integrations?: any
 }
 
-export class SegmentClient {
+export class AnalyticsService {
   segmentClient: Analytics
+  api: ApiService
 
   constructor(writeKey: string = OPS_SEGMENT_KEY) {
     this.segmentClient = new Analytics(writeKey)
+    this.api = new FeathersClient()
   }
 
   /* The identify method lets you tie a user to their actions and record traits about them. */
@@ -44,9 +52,25 @@ export class SegmentClient {
   }
 
   /* The track method lets you record the actions your users perform. */
-  track(payload: SegmentTrack) {
+  track(payload: AnalyticsTrack, accessToken?: string) {
     if (OPS_DEBUG) {
       return null
+    }
+    if (accessToken) {
+      this.api
+        .create(
+          '/log/event',
+          { metadata: payload, tags: ['track'] },
+          {
+            headers: {
+              Authorization: accessToken,
+            },
+          },
+        )
+        .catch(err => {
+          debug('%O', err)
+          throw new APIError(err)
+        })
     }
     return this.segmentClient.track(payload)
   }

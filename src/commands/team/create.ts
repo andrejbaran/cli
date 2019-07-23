@@ -80,14 +80,20 @@ export default class TeamCreate extends Command {
   }
 
   sendAnalytics = (userId: string) => (inputs: CreateInputs): void => {
-    const { team } = inputs
-    this.analytics.track({
-      event: 'Ops Team Create',
-      userId,
-      properties: {
-        teamName: team.name,
+    const {
+      team: { id: teamId, name },
+    } = inputs
+    this.analytics.track(
+      {
+        event: 'Ops Team Create',
+        userId,
+        teamId,
+        properties: {
+          teamName: name,
+        },
       },
-    })
+      this.accessToken,
+    )
   }
 
   validateTeamName = async (name: string): Promise<boolean | string> => {

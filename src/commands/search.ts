@@ -25,6 +25,7 @@ interface SearchInputs {
   apiOps: Op[]
   apiWorkflows: Workflow[]
   localWorkflows: Workflow[]
+  selectedOpOrWorkflow: Op | Workflow
 }
 
 export default class Search extends Command {
@@ -228,10 +229,14 @@ export default class Search extends Command {
     return inputs
   }
 
-  selectOpOrWorkflowPrompt = async (inputs: SearchInputs) => {
-    return this.ux.prompt<{ runOp: SourceResult }>({
+  selectOpOrWorkflowPrompt = async (
+    inputs: SearchInputs,
+  ): Promise<SearchInputs> => {
+    const { selectedOpOrWorkflow } = await this.ux.prompt<{
+      selectedOpOrWorkflow: Op | Workflow
+    }>({
       type: 'autocomplete',
-      name: 'runOp',
+      name: 'selectedOpOrWorkflow',
       pageSize: 5,
       message: `\nSelect a ${this.ux.colors.multiBlue(
         '\u2022Op',
@@ -247,29 +252,47 @@ export default class Search extends Command {
         )} for usage information.`,
       )}`,
     })
+    return { ...inputs, selectedOpOrWorkflow }
   }
 
-  showRunMessage = (answer: { runOp: SourceResult }) => {
-    const { runOp } = answer
+  showRunMessage = (inputs: SearchInputs): SearchInputs => {
+    const {
+      selectedOpOrWorkflow: { name },
+    } = inputs
     this.log(
       `\n💻 Run ${this.ux.colors.green('$')} ${this.ux.colors.italic.dim(
-        'ops run ' + runOp.name,
+        'ops run ' + name,
       )} to test your op. \n`,
     )
+    return inputs
   }
 
-  sendAnalytics = (filter: string) => () => {
+  sendAnalytics = (filter: string) => (inputs: SearchInputs) => {
+    const {
+      selectedOpOrWorkflow,
+      selectedOpOrWorkflow: { id: opId, teamID },
+    } = inputs
+    const teamOp = teamID === this.team.id
+    const remote =
+      'remote' in selectedOpOrWorkflow ? selectedOpOrWorkflow.remote : false
     try {
-      this.analytics.track({
-        userId: this.user.email,
-        event: 'Ops CLI Search',
-        properties: {
-          email: this.user.email,
-          username: this.user.username,
-          results: this.opsAndWorkflows.length,
-          filter,
+      this.analytics.track(
+        {
+          userId: this.user.email,
+          teamId: this.team.id,
+          event: 'Ops CLI Search',
+          properties: {
+            email: this.user.email,
+            username: this.user.username,
+            selectedOp: opId,
+            teamOp,
+            remote,
+            results: this.opsAndWorkflows.length,
+            filter,
+          },
         },
-      })
+        this.accessToken,
+      )
     } catch (err) {
       this.debug('%O', err)
       throw new AnalyticsError(err)

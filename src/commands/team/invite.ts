@@ -1,6 +1,6 @@
 import { ux } from '@cto.ai/sdk'
 import Command, { flags } from '~/base'
-import { User, Team, Invite } from '~/types'
+import { Config, Team, Invite } from '~/types'
 import { asyncPipe, validateEmail } from '~/utils'
 import { InviteSendingInvite } from '~/errors/CustomErrors'
 
@@ -128,19 +128,25 @@ export default class TeamInvite extends Command {
     return inputs
   }
 
-  sendAnalytics = (user: User) => (inputs: InviteInputs): void => {
-    const { team, inviteesArray } = inputs
-    const { email, username } = user
-    this.analytics.track({
-      userId: email,
-      event: 'Ops CLI team:invite',
-      properties: {
-        email,
-        username,
-        invitees: inviteesArray,
-        team,
+  sendAnalytics = (config: Config) => (inputs: InviteInputs): void => {
+    const { inviteesArray } = inputs
+    const {
+      user: { email, username },
+      team: { id: teamId },
+    } = config
+    this.analytics.track(
+      {
+        userId: email,
+        teamId,
+        event: 'Ops CLI team:invite',
+        properties: {
+          email,
+          username,
+          invitees: inviteesArray,
+        },
       },
-    })
+      this.accessToken,
+    )
   }
 
   async run(): Promise<void> {
@@ -163,7 +169,7 @@ export default class TeamInvite extends Command {
         this.splitInvitees,
         this.inviteUserToTeam,
         this.printInviteResponses,
-        this.sendAnalytics(this.user),
+        this.sendAnalytics(this.state.config),
       )
 
       await invitePipeline({ invitees })

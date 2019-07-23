@@ -297,7 +297,7 @@ export default class Init extends Command {
     )
   }
 
-  trackAnalytics = async ({
+  sendAnalytics = async ({
     initPaths,
     initParams,
   }: {
@@ -308,18 +308,22 @@ export default class Init extends Command {
       const { destDir } = initPaths
       const { templates } = initParams
       const { name, description } = this.getNameAndDescription(initParams)
-      this.analytics.track({
-        userId: this.user.email,
-        event: 'Ops CLI Init',
-        properties: {
-          email: this.user.email,
-          username: this.user.username,
-          path: destDir,
-          name,
-          description,
-          templates,
+      this.analytics.track(
+        {
+          userId: this.user.email,
+          teamId: this.team.id,
+          event: 'Ops CLI Init',
+          properties: {
+            email: this.user.email,
+            username: this.user.username,
+            path: destDir,
+            name,
+            description,
+            templates,
+          },
         },
-      })
+        this.accessToken,
+      )
     } catch (err) {
       this.debug('%O', err)
       throw new AnalyticsError(err)
@@ -360,7 +364,7 @@ export default class Init extends Command {
         this.customizePackageJson,
         this.customizeYaml,
         this.logMessages,
-        this.trackAnalytics,
+        this.sendAnalytics,
       )
 
       await initPipeline(this.initPrompts)
