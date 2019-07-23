@@ -282,6 +282,28 @@ export class SignInError extends ErrorTemplate {
   }
 }
 
+export class NoEmailForReset extends ErrorTemplate {
+  constructor(err) {
+    super(
+      "😞 Uh-oh, we couldn't find any user associated with that email address.\nCheck your email and try again.",
+      err,
+      { source: EXPECTED },
+    )
+  }
+}
+
+export class ResetTokenError extends ErrorTemplate {
+  constructor(err) {
+    super(
+      `😞 ${err}. Please request a new token by running ${ux.colors.italic.dim(
+        'ops account:reset.',
+      )}`,
+      err,
+      { source: EXPECTED },
+    )
+  }
+}
+
 export class SignUpError extends ErrorTemplate {
   constructor(err: ErrorResponse) {
     super("🤔 We couldn't sign you up at this point in time.", err, {

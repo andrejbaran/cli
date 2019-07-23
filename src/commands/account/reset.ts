@@ -1,111 +1,159 @@
 import { ux } from '@cto.ai/sdk'
-import commander from 'commander'
 import Command from '~/base'
-import { Question } from '~/types'
+import { asyncPipe } from '~/utils'
+import {
+  NoEmailForReset,
+  APIError,
+  ResetTokenError,
+} from '~/errors/CustomErrors'
 import {
   validateCpassword,
   validateEmail,
   validatePasswordFormat,
 } from '~/utils/validate'
 
-const checkEmail = (input: string) => {
-  return (
-    validateEmail(input) ||
-    '🤔 That email format is invalid. Please check your email and try again.'
-  )
-}
-
-const emailPrompt: Question = {
-  type: 'input',
-  name: 'email',
-  message: 'Enter an email address to reset your password: ',
-  validate: checkEmail,
-}
-
-const passwordPrompts: Question[] = [
-  {
-    type: 'password',
-    name: 'password',
-    message: 'Enter a new password: ',
-    validate: validatePasswordFormat,
-    mask: '*',
-  },
-  {
-    type: 'password',
-    name: 'passwordConfirm',
-    message: 'Confirm your password: ',
-    validate: validateCpassword,
-    mask: '*',
-  },
-]
-
-const tokenErr = {
-  consumed: 'Token already used',
-  expired: 'Token already expired',
-  postMessage: `Please request a new token by running ${ux.colors.italic.dim(
-    'ops account:reset.',
-  )}`,
+export interface ResetInputs {
+  password: string
+  token: string
 }
 
 export default class AccountReset extends Command {
   public static description = 'Reset your password.'
 
-  public startSpinner() {
-    this.log('')
-    ux.spinner.start(`${ux.colors.white('Working on it')}`)
+  static args = [
+    {
+      name: 'token',
+      description: 'Reset password token.',
+    },
+  ]
+
+  emailPrompt = async (): Promise<string> => {
+    const { email } = await ux.prompt<{ email: string }>({
+      type: 'input',
+      name: 'email',
+      message: 'Enter an email address to reset your password: ',
+      validate: (input: string) => {
+        return (
+          validateEmail(input) ||
+          '🤔 That email format is invalid. Please check your email and try again.'
+        )
+      },
+    })
+    return email
   }
 
-  public async run() {
-    const {
-      args: [_, token],
-    } = commander.parse(process.argv)
-
-    if (!token) {
-      const { email } = await ux.prompt<{ email: string }>(emailPrompt)
-      this.startSpinner()
-      const res = await this.createToken(email)
-
-      if (res.data) {
-        ux.spinner.stop(`${ux.colors.green('Done!\n')}`)
-        this.log(`Go to ${ux.colors.italic.dim(email)} to reset your password.`)
-        process.exit()
+  createToken = async (email: string): Promise<string> => {
+    try {
+      const { data } = await this.api.create('reset', { email })
+      if (!data) {
+        throw new NoEmailForReset(null)
       }
-
-      ux.spinner.stop('❗️\n')
-      this.log(
-        `Uh-oh, we couldn't find any user associated with that email address.\nCheck your email and try again.\n`,
-      )
-      return this.run()
+      return email
+    } catch (err) {
+      this.debug('%O', err)
+      throw new NoEmailForReset(err)
     }
+  }
 
-    const { password } = await ux.prompt<{ password: string }>(passwordPrompts)
-    this.startSpinner()
-    const res = await this.resetPassword(token, password)
+  startSpinner = (input: string | ResetInputs): string | ResetInputs => {
+    this.log('')
+    ux.spinner.start(`${ux.colors.white('Working on it')}`)
+    return input
+  }
 
-    if (res.data) {
-      ux.spinner.stop(`${ux.colors.green('Done!\n')}`)
-      this.log(
-        `${ux.colors.bold.green(
-          '✓',
-        )} Password reset successful.\n\nTo continue, please sign in by running ${ux.colors.italic.dim(
-          'ops account:signin',
-        )}.`,
-      )
-      process.exit()
-    }
+  logEmailMessage = (email: string): void => {
+    ux.spinner.stop(`${ux.colors.green('Done!\n')}`)
+    this.log(
+      `Go to ${ux.colors.italic.dim(
+        email,
+      )} to retrieve your password reset token.`,
+    )
+    process.exit()
+  }
 
-    ux.spinner.stop('❗️\n')
+  passwordPrompt = async (token: string): Promise<ResetInputs> => {
+    const { password } = await ux.prompt<{ password: string }>([
+      {
+        type: 'password',
+        name: 'password',
+        message: 'Enter a new password: ',
+        validate: validatePasswordFormat,
+        mask: '*',
+      },
+      {
+        type: 'password',
+        name: 'passwordConfirm',
+        message: 'Confirm your password: ',
+        validate: validateCpassword,
+        mask: '*',
+      },
+    ])
+    return { password, token }
+  }
 
-    if (res.message) {
+  resetPassword = async (inputs: ResetInputs): Promise<ResetInputs> => {
+    try {
+      const { token, password } = inputs
+      await this.api.patch('reset', token, {
+        password,
+      })
+      return inputs
+    } catch (err) {
+      if (!err.error) {
+        throw new APIError(err)
+      }
+      const { message } = err.error[0]
+      const consumed = 'Token already used'
+      const expired = 'Token already expired'
+      this.debug('%O:', err)
       switch (true) {
-        case res.message.includes(tokenErr.consumed):
-          return this.log(`${tokenErr.consumed}. ${tokenErr.postMessage}`)
-        case res.message.includes(tokenErr.expired):
-          return this.log(`${tokenErr.expired}. ${tokenErr.postMessage}`)
+        case message.includes(consumed):
+          throw new ResetTokenError(consumed)
+        case message.includes(expired):
+          throw new ResetTokenError(expired)
+        default:
+          throw new APIError(err)
       }
     }
+  }
 
-    this.log(`Sorry, we're unable to complete your request at this time.`)
-    process.exit(1)
+  logResetMessage = (inputs: ResetInputs): void => {
+    ux.spinner.stop(`${ux.colors.green('Done!\n')}`)
+    this.log(
+      `${ux.colors.bold.green(
+        '✓',
+      )} Password reset successful.\n\nTo continue, please sign in by running ${ux.colors.italic.dim(
+        'ops account:signin',
+      )}.`,
+    )
+  }
+
+  async run() {
+    try {
+      const {
+        args: { token },
+      } = this.parse(AccountReset)
+      if (!token) {
+        const resetPipeline = asyncPipe(
+          this.emailPrompt,
+          this.startSpinner,
+          this.createToken,
+          this.logEmailMessage,
+        )
+        await resetPipeline()
+      } else {
+        const resetPipeline = asyncPipe(
+          this.passwordPrompt,
+          this.startSpinner,
+          this.resetPassword,
+          this.logResetMessage,
+        )
+        await resetPipeline(token)
+      }
+    } catch (err) {
+      ux.spinner.stop(`${ux.colors.errorRed('Failed!')}`)
+      this.debug('%O', err)
+      this.config.runHook('error', { err })
+    }
   }
 }

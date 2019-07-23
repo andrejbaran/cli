@@ -324,14 +324,6 @@ abstract class CTOCommand extends Command {
       })
     return response.data
   }
-
-  async createToken(email: string) {
-    return this.api.create('reset', { email })
-  }
-
-  async resetPassword(token: string, password: string) {
-    return this.api.patch('reset', token, { password })
-  }
 }
 
 export { CTOCommand as default, flags }
