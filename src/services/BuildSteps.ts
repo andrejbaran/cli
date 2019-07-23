@@ -1,8 +1,6 @@
-import { IConfig } from '@oclif/config'
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import { Op, RegistryAuth, User } from '../types'
-import { SegmentClient } from './Segment'
+import { Op, RegistryAuth, User, Config } from '../types'
 import { FeathersClient } from './Feathers'
 import { Publish } from './Publish'
 import { OpService } from './../services/Op'
@@ -27,8 +25,7 @@ export class BuildSteps {
     opService: OpService,
     featherClient: FeathersClient,
     registryAuth: RegistryAuth,
-    config: IConfig,
-    analytics: SegmentClient,
+    config: Config,
   ): Promise<string> => {
     const indexJs = path.resolve(opPath, 'index.js')
     fs.writeFileSync(
@@ -62,8 +59,7 @@ export class BuildSteps {
     await opService.opsBuildLoop(
       [glueCodeClone],
       path.resolve(__dirname, '../templates//workflowsteps/js'),
-      teamName,
-      user,
+      config,
     )
 
     const { data: apiOp } = await publishService.publishOpToAPI(

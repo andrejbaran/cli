@@ -100,6 +100,18 @@ export class Cleanup extends Command {
       const imagebyName = formImageName(name, this.team.name, OPS_REGISTRY_HOST)
       await removeImage(this.docker, imagebyId)
       await removeImage(this.docker, imagebyName)
+      this.analytics.track(
+        {
+          userId: this.user.email,
+          teamId: this.team.id,
+          event: 'Ops CLI Cleanup',
+          properties: {
+            email: this.user.email,
+            username: this.user.username,
+          },
+        },
+        this.accessToken,
+      )
 
       this.log(`\n Successfully removed images for ${opName}`)
     } catch (err) {

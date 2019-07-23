@@ -2,7 +2,7 @@ import { ux } from '@cto.ai/sdk'
 import Command from '~/base'
 import { InviteCodeInvalid } from '~/errors/CustomErrors'
 import { asyncPipe } from '~/utils'
-import { Team, User } from '~/types'
+import { Team, Config } from '~/types'
 
 const {
   white,
@@ -79,18 +79,25 @@ export default class TeamJoin extends Command {
     return inputs
   }
 
-  sendAnalytics = (user: User) => (inputs: JoinInputs): void => {
-    const { newTeam: team } = inputs
-    const { email, username } = user
-    this.analytics.track({
-      userId: email,
-      event: 'Ops CLI team:join',
-      properties: {
-        email,
-        username,
-        team,
+  sendAnalytics = (config: Config) => (inputs: JoinInputs): void => {
+    const {
+      newTeam: { id: teamId },
+    } = inputs
+    const {
+      user: { email, username },
+    } = config
+    this.analytics.track(
+      {
+        userId: email,
+        teamId,
+        event: 'Ops CLI team:join',
+        properties: {
+          email,
+          username,
+        },
       },
-    })
+      this.accessToken,
+    )
   }
 
   async run() {
@@ -102,7 +109,7 @@ export default class TeamJoin extends Command {
         this.joinTeam,
         this.setActiveTeam,
         this.logMessage,
-        this.sendAnalytics(this.user),
+        this.sendAnalytics(this.state.config),
       )
       await joinPipeline()
     } catch (err) {

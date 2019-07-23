@@ -334,6 +334,30 @@ export default class Run extends Command {
     }
   }
 
+  sendAnalytics = (inputs: RunInputs): RunInputs => {
+    const {
+      opOrWorkflow: { id, name, description },
+      parsedArgs: { opParams },
+    } = inputs
+    this.analytics.track(
+      {
+        userId: this.user.email,
+        event: 'Ops CLI Run',
+        properties: {
+          email: this.user.email,
+          username: this.user.username,
+          id,
+          name,
+          description,
+          argments: opParams.length,
+          image: `${OPS_REGISTRY_HOST}/${name}`,
+        },
+      },
+      this.accessToken,
+    )
+    return inputs
+  }
+
   async run() {
     try {
       this.isLoggedIn()
@@ -349,6 +373,7 @@ export default class Run extends Command {
           this.getOpsAndWorkflowsFromFileSystem,
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
+          this.sendAnalytics,
           this.executeOpOrWorkflowService,
         )
         await runFsPipeline({ parsedArgs, config })
@@ -358,6 +383,7 @@ export default class Run extends Command {
           this.getApiWorkflows,
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
+          this.sendAnalytics,
           this.executeOpOrWorkflowService,
         )
         await runApiPipeline({ parsedArgs, config })

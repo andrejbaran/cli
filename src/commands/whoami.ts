@@ -61,5 +61,14 @@ export default class Whoami extends Command {
       )
     }
     this.log('\n')
+    this.analytics.track(
+      {
+        userId: this.user.email,
+        teamId: this.team.id,
+        event: 'Ops CLI Whoami',
+        properties: {},
+      },
+      this.accessToken,
+    )
   }
 }

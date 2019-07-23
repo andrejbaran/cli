@@ -273,8 +273,7 @@ export default class Publish extends Command {
               this.opService,
               this.api,
               registryAuth,
-              this.config,
-              this.analytics,
+              this.state.config,
             )
           }
 

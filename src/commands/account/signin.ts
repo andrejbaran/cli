@@ -45,14 +45,17 @@ export default class AccountSignin extends Command {
           username: config.user.username,
         },
       })
-      this.analytics.track({
-        userId: config.user.email,
-        event: 'Ops CLI Signin',
-        properties: {
-          email: config.user.email,
-          username: config.user.username,
+      this.analytics.track(
+        {
+          userId: config.user.email,
+          event: 'Ops CLI Signin',
+          properties: {
+            email: config.user.email,
+            username: config.user.username,
+          },
         },
-      })
+        config.accessToken,
+      )
     } catch (err) {
       this.debug('%O', err)
       throw new AnalyticsError(err)

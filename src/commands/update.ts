@@ -43,14 +43,18 @@ export default class Update extends Command {
   }
 
   private _trackAnalytics(newVersion: string | undefined) {
-    this.analytics.track({
-      userId: this.user.email,
-      event: 'Ops CLI Update',
-      properties: {
-        oldVersion: this.config.version,
-        newVersion,
+    this.analytics.track(
+      {
+        userId: this.user.email,
+        teamId: this.team.id,
+        event: 'Ops CLI Update',
+        properties: {
+          oldVersion: this.config.version,
+          newVersion,
+        },
       },
-    })
+      this.accessToken,
+    )
   }
 
   private async _askQuestion() {

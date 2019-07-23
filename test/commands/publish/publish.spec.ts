@@ -61,7 +61,13 @@ describe('BuildStep', () => {
       id: 'team-id',
       name: 'team-name',
     }
-
+    cmd.state = {
+      config: {
+        accessToken: '',
+        team: cmd.team,
+        user: {},
+      },
+    }
     cmd.getRegistryAuth = jest.fn()
     cmd.getRegistryAuth.mockReturnValue({} as RegistryAuth)
 
@@ -128,6 +134,13 @@ describe('BuildStep', () => {
     cmd.team = {
       id: 'team-id',
       name: 'team-name',
+    }
+    cmd.state = {
+      config: {
+        accessToken: '',
+        team: cmd.team,
+        user: {},
+      },
     }
 
     cmd.getRegistryAuth = jest.fn()
