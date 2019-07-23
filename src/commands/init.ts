@@ -370,7 +370,7 @@ export default class Init extends Command {
       await initPipeline(this.initPrompts)
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err })
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 }

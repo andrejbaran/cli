@@ -366,7 +366,7 @@ export default class Search extends Command {
       await searchPipeline(filter)
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err })
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 }

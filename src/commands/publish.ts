@@ -348,7 +348,7 @@ export default class Publish extends Command {
       await publishPipeline(args.path)
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err })
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 }

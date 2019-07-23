@@ -87,7 +87,7 @@ export default class Build extends Command {
       await this.opService.opsBuildLoop(ops, opPath, this.state.config)
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err })
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 }

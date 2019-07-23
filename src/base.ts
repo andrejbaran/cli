@@ -85,7 +85,7 @@ abstract class CTOCommand extends Command {
       this.team = team
       this.state = { config }
     } catch (err) {
-      this.config.runHook('error', { err })
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 
@@ -148,7 +148,7 @@ abstract class CTOCommand extends Command {
 
       return registryAuth
     } catch (err) {
-      this.config.runHook('error', { err })
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 

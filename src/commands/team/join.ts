@@ -47,7 +47,7 @@ export default class TeamJoin extends Command {
       if (!newTeam) throw new InviteCodeInvalid(null)
       return { ...inputs, newTeam }
     } catch (err) {
-      this.debug('%0', err)
+      this.debug('%O', err)
       throw new InviteCodeInvalid(err)
     }
   }
@@ -114,8 +114,11 @@ export default class TeamJoin extends Command {
       await joinPipeline()
     } catch (err) {
       ux.spinner.stop(`${errorRed('failed')}\n`)
-      this.debug('%0', err)
-      this.config.runHook('error', { err })
+      this.debug('%O', err)
+      this.config.runHook('error', {
+        err,
+        accessToken: this.accessToken,
+      })
     }
   }
 }
