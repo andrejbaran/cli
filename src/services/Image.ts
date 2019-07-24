@@ -6,11 +6,14 @@ import through from 'through2'
 
 import { Op } from '~/types'
 import getDocker from '~/utils/get-docker'
-import { DockerBuildImageError, ReadFileError } from '~/errors/CustomErrors'
+import { ErrorService } from '~/services/Error'
+import { DockerBuildImageError } from '~/errors/CustomErrors'
 const debug = Debug('ops:ImageService')
 
 export class ImageService {
+  constructor(protected error = new ErrorService()) {}
   public log = console.log
+
   public checkLocalImage = async (opImageUrl: string) => {
     const docker = await getDocker(console, 'ImageService')
 
@@ -118,72 +121,80 @@ export class ImageService {
   }
 
   public build = async (tag: string, opPath: string, op: Op) => {
-    const all: any[] = []
-    const log = this.log
-    const parser = through.obj(function(
-      this: any,
-      chunk: any,
-      _enc: any,
-      cb: any,
-    ) {
-      if (chunk.stream && chunk.stream !== '\n') {
-        this.push(chunk.stream.replace('\n', ''))
-        log(chunk.stream.replace('\n', ''))
-        all.push(chunk)
-      } else if (chunk.errorDetail) {
-        debug(chunk.errorDetail)
-        throw new ReadFileError(chunk.errorDetail.message)
-      }
-      cb()
-    })
-
-    const _pipe = parser.pipe
-    parser.pipe = function(dest: any) {
-      return _pipe(dest)
-    }
-    await new Promise(async function(resolve, reject) {
-      const docker = await getDocker(console, 'build')
-
-      if (docker) {
-        const stream = await docker
-          .buildImage({ context: opPath, src: op.src }, { t: tag })
-          .catch(err => {
-            debug('%O', err)
-            reject(new DockerBuildImageError(err))
-            return null
-          })
-
-        if (stream) {
-          stream
-            .pipe(json.parse())
-            .pipe(parser)
-            .on('data', (d: any, data: any) => {
-              all.push(d)
-            })
-            .on('end', async function() {
-              log('\n⚡️ Verifying...')
-              const bar = ux.progress.init()
-              bar.start(100, 0)
-              for (let i = 0; i < all.length; i++) {
-                bar.update(100 - all.length / i)
-                await ux.wait(50)
-              }
-              bar.update(100)
-              bar.stop()
-              log(
-                `\n💻 Run ${ux.colors.green('$')} ${ux.colors.italic.dim(
-                  'ops run ' + op.name,
-                )} to test your op.`,
-              )
-              log(
-                `📦 Run ${ux.colors.green('$')} ${ux.colors.italic.dim(
-                  'ops publish ' + opPath,
-                )} to share your op. \n`,
-              )
-              resolve()
-            })
+    try {
+      const all: any[] = []
+      const errors: any[] = []
+      const log = this.log
+      const parser = through.obj(function(
+        this: any,
+        chunk: any,
+        _enc: any,
+        cb: any,
+      ) {
+        if (chunk.stream && chunk.stream !== '\n') {
+          this.push(chunk.stream.replace('\n', ''))
+          log(chunk.stream.replace('\n', ''))
+          all.push(chunk)
+        } else if (chunk.errorDetail) {
+          debug(chunk.errorDetail)
+          errors.push(chunk.errorDetail.message)
         }
+        cb()
+      })
+
+      const _pipe = parser.pipe
+      parser.pipe = function(dest: any) {
+        return _pipe(dest)
       }
-    })
+      await new Promise(async function(resolve, reject) {
+        const docker = await getDocker(console, 'build')
+
+        if (docker) {
+          const stream = await docker
+            .buildImage({ context: opPath, src: op.src }, { t: tag })
+            .catch(err => {
+              debug('%O', err)
+              throw new DockerBuildImageError(err)
+            })
+
+          if (stream) {
+            stream
+              .pipe(json.parse())
+              .pipe(parser)
+              .on('data', (d: any, data: any) => {
+                all.push(d)
+              })
+              .on('end', async function() {
+                if (errors.length) {
+                  return reject(new DockerBuildImageError(errors[0]))
+                }
+                log('\n⚡️ Verifying...')
+                const bar = ux.progress.init()
+                bar.start(100, 0)
+                for (let i = 0; i < all.length; i++) {
+                  bar.update(100 - all.length / i)
+                  await ux.wait(50)
+                }
+                bar.update(100)
+                bar.stop()
+                log(
+                  `\n💻 Run ${ux.colors.green('$')} ${ux.colors.italic.dim(
+                    'ops run ' + op.name,
+                  )} to test your op.`,
+                )
+                log(
+                  `📦 Run ${ux.colors.green('$')} ${ux.colors.italic.dim(
+                    'ops publish ' + opPath,
+                  )} to share your op. \n`,
+                )
+                resolve()
+              })
+          }
+        }
+      })
+    } catch (err) {
+      debug('%O', err)
+      this.error.handleError({ err })
+    }
   }
 }

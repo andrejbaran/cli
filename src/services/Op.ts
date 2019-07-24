@@ -194,7 +194,7 @@ export class OpService {
         fs.ensureDirSync(path.resolve(op.opsHome + op.stateDir))
       } catch (err) {
         debug('%O', err)
-        throw new CouldNotMakeDir()
+        throw new CouldNotMakeDir(err, path.resolve(op.opsHome + op.stateDir))
       }
     }
 

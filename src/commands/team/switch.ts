@@ -2,7 +2,7 @@ import { ux } from '@cto.ai/sdk'
 import Command, { flags } from '~/base'
 import { Config, Team } from '~/types'
 import { asyncPipe } from '~/utils'
-import { ReadConfigError, APIError } from '~/errors/CustomErrors'
+import { ConfigError, APIError } from '~/errors/CustomErrors'
 
 const { white, italic, blue, dim, callOutCyan } = ux.colors
 interface displayTeam extends Team {
@@ -29,8 +29,8 @@ export default class TeamSwitch extends Command {
       if (!activeTeam) throw new Error()
       return { activeTeam }
     } catch (err) {
-      this.debug('%0', err)
-      throw new ReadConfigError(err)
+      this.debug('%O', err)
+      throw new ConfigError(err)
     }
   }
 
@@ -41,7 +41,7 @@ export default class TeamSwitch extends Command {
       })
       return { ...inputs, teams }
     } catch (err) {
-      this.debug('%0')
+      this.debug('%O', err)
       throw new APIError(err)
     }
   }
@@ -78,18 +78,24 @@ export default class TeamSwitch extends Command {
         `Or, run ${italic.dim('ops help')} for usage information.`,
       )}`,
     })
-    this.log(`\n⏱ Switching teams`)
+    this.log(`\n⏱  Switching teams`)
     return { ...inputs, teamSelected }
   }
 
   updateActiveTeam = async (inputs: SwitchInputs): Promise<SwitchInputs> => {
-    const {
-      teamSelected: { name, id },
-    } = inputs
-    const configData = await this.readConfig()
-    await this.writeConfig(configData, {
-      team: { name, id },
-    })
+    try {
+      const {
+        teamSelected: { name, id },
+      } = inputs
+      const configData = await this.readConfig()
+      await this.writeConfig(configData, {
+        team: { name, id },
+      })
+    } catch (err) {
+      this.debug('%O', err)
+      throw new ConfigError(err)
+    }
+
     return inputs
   }
 
@@ -134,11 +140,13 @@ export default class TeamSwitch extends Command {
         this.setTeamsDisplayName,
         this.getSelectedTeamPrompt,
         this.updateActiveTeam,
+        this.logMessage,
         this.sendAnalytics(this.state.config),
       )
       await switchPipeline()
     } catch (err) {
-      this.debug('%0', err)
+      this.debug('%O', err)
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 }

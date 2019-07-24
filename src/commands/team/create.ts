@@ -29,12 +29,13 @@ export default class TeamCreate extends Command {
       }
       return { name }
     } catch (err) {
-      this.debug('%0', err)
       throw err
     }
   }
 
-  promptForTeamName = async (inputs): Promise<Pick<CreateInputs, 'name'>> => {
+  promptForTeamName = async (
+    inputs: Pick<CreateInputs, 'name'>,
+  ): Promise<Pick<CreateInputs, 'name'>> => {
     if (inputs.name) {
       return inputs
     }
