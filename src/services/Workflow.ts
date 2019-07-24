@@ -71,7 +71,7 @@ export class WorkflowService {
           `😌  Workflow ${callOutCyan(name)} completed successfully.`,
         )
     } catch (err) {
-      debug('%0', err)
+      debug('%O', err)
       throw err
     }
   }
@@ -90,7 +90,10 @@ const getRunEnv = (workflow: Workflow, config: Config): Workflow => {
       fs.ensureDirSync(path.resolve(workflow.opsHome + workflow.stateDir))
     } catch (err) {
       this.debug('%O', err)
-      throw new CouldNotMakeDir()
+      throw new CouldNotMakeDir(
+        err,
+        path.resolve(workflow.opsHome + workflow.stateDir),
+      )
     }
   }
   return workflow

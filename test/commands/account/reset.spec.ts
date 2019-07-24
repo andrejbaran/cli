@@ -36,7 +36,7 @@ describe('createToken', () => {
     cmd = new AccountReset([], config, mockFeathersService)
     cmd.accessToken = fakeToken
     await expect(cmd.createToken(mockEmail)).rejects.toThrowError(
-      new NoEmailForReset(null),
+      NoEmailForReset,
     )
     expect(mockFeathersService.create).toHaveBeenCalledWith(`reset`, {
       email: mockEmail,
@@ -53,7 +53,7 @@ describe('createToken', () => {
     cmd = new AccountReset([], config, mockFeathersService)
     cmd.accessToken = fakeToken
     await expect(cmd.createToken(mockEmail)).rejects.toThrowError(
-      new NoEmailForReset(null),
+      NoEmailForReset,
     )
     expect(mockFeathersService.create).toHaveBeenCalledWith(`reset`, {
       email: mockEmail,

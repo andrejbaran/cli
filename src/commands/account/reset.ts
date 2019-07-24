@@ -46,12 +46,12 @@ export default class AccountReset extends Command {
     try {
       const { data } = await this.api.create('reset', { email })
       if (!data) {
-        throw new NoEmailForReset(null)
+        throw new NoEmailForReset(null, email)
       }
       return email
     } catch (err) {
       this.debug('%O', err)
-      throw new NoEmailForReset(err)
+      throw new NoEmailForReset(err, email)
     }
   }
 

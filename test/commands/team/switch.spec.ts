@@ -1,7 +1,7 @@
 import * as Config from '@oclif/config'
 
 import TeamSwitch from '~/commands/team/switch'
-import { ReadConfigError, APIError } from '~/errors/CustomErrors'
+import { ConfigError, APIError } from '~/errors/CustomErrors'
 import { FeathersClient } from '~/services/Feathers'
 import { createMockTeam } from '../../mocks'
 
@@ -22,17 +22,13 @@ describe('getActiveTeam', () => {
   test('should throw an error if readConfig does not return a team', async () => {
     cmd = new TeamSwitch([], config)
     cmd.readConfig = jest.fn().mockReturnValue({})
-    await expect(cmd.getActiveTeam()).rejects.toThrowError(
-      new ReadConfigError(null),
-    )
+    await expect(cmd.getActiveTeam()).rejects.toThrowError(ConfigError)
   })
 
   test('should throw an error if readConfig throws an error', async () => {
     cmd = new TeamSwitch([], config)
     cmd.readConfig = jest.fn().mockRejectedValue(new Error())
-    await expect(cmd.getActiveTeam()).rejects.toThrowError(
-      new ReadConfigError(null),
-    )
+    await expect(cmd.getActiveTeam()).rejects.toThrowError(ConfigError)
   })
 })
 

@@ -12,7 +12,7 @@
 import { ErrorTemplate } from '../errors/ErrorTemplate'
 import { errorSource } from '../constants/errorSource'
 import { FeathersClient } from '~/services/Feathers'
-import { Config } from '~/types'
+import { INTERCOM_EMAIL } from '~/constants/env'
 
 const { UNEXPECTED } = errorSource
 
@@ -43,7 +43,7 @@ export default async function error(
       .catch(err => {
         this.debug('%O', err)
         this.log(
-          `\n 😰 We've encountered a problem. Please try again or contact support@cto.ai and we'll do our best to help. \n`,
+          `\n 😰 We've encountered a problem. Please try again or contact ${INTERCOM_EMAIL} and we'll do our best to help. \n`,
         )
         process.exit(1)
       })
@@ -53,7 +53,7 @@ export default async function error(
 
   if (extra && extra.source === UNEXPECTED) {
     this.log(
-      `\n 😰 We've encountered a problem. Please try again or contact support@cto.ai and we'll do our best to help. \n`,
+      `\n 😰 We've encountered a problem. Please try again or contact ${INTERCOM_EMAIL} and we'll do our best to help. \n`,
     )
     process.exit(1)
   }
