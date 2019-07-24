@@ -8,15 +8,14 @@
  */
 
 import { ux as UX } from '@cto.ai/sdk'
-
 import Command, { flags } from '@oclif/command'
 import * as OClifConfig from '@oclif/config'
+import _inquirer from '@cto.ai/inquirer'
 import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
 import jwt from 'jsonwebtoken'
-import { asyncPipe, _trace } from './utils/asyncPipe'
-import _inquirer from '@cto.ai/inquirer'
-import { handleMandatory, handleUndefined } from './utils/guards'
+
+import { asyncPipe, _trace, handleMandatory, handleUndefined } from './utils'
 
 import {
   Config,

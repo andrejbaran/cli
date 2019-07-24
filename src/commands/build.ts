@@ -8,27 +8,26 @@
  *
  */
 import * as path from 'path'
-import Docker from 'dockerode'
-
-import Command, { flags } from '../base'
-import { Container, Op, OpsYml } from '../types'
-
 import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
 import * as yaml from 'yaml'
+
+import Command, { flags } from '~/base'
+import { Container, Op, OpsYml, Config } from '~/types'
 import {
   FileNotFoundError,
-  InvalidInputCharacter,
   MissingRequiredArgument,
   NoOpsFound,
-} from '../errors/CustomErrors'
-import { getOpUrl, getOpImageTag } from '../utils/getOpUrl'
-import { OPS_REGISTRY_HOST } from '../constants/env'
-import { OP_FILE } from '../constants/opConfig'
+} from '~/errors/CustomErrors'
+import { OP_FILE } from '~/constants/opConfig'
+import { asyncPipe } from '~/utils'
 
-import getDocker from '~/utils/get-docker'
-import { thisExpression } from '@babel/types'
-
+export interface BuildInputs {
+  opPath: string
+  config: Config
+  ops: Op[]
+  opsToBuild: Op[]
+}
 export default class Build extends Command {
   static description = 'Build your op for sharing.'
 
@@ -40,51 +39,69 @@ export default class Build extends Command {
     { name: 'path', description: 'Path to the op you want to build.' },
   ]
 
-  docker: Docker | undefined
+  resolvePath = (inputs: BuildInputs): Pick<BuildInputs, 'opPath'> => {
+    let { opPath } = inputs
+    if (!opPath) throw new MissingRequiredArgument('ops [command]')
+    opPath = path.resolve(process.cwd(), opPath)
+    return { ...inputs, opPath }
+  }
+
+  getOpsFromFileSystem = async (inputs: BuildInputs): Promise<BuildInputs> => {
+    const { opPath } = inputs
+    const manifest = await fs
+      .readFile(path.join(opPath, OP_FILE), 'utf8')
+      .catch(err => {
+        this.debug('%O', err)
+        throw new FileNotFoundError(err, opPath, OP_FILE)
+      })
+    const { ops }: OpsYml = manifest && yaml.parse(manifest)
+    if (!ops) {
+      throw new NoOpsFound()
+    }
+    return { ...inputs, ops }
+  }
+
+  selectOpToBuild = async (inputs: BuildInputs): Promise<BuildInputs> => {
+    const { ops } = inputs
+    if (ops.length === 1) {
+      return { ...inputs, opsToBuild: ops }
+    }
+    const { opsToBuild } = await ux.prompt<Container<Op[]>>({
+      type: 'checkbox',
+      name: 'opsToBuild',
+      message: `\n Which ops would you like to build ${ux.colors.reset.green(
+        '→',
+      )}`,
+      choices: ops.map(op => {
+        return {
+          value: op,
+          name: `${op.name} - ${op.description}`,
+        }
+      }),
+      validate: input => input.length > 0,
+    })
+    return { ...inputs, opsToBuild }
+  }
+
+  executeOpService = async (inputs: BuildInputs): Promise<BuildInputs> => {
+    const { opsToBuild, opPath, config } = inputs
+    await this.opService.opsBuildLoop(opsToBuild, opPath, config)
+    return inputs
+  }
 
   async run(this: any) {
     try {
-      this.docker = await getDocker(this, 'build')
-
-      const { args } = this.parse(Build)
-      if (!args.path) throw new MissingRequiredArgument('ops [command]')
-
-      const opPath: string = args.path
-        ? path.resolve(process.cwd(), args.path)
-        : process.cwd()
-
+      const { args: path } = this.parse(Build)
       this.isLoggedIn()
 
-      const manifest = await fs
-        .readFile(path.join(opPath, OP_FILE), 'utf8')
-        .catch(err => {
-          this.debug('%O', err)
-          throw new FileNotFoundError(err, opPath, OP_FILE)
-        })
-      let { ops }: OpsYml = manifest && yaml.parse(manifest)
-      if (!ops) {
-        throw new NoOpsFound()
-      }
+      const buildPipeline = asyncPipe(
+        this.resolvePath,
+        this.getOpsFromFileSystem,
+        this.selectOpToBuild,
+        this.executeOpService,
+      )
 
-      if (ops.length > 1) {
-        const answers = await ux.prompt<Container<Op[]>>({
-          type: 'checkbox',
-          name: 'ops',
-          message: `\n Which ops would you like to build ${ux.colors.reset.green(
-            '→',
-          )}`,
-          choices: ops.map(op => {
-            return {
-              value: op,
-              name: `${op.name} - ${op.description}`,
-            }
-          }),
-          validate: input => input.length > 0,
-        })
-        ops = answers.ops
-      }
-
-      await this.opService.opsBuildLoop(ops, opPath, this.state.config)
+      await buildPipeline({ opPath: path, config: this.state.config })
     } catch (err) {
       this.debug('%O', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })
