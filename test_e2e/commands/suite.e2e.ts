@@ -89,7 +89,8 @@ test('it should signup, signin, init, build, publish, search', async () => {
 
   console.log(`ops publish ${NEW_OP_NAME}`)
   try {
-    const publishRes = await run(['publish', NEW_OP_NAME])
+    const publishRes = await run(['publish', NEW_OP_NAME], [ENTER])
+    console.log('publishRes :', publishRes)
     expect(publishRes.toLowerCase()).toContain('preparing:')
     expect(publishRes).toContain('has been published!')
   } catch (e) {
@@ -99,7 +100,7 @@ test('it should signup, signin, init, build, publish, search', async () => {
 
   console.log('ops search')
   try {
-    const searchRes = await run(['search'])
+    const searchRes = await run(['search'], [SPACE, ENTER])
     await sleep(500)
 
     expect(searchRes).toContain(NEW_OP_NAME)
