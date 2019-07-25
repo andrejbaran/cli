@@ -10,9 +10,11 @@ import fs from 'fs-extra'
 import path from 'path'
 import { run, signin, sleep } from '../utils/cmd'
 import {
+  DOWN,
+  ENTER,
+  EXISTING_OP_NAME,
   EXISTING_USER_EMAIL,
   EXISTING_USER_PASSWORD,
-  EXISTING_OP_NAME,
   NEW_FILE,
 } from '../utils/constants'
 
@@ -31,7 +33,7 @@ afterAll(async () => {
   await sleep(500)
 })
 
-test('it should signin, run existing op', async () => {
+test.only('it should signin, run existing op', async () => {
   console.log('it should signin, run existing op')
   await signin(EXISTING_USER_EMAIL, EXISTING_USER_PASSWORD)
   await sleep(500)
@@ -40,7 +42,7 @@ test('it should signin, run existing op', async () => {
   try {
     const pathToExistingOp = path.join(__dirname, '../', EXISTING_OP_NAME)
 
-    const result = await run(['run', pathToExistingOp])
+    const result = await run(['run', pathToExistingOp], [DOWN, ENTER])
     // await sleep(6500)
 
     expect(result).toContain(`Running ${EXISTING_OP_NAME}...`)

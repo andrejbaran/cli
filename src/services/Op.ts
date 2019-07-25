@@ -1,28 +1,27 @@
 import { sdk, ux } from '@cto.ai/sdk'
-import { IConfig } from '@oclif/config'
 import Debug from 'debug'
 import Docker from 'dockerode'
-import { v4 as uuid } from 'uuid'
-import * as path from 'path'
 import * as fs from 'fs-extra'
 import * as os from 'os'
-import { AnalyticsService } from '~/services/Analytics'
-
-import { Op, Config, Container, User } from '~/types'
-import { asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
+import * as path from 'path'
+import { v4 as uuid } from 'uuid'
 import { RunCommandArgs } from '~/commands/run'
-import { ImageService } from '~/services/Image'
-import { ContainerService } from '~/services/Container'
-import { RegistryAuthService } from '~/services/RegistryAuth'
 import {
   HOME,
-  OPS_REGISTRY_HOST,
-  OPS_API_PATH,
   OPS_API_HOST,
+  OPS_API_PATH,
+  OPS_REGISTRY_HOST,
   OPS_SEGMENT_KEY,
 } from '~/constants/env'
 import { CouldNotMakeDir, InvalidInputCharacter } from '~/errors/CustomErrors'
+import { AnalyticsService } from '~/services/Analytics'
+import { ContainerService } from '~/services/Container'
+import { ImageService } from '~/services/Image'
+import { RegistryAuthService } from '~/services/RegistryAuth'
+import { Config, Container, Op } from '~/types'
+import { asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
 import { isValidOpName } from '~/utils/validate'
+
 const debug = Debug('ops:OpService')
 
 interface OpRunInputs {

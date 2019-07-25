@@ -7,20 +7,18 @@
  * DESCRIPTION
  *
  */
-import * as path from 'path'
 import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
+import * as path from 'path'
 import * as yaml from 'yaml'
-
 import Command, { flags } from '~/base'
-import { Container, Op, OpsYml, Config } from '~/types'
+import { OP_FILE } from '~/constants/opConfig'
 import {
   FileNotFoundError,
   MissingRequiredArgument,
   NoOpsFound,
 } from '~/errors/CustomErrors'
-
-import { OP_FILE } from '~/constants/opConfig'
+import { Config, Container, Op, OpsYml } from '~/types'
 import { asyncPipe } from '~/utils'
 
 export interface BuildInputs {
@@ -92,7 +90,9 @@ export default class Build extends Command {
 
   async run(this: any) {
     try {
-      const { args: path } = this.parse(Build)
+      const {
+        args: { path },
+      } = this.parse(Build)
       this.isLoggedIn()
 
       const buildPipeline = asyncPipe(

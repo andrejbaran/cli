@@ -7,18 +7,17 @@
  */
 
 import fs from 'fs-extra'
-import { run, sleep, cleanup, signin, signup } from '../utils/cmd'
+import { cleanup, run, signin, signup, sleep } from '../utils/cmd'
 import {
   ENTER,
-  SPACE,
-  DOWN,
-  NEW_OP_NAME,
-  NEW_OP_DESCRIPTION,
-  NEW_USER_EMAIL,
-  NEW_USER_PASSWORD,
-  NEW_USER_NAME,
   EXISTING_USER_EMAIL,
   EXISTING_USER_PASSWORD,
+  NEW_OP_DESCRIPTION,
+  NEW_OP_NAME,
+  NEW_USER_EMAIL,
+  NEW_USER_NAME,
+  NEW_USER_PASSWORD,
+  SPACE,
 } from '../utils/constants'
 
 // give the suite max 5 minutes to complete
