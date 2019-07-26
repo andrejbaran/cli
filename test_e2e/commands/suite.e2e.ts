@@ -24,11 +24,7 @@ import {
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 5
 
 beforeEach(async () => {
-  try {
-    await run(['account:signout'])
-  } catch (err) {
-    console.error(err)
-  }
+  await run(['account:signout'])
 })
 
 afterAll(async () => {
@@ -38,7 +34,6 @@ afterAll(async () => {
 
 // test is redundant but useful for debugging
 test.skip('it should signup', async () => {
-  console.log('it should signup')
   const result = await signup(NEW_USER_EMAIL, NEW_USER_NAME, NEW_USER_PASSWORD)
 
   expect(result).toMatchSnapshot()
@@ -47,7 +42,6 @@ test.skip('it should signup', async () => {
 
 // test is redundant but useful for debugging
 test.skip('it should signin', async () => {
-  console.log('it should signin')
   const result = await signin(EXISTING_USER_EMAIL, EXISTING_USER_PASSWORD)
 
   expect(result).toMatchSnapshot()
@@ -55,8 +49,6 @@ test.skip('it should signin', async () => {
 })
 
 test('it should signup, signin, init, build, publish, search', async () => {
-  console.log('it should signup, signin, init, build, publish, search')
-
   await signup(NEW_USER_EMAIL, NEW_USER_NAME, NEW_USER_PASSWORD)
   await sleep(500)
 
@@ -64,49 +56,32 @@ test('it should signup, signin, init, build, publish, search', async () => {
   await sleep(500)
 
   console.log('ops init')
-  try {
-    const initRes = await run(
-      ['init'],
-      [SPACE, ENTER, NEW_OP_NAME, ENTER, NEW_OP_DESCRIPTION, ENTER],
-    )
-    expect(initRes.toLowerCase()).toContain('success')
-    expect(initRes).toContain('🚀 To test your op run: $ ops run t_my_new_op')
-  } catch (e) {
-    throw e
-  }
+  const initRes = await run(
+    ['init'],
+    [SPACE, ENTER, NEW_OP_NAME, ENTER, NEW_OP_DESCRIPTION, ENTER],
+  )
+  expect(initRes.toLowerCase()).toContain('success')
+  expect(initRes).toContain('🚀 To test your op run: $ ops run t_my_new_op')
 
   await sleep(500)
 
   console.log(`ops build ${NEW_OP_NAME}`)
-  try {
-    const buildRes = await run(['build', NEW_OP_NAME])
-    expect(buildRes.toLowerCase()).toContain('successfully built')
-  } catch (e) {
-    throw e
-  }
+  const buildRes = await run(['build', NEW_OP_NAME])
+  expect(buildRes.toLowerCase()).toContain('successfully built')
 
   await sleep(500)
 
   console.log(`ops publish ${NEW_OP_NAME}`)
-  try {
-    const publishRes = await run(['publish', NEW_OP_NAME], [ENTER])
-    console.log('publishRes :', publishRes)
-    expect(publishRes.toLowerCase()).toContain('preparing:')
-    expect(publishRes).toContain('has been published!')
-  } catch (e) {
-    throw e
-  }
+  const publishRes = await run(['publish', NEW_OP_NAME], [ENTER])
+  expect(publishRes.toLowerCase()).toContain('preparing:')
+  expect(publishRes).toContain('has been published!')
   await sleep(500)
 
   console.log('ops search')
-  try {
-    const searchRes = await run(['search'], [SPACE, ENTER])
-    await sleep(500)
+  const searchRes = await run(['search'], [SPACE, ENTER])
+  await sleep(500)
 
-    expect(searchRes).toContain(NEW_OP_NAME)
-  } catch (e) {
-    throw e
-  }
+  expect(searchRes).toContain(NEW_OP_NAME)
   await sleep(500)
 
   const pathToOp = `./${NEW_OP_NAME}`

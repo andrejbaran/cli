@@ -33,35 +33,26 @@ afterAll(async () => {
   await sleep(500)
 })
 
-test.only('it should signin, run existing op', async () => {
+test('it should signin, run existing op', async () => {
   console.log('it should signin, run existing op')
   await signin(EXISTING_USER_EMAIL, EXISTING_USER_PASSWORD)
   await sleep(500)
 
   console.log(`ops run ${EXISTING_OP_NAME}`)
-  try {
-    const pathToExistingOp = path.join(__dirname, '../', EXISTING_OP_NAME)
+  const pathToExistingOp = path.join(__dirname, '../', EXISTING_OP_NAME)
 
-    const result = await run(['run', pathToExistingOp], [DOWN, ENTER])
-    // await sleep(6500)
+  const result = await run(['run', pathToExistingOp], [DOWN, ENTER])
+  // await sleep(6500)
 
-    expect(result).toContain(`Running ${EXISTING_OP_NAME}...`)
-    const newFile = path.join(process.cwd(), NEW_FILE)
-    const newFileExists = fs.existsSync(newFile)
-    console.log('newfile', newFile, newFileExists)
-    expect(newFileExists).toBeTruthy()
+  expect(result).toContain(`Running ${EXISTING_OP_NAME}...`)
+  const newFile = path.join(process.cwd(), NEW_FILE)
+  const newFileExists = fs.existsSync(newFile)
+  console.log('newfile', newFile, newFileExists)
+  expect(newFileExists).toBeTruthy()
 
-    if (newFileExists) {
-      fs.unlinkSync(newFile)
-    }
-    await sleep(500)
-  } catch (error) {
-    throw error
+  if (newFileExists) {
+    fs.unlinkSync(newFile)
   }
-
   await sleep(500)
-})
-
-test('it should true', async () => {
-  expect(true).toBe(true)
+  await sleep(500)
 })

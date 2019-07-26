@@ -6,7 +6,7 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-import { run, signin, sleep, signup, cleanup } from '../../utils/cmd'
+import { cleanup, run, signin, signup, sleep } from '../../utils/cmd'
 import {
   NEW_USER_EMAIL,
   NEW_USER_NAME,
@@ -16,11 +16,7 @@ import {
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
 
 beforeEach(async () => {
-  try {
-    await run(['account:signout'])
-  } catch (err) {
-    console.error(err)
-  }
+  await run(['account:signout'])
 })
 
 afterAll(async () => {
@@ -34,14 +30,10 @@ test('it should signup, signin, team:switch', async () => {
 
   await signin(NEW_USER_EMAIL, NEW_USER_PASSWORD)
 
-  try {
-    const teamSwitchRes = await run(['team:switch'])
+  const teamSwitchRes = await run(['team:switch'])
 
-    expect(teamSwitchRes).toContain(`Here's the list of your teams`)
-    expect(teamSwitchRes).toContain(NEW_USER_NAME)
-  } catch (e) {
-    console.error('team:switch', e)
-  }
+  expect(teamSwitchRes).toContain(`Here's the list of your teams`)
+  expect(teamSwitchRes).toContain(NEW_USER_NAME)
   await sleep(500)
   await cleanup()
 })

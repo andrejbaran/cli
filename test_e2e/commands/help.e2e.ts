@@ -6,26 +6,18 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-import { run, sleep } from '../utils/cmd'
+import { run } from '../utils/cmd'
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
 
 test('it should display help commands when no arguments passed', async () => {
-  try {
-    console.log('it should display help commands when no arguments passed')
-    const result = await run(['--help'])
-    expect(result).toContain('Manage your account settings.')
-  } catch (error) {
-    console.error(error)
-  }
+  console.log('it should display help commands when no arguments passed')
+  const result = await run(['--help'])
+  expect(result).toContain('Manage your account settings.')
 })
 
 test('it should display help commands when --help flag passed', async () => {
-  try {
-    console.log('it should display help commands when --help flag passed')
-    const result = await run()
-    expect(result).toContain('Manage your account settings.')
-  } catch (error) {
-    console.error(error)
-  }
+  console.log('it should display help commands when --help flag passed')
+  const result = await run()
+  expect(result).toContain('Manage your account settings.')
 })

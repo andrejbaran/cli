@@ -8,21 +8,17 @@
 
 import { run, signin, sleep } from '../../utils/cmd'
 import {
-  getValidTeamName,
-  EXISTING_USER_EMAIL,
   ENTER,
+  EXISTING_USER_EMAIL,
   EXISTING_USER_PASSWORD,
+  getValidTeamName,
   INVALID_TEAM_NAME,
 } from '../../utils/constants'
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
 
 beforeEach(async () => {
-  try {
-    await run(['account:signout'])
-  } catch (err) {
-    console.error(err)
-  }
+  await run(['account:signout'])
 })
 
 afterAll(async () => {
@@ -34,26 +30,16 @@ test('it should create a new team when prompting', async () => {
   console.log('it should create a new team by prompting')
   await signin(EXISTING_USER_EMAIL, EXISTING_USER_PASSWORD)
   await sleep(500)
-
-  try {
-    const result = await run(['team:create'], [getValidTeamName(), ENTER])
-    expect(result).toContain('team has been created')
-  } catch (error) {
-    console.error(error)
-  }
+  const result = await run(['team:create'], [getValidTeamName(), ENTER])
+  expect(result).toContain('team has been created')
 })
 
 test('it should create a new team when name flag set', async () => {
   console.log('it should create a new team when name flag set')
   await signin(EXISTING_USER_EMAIL, EXISTING_USER_PASSWORD)
   await sleep(500)
-
-  try {
-    const result = await run(['team:create', '-n', getValidTeamName()])
-    expect(result).toContain('team has been created')
-  } catch (error) {
-    console.error(error)
-  }
+  const result = await run(['team:create', '-n', getValidTeamName()])
+  expect(result).toContain('team has been created')
 })
 
 test('it should fail to create a new team when prompted with an invalid name', async () => {
@@ -62,13 +48,8 @@ test('it should fail to create a new team when prompted with an invalid name', a
   )
   await signin(EXISTING_USER_EMAIL, EXISTING_USER_PASSWORD)
   await sleep(500)
-
-  try {
-    const result = await run(['team:create'], [INVALID_TEAM_NAME, ENTER])
-    expect(result).toContain('Invalid team name')
-  } catch (error) {
-    console.error(error)
-  }
+  const result = await run(['team:create'], [INVALID_TEAM_NAME, ENTER])
+  expect(result).toContain('Invalid team name')
 })
 
 test('it should fail to create a new team when flag is set to invalid name', async () => {
@@ -77,11 +58,6 @@ test('it should fail to create a new team when flag is set to invalid name', asy
   )
   await signin(EXISTING_USER_EMAIL, EXISTING_USER_PASSWORD)
   await sleep(500)
-
-  try {
-    const result = await run(['team:create', '-n', INVALID_TEAM_NAME])
-    expect(result).toContain('invalid team name')
-  } catch (error) {
-    console.error(error)
-  }
+  const result = await run(['team:create', '-n', INVALID_TEAM_NAME])
+  expect(result).toContain('invalid team name')
 })
