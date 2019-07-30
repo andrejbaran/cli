@@ -3,7 +3,6 @@ ops:
   - name: hello-world
     description: Your first hello-world op
     run: node /ops/index.js
-    network: 'host'
     env:
       - 'USER=world'
       - 'OPS_ACCESS_TOKEN'
@@ -17,6 +16,8 @@ ops:
     mountHome: false
     bind:
       - '/tmp:/tmp'
+    port:
+      - 3000:3000
     help:
       usage: 'Your first hello-world op'
       arguments:

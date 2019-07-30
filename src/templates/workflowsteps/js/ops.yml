@@ -3,10 +3,11 @@ ops:
   - name: js
     description: js
     run: node /ops/index.js
-    network: host
     env:
       - USER=world
       - OPS_ACCESS_TOKEN
+    port:
+      - 3000:3000
     src:
       - Dockerfile
       - index.js

@@ -8,7 +8,7 @@ import { terminalText } from '~/utils'
 const expectedSource = {
   source: errorSource.EXPECTED,
 }
-const { actionBlue, white } = ux.colors
+const { actionBlue, white, dim } = ux.colors
 
 const problemContinues = `If the problem continues please contact us at: ${actionBlue(
   INTERCOM_EMAIL,
@@ -428,6 +428,22 @@ export class SignOutError extends ErrorTemplate {
         `😅 Uh-oh, we weren't able to sign out up at this point in time.\n    ${tryAgainOrContact}`,
       ),
       err,
+      expectedSource,
+    )
+  }
+}
+
+export class YamlPortError extends ErrorTemplate {
+  constructor(badPort: string) {
+    super(
+      white(
+        `🤔 We're having trouble parsing the port: ${badPort}.\n ${dim(
+          'Please enter with the format',
+        )} ${actionBlue('{HostPort}:{InternalPort}')}${dim(
+          '. For example:',
+        )} ${actionBlue('3000:3000')}`,
+      ),
+      undefined,
       expectedSource,
     )
   }
