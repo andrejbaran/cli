@@ -12,6 +12,7 @@ export interface Op extends BaseFields {
   src: string[]
   mountCwd: boolean
   mountHome: boolean
+  port: string[]
   // RUN CMD
   image: string | void
 }

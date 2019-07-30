@@ -3,6 +3,7 @@
 ############################
 FROM node:10-alpine AS dep
 
+# This is enforced because otherwise the code wouldn't get detected by the CLI
 WORKDIR /ops
 
 RUN apk add python make

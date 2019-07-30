@@ -1,6 +1,6 @@
 import { sdk, ux } from '@cto.ai/sdk'
 import Debug from 'debug'
-import Docker from 'dockerode'
+import Docker, { ContainerCreateOptions, PortMap } from 'dockerode'
 import * as fs from 'fs-extra'
 import * as os from 'os'
 import * as path from 'path'
@@ -13,7 +13,11 @@ import {
   OPS_REGISTRY_HOST,
   OPS_SEGMENT_KEY,
 } from '~/constants/env'
-import { CouldNotMakeDir, InvalidInputCharacter } from '~/errors/CustomErrors'
+import {
+  CouldNotMakeDir,
+  InvalidInputCharacter,
+  YamlPortError,
+} from '~/errors/CustomErrors'
 import { AnalyticsService } from '~/services/Analytics'
 import { ContainerService } from '~/services/Container'
 import { ImageService } from '~/services/Image'
@@ -24,11 +28,11 @@ import { isValidOpName } from '~/utils/validate'
 
 const debug = Debug('ops:OpService')
 
-interface OpRunInputs {
+export interface OpRunInputs {
   op: Op
   config: Config
   parsedArgs: RunCommandArgs
-  options: object
+  options: ContainerCreateOptions
   container: Docker.Container
 }
 export class OpService {
@@ -85,6 +89,7 @@ export class OpService {
         this.hostSetup,
         this.setBinds,
         this.getOptions,
+        this.addPortsToOptions,
         this.createContainer,
         this.attachToContainer,
       )
@@ -264,6 +269,83 @@ export class OpService {
     }
 
     return { ...rest, op, options }
+  }
+
+  addPortsToOptions = async ({
+    op,
+    options,
+    ...rest
+  }: OpRunInputs): Promise<OpRunInputs> => {
+    /**
+     * Turns a string of ports to the syntax docker understands if it exists
+     * https://docs.docker.com/engine/api/v1.39/#operation/ContainerCreate
+     *
+     * e.g.
+     * ports:
+     *   - 3000:3000
+     *   - 5000:9000
+     * Will turn to
+     * PortBindings: {
+     *  "3000/tcp": [
+     *   {
+     *     "HostPort": "3000"
+     *   },
+     *  "5000/tcp": [
+     *   {
+     *     "HostPort": "9000"
+     *   }
+     * ]
+     * ExposedPorts: {
+     *   "3000/tcp": {},
+     *   "5000/tcp": {}
+     * }
+     */
+    const ExposedPorts: { [key: string]: {} } = {}
+    const PortBindings: PortMap = {}
+    if (op.port) {
+      const parsedPorts = op.port
+        .filter(p => !!p) // Remove null valuesT
+        .map(port => {
+          if (typeof port !== 'string') throw new YamlPortError(port)
+          const portSplits = port.split(':')
+          if (!portSplits.length || portSplits.length > 2) {
+            throw new YamlPortError(port)
+          }
+          portSplits.forEach(p => {
+            const portNumber = parseInt(p, 10)
+            if (!portNumber) throw new YamlPortError(port)
+          })
+          return { host: portSplits[0], machine: `${portSplits[1]}/tcp` }
+        })
+
+      parsedPorts.forEach(parsedPorts => {
+        ExposedPorts[parsedPorts.machine] = {}
+      })
+
+      parsedPorts.forEach(parsedPorts => {
+        PortBindings[parsedPorts.machine] = [
+          ...(PortBindings[parsedPorts.machine] || []),
+          {
+            HostPort: parsedPorts.host,
+          },
+        ]
+      })
+    }
+
+    options = {
+      ...options,
+      ExposedPorts,
+      HostConfig: {
+        ...options.HostConfig,
+        PortBindings,
+      },
+    }
+
+    return {
+      ...rest,
+      op,
+      options,
+    }
   }
 
   createContainer = async (inputs: OpRunInputs): Promise<OpRunInputs> => {
