@@ -39,7 +39,7 @@ export default class TeamJoin extends Command {
   joinTeam = async (inputs: JoinInputs): Promise<JoinInputs> => {
     try {
       const { inviteCode } = inputs
-      const { data: newTeam } = await this.api.create(
+      const { data: newTeam } = await this.services.api.create(
         'teams/accept',
         { inviteCode },
         { headers: { Authorization: this.accessToken } },
@@ -86,7 +86,7 @@ export default class TeamJoin extends Command {
     const {
       user: { email, username },
     } = config
-    this.analytics.track(
+    this.services.analytics.track(
       {
         userId: email,
         teamId,
@@ -102,7 +102,7 @@ export default class TeamJoin extends Command {
 
   async run() {
     try {
-      this.isLoggedIn()
+      await this.isLoggedIn()
       const joinPipeline = asyncPipe(
         this.inviteCodePrompt,
         this.startSpinner,

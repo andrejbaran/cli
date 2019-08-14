@@ -3,6 +3,7 @@ import TeamJoin, { JoinInputs } from '~/commands/team/join'
 import { FeathersClient } from '~/services/Feathers'
 import { InviteCodeInvalid } from '~/errors/CustomErrors'
 import { createMockTeam } from '../../mocks'
+import { Services } from '~/types'
 
 let cmd: TeamJoin
 let config
@@ -17,12 +18,13 @@ describe('joinTeam', () => {
     const mockFeathersService = new FeathersClient()
     mockFeathersService.create = jest.fn().mockReturnValue({ data: mockTeam })
 
-    const inputs: Pick<JoinInputs, 'inviteCode'> = {
+    const inputs: JoinInputs = {
       inviteCode: mockInviteCode,
+      newTeam: mockTeam,
     }
     const fakeToken = 'FAKETOKEN'
 
-    cmd = new TeamJoin([], config, mockFeathersService)
+    cmd = new TeamJoin([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
     await cmd.joinTeam(inputs)
     expect(mockFeathersService.create).toHaveBeenCalledWith(
@@ -44,12 +46,13 @@ describe('joinTeam', () => {
     const mockFeathersService = new FeathersClient()
     mockFeathersService.create = jest.fn().mockReturnValue({ data: null })
 
-    const inputs: Pick<JoinInputs, 'inviteCode'> = {
+    const inputs: JoinInputs = {
       inviteCode: mockInviteCode,
+      newTeam: mockTeam,
     }
     const fakeToken = 'FAKETOKEN'
 
-    cmd = new TeamJoin([], config, mockFeathersService)
+    cmd = new TeamJoin([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
 
     await expect(cmd.joinTeam(inputs)).rejects.toThrowError(
@@ -75,12 +78,13 @@ describe('joinTeam', () => {
     const mockFeathersService = new FeathersClient()
     mockFeathersService.create = jest.fn().mockRejectedValue(new Error())
 
-    const inputs: Pick<JoinInputs, 'inviteCode'> = {
+    const inputs: JoinInputs = {
       inviteCode: mockInviteCode,
+      newTeam: mockTeam,
     }
     const fakeToken = 'FAKETOKEN'
 
-    cmd = new TeamJoin([], config, mockFeathersService)
+    cmd = new TeamJoin([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
     await expect(cmd.joinTeam(inputs)).rejects.toThrowError(
       new InviteCodeInvalid(null),

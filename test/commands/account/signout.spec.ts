@@ -29,7 +29,9 @@ describe('signUserOut', () => {
   test('should throw an error if the accessToken is not cleared', async () => {
     cmd = new AccountSignout([], config)
     cmd.clearConfig = jest.fn()
-    cmd.readConfig = jest.fn().mockReturnValue({ accessToken: 'FakeToken' })
+    cmd.readConfig = jest
+      .fn()
+      .mockReturnValue({ tokens: { accessToken: 'FakeToken' } })
     await expect(cmd.signUserOut()).rejects.toThrow(SignOutError)
   })
   test('should handle errors if an exception is thrown', async () => {

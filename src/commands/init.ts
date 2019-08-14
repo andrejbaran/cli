@@ -308,7 +308,7 @@ export default class Init extends Command {
       const { destDir } = initPaths
       const { templates } = initParams
       const { name, description } = this.getNameAndDescription(initParams)
-      this.analytics.track(
+      this.services.analytics.track(
         {
           userId: this.user.email,
           teamId: this.team.id,
@@ -353,7 +353,7 @@ export default class Init extends Command {
 
   async run() {
     try {
-      this.isLoggedIn()
+      await this.isLoggedIn()
 
       const initPipeline = asyncPipe(
         this.determineTemplate,

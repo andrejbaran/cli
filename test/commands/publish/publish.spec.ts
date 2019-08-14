@@ -1,13 +1,14 @@
 import * as Config from '@oclif/config'
-import Publish from './../../../src/commands/publish'
-import { PublishInputs } from './../../../src/commands/publish'
+import Publish from '~/commands/publish'
+import { PublishInputs } from '~/commands/publish'
 import { BuildSteps } from '~/services/BuildSteps'
 import { FeathersClient } from '~/services/Feathers'
-import { ImageService } from './../../../src/services/Image'
-import { Publish } from '~/services/Publish'
-import { Op, RegistryAuth } from './../../../src/types'
-import { Workflow } from './../../../src/types/OpsYml'
-import { createMockWorkflow } from './../../../test/mocks/index.ts'
+import { ImageService } from '~/services/Image'
+import { Op, RegistryAuth, User } from '~/types'
+import { Workflow } from '~/types/OpsYml'
+import { Services } from '~/types'
+import { Publish as PublishService } from '~/services/Publish'
+import { createMockWorkflow } from './../../../test//mocks'
 
 let cmd: Publish
 
@@ -33,43 +34,35 @@ describe('BuildStep', () => {
 
     // MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.create = jest.fn()
-    mockFeathersService.create.mockReturnValue({ data: {} as Op })
+    mockFeathersService.create = jest.fn().mockReturnValue({ data: {} as Op })
 
     // SPY ON BUILD STEPS
     const mockBuildStepService = new BuildSteps()
-    mockBuildStepService.isGlueCode = jest.fn()
-    mockBuildStepService.isGlueCode.mockReturnValue(true)
+    mockBuildStepService.isGlueCode = jest.fn().mockReturnValue(true)
 
-    mockBuildStepService.buildAndPublishGlueCode = jest.fn()
-    mockBuildStepService.buildAndPublishGlueCode.mockReturnValue(
-      'ops run mock-op',
-    )
+    mockBuildStepService.buildAndPublishGlueCode = jest
+      .fn()
+      .mockReturnValue('ops run mock-op')
 
-    mockBuildStepService.isOpRun = jest.fn()
-    mockBuildStepService.isOpRun.mockReturnValue(true)
+    mockBuildStepService.isOpRun = jest.fn().mockReturnValue(true)
 
     const config = await Config.load()
-    cmd = new Publish(
-      [],
-      config,
-      mockFeathersService,
-      undefined,
-      mockBuildStepService,
-    )
+    cmd = new Publish([], config, {
+      api: mockFeathersService,
+      buildStepService: mockBuildStepService,
+    } as Services)
     cmd.team = {
       id: 'team-id',
       name: 'team-name',
     }
     cmd.state = {
       config: {
-        accessToken: '',
+        tokens: { accessToken: '', refreshToken: '', idToken: '' },
         team: cmd.team,
-        user: {},
+        user: {} as User,
       },
     }
-    cmd.getRegistryAuth = jest.fn()
-    cmd.getRegistryAuth.mockReturnValue({} as RegistryAuth)
+    cmd.getRegistryAuth = jest.fn().mockReturnValue({} as RegistryAuth)
 
     await cmd.workflowsPublishLoop(inputs)
 
@@ -107,44 +100,36 @@ describe('BuildStep', () => {
 
     // SPY ON FEATHERS CREATE
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.create = jest.fn()
-    mockFeathersService.create.mockReturnValue({ data: {} as Op })
+    mockFeathersService.create = jest.fn().mockReturnValue({ data: {} as Op })
 
     // MOCK BUILD STEP SERVICE
     const mockBuildStepService = new BuildSteps()
-    mockBuildStepService.isGlueCode = jest.fn()
-    mockBuildStepService.isGlueCode.mockReturnValue(true)
+    mockBuildStepService.isGlueCode = jest.fn().mockReturnValue(true)
 
-    mockBuildStepService.buildAndPublishGlueCode = jest.fn()
-    mockBuildStepService.buildAndPublishGlueCode.mockReturnValue(
-      'ops run mock-op',
-    )
+    mockBuildStepService.buildAndPublishGlueCode = jest
+      .fn()
+      .mockReturnValue('ops run mock-op')
 
-    mockBuildStepService.isOpRun = jest.fn()
-    mockBuildStepService.isOpRun.mockReturnValue(true)
+    mockBuildStepService.isOpRun = jest.fn().mockReturnValue(true)
 
     const config = await Config.load()
-    cmd = new Publish(
-      [],
-      config,
-      mockFeathersService,
-      undefined,
-      mockBuildStepService,
-    )
+    cmd = new Publish([], config, {
+      api: mockFeathersService,
+      buildStepService: mockBuildStepService,
+    } as Services)
     cmd.team = {
       id: 'team-id',
       name: 'team-name',
     }
     cmd.state = {
       config: {
-        accessToken: '',
+        tokens: { accessToken: '', refreshToken: '', idToken: '' },
         team: cmd.team,
-        user: {},
+        user: {} as User,
       },
     }
 
-    cmd.getRegistryAuth = jest.fn()
-    cmd.getRegistryAuth.mockReturnValue({} as RegistryAuth)
+    cmd.getRegistryAuth = jest.fn().mockReturnValue({} as RegistryAuth)
 
     await cmd.workflowsPublishLoop(inputs)
 
@@ -170,36 +155,28 @@ describe('BuildStep', () => {
 
 it('should publish ops in a loop', async () => {
   const mockConfig = {} as Config.IConfig
-  mockConfig.runHook = jest.fn()
-  mockConfig.runHook.mockReturnValue(true)
+  mockConfig.runHook = jest.fn().mockReturnValue(true)
 
   const mockImageService = new ImageService()
-  mockImageService.checkLocalImage = jest.fn()
-  mockImageService.checkLocalImage.mockReturnValue(true)
+  mockImageService.checkLocalImage = jest.fn().mockReturnValue(true)
 
-  const mockPublishService = new Publish()
-  mockPublishService.publishOp = jest.fn()
-  mockPublishService.publishOp.mockReturnValue({
+  const mockPublishService = new PublishService()
+  mockPublishService.publishOpToRegistry = jest.fn().mockReturnValue({
     data: {
       name: 'mock-op',
     } as Op,
   })
 
-  cmd = new Publish(
-    [],
-    mockConfig,
-    undefined,
-    mockPublishService,
-    undefined,
-    mockImageService,
-  )
+  cmd = new Publish([], mockConfig, {
+    publishService: mockPublishService,
+    imageService: mockImageService,
+  } as Services)
   cmd.team = {
     id: 'team-id',
     name: 'team-name',
   }
 
-  cmd.getRegistryAuth = jest.fn()
-  cmd.getRegistryAuth.mockReturnValue({} as RegistryAuth)
+  cmd.getRegistryAuth = jest.fn().mockReturnValue({} as RegistryAuth)
 
   const inputs: PublishInputs = {
     version: 'mockVersion',

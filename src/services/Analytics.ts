@@ -69,7 +69,6 @@ export class AnalyticsService {
         )
         .catch(err => {
           debug('%O', err)
-          throw new APIError(err)
         })
     }
     return this.segmentClient.track(payload)

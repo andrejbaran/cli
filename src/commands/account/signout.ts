@@ -28,8 +28,8 @@ export default class AccountSignout extends Command {
   signUserOut = async () => {
     try {
       await this.clearConfig(this)
-      const { accessToken } = await this.readConfig()
-      if (accessToken) {
+      const { tokens } = await this.readConfig()
+      if (tokens && tokens.accessToken) {
         throw new SignOutError(null)
       }
     } catch (err) {
@@ -51,7 +51,7 @@ export default class AccountSignout extends Command {
   }
 
   sendAnalytics = () => {
-    this.analytics.track(
+    this.services.analytics.track(
       {
         userId: this.user.email,
         teamId: this.team.id,

@@ -9,7 +9,7 @@
 export interface User {
   username: string
   email: string
-  _id: string
+  id: string
   registryHost?: string
   nodeEnv?: string
 }

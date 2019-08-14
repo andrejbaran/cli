@@ -16,7 +16,6 @@ import {
   DockerPublishNoImageFound,
 } from '../errors/CustomErrors'
 import {
-  Config,
   Container,
   Op,
   OpsYml,
@@ -202,7 +201,6 @@ export default class Publish extends Command {
   public opsPublishLoop = async ({
     ops,
     registryAuth,
-    docker,
     version,
   }: PublishInputs) => {
     for (const op of ops) {
@@ -210,7 +208,7 @@ export default class Publish extends Command {
         throw new InvalidInputCharacter('Op Name')
       }
 
-      const localImage = await this.imageService.checkLocalImage(
+      const localImage = await this.services.imageService.checkLocalImage(
         `${OPS_REGISTRY_HOST}/${this.team.name}/${op.name}:latest`,
       )
 
@@ -220,15 +218,15 @@ export default class Publish extends Command {
 
       const {
         data: apiOp,
-      }: { data: Op } = await this.publishService.publishOpToAPI(
+      }: { data: Op } = await this.services.publishService.publishOpToAPI(
         op,
         version,
         this.team.id,
         this.accessToken,
-        this.api,
+        this.services.api,
       )
 
-      await this.publishService.publishOpToRegistry(
+      await this.services.publishService.publishOpToRegistry(
         apiOp,
         registryAuth,
         this.team.name,
@@ -248,7 +246,7 @@ export default class Publish extends Command {
         for (const step of workflow.steps) {
           let newStep = ''
 
-          if (await this.buildStepService.isGlueCode(step)) {
+          if (await this.services.buildStepService.isGlueCode(step)) {
             const registryAuth = await this.getRegistryAuth(
               this.accessToken,
               this.team.name,
@@ -262,22 +260,22 @@ export default class Publish extends Command {
               './../templates/workflowsteps/js/',
             )
 
-            newStep = await this.buildStepService.buildAndPublishGlueCode(
+            newStep = await this.services.buildStepService.buildAndPublishGlueCode(
               step,
               this.team.id,
               this.team.name,
               this.accessToken,
               opPath,
               this.user,
-              this.publishService,
-              this.opService,
-              this.api,
+              this.services.publishService,
+              this.services.opService,
+              this.services.api,
               registryAuth,
               this.state.config,
             )
           }
 
-          if (!this.buildStepService.isOpRun(newStep)) {
+          if (!this.services.buildStepService.isOpRun(newStep)) {
             this.debug('InvalidStepsFound - Step:', newStep)
             throw new InvalidStepsFound(newStep)
           }
@@ -289,7 +287,9 @@ export default class Publish extends Command {
       }
 
       try {
-        const { data: apiWorkflow }: { data: Op } = await this.api.create(
+        const {
+          data: apiWorkflow,
+        }: { data: Op } = await this.services.api.create(
           'workflows',
           { ...workflow, version, teamID: this.team.id },
           {
@@ -316,7 +316,7 @@ export default class Publish extends Command {
     publishType: string,
     opOrWorkflow: Op | Workflow,
   ) => {
-    this.analytics.track({
+    this.services.analytics.track({
       userId: this.user.email,
       event: 'Ops CLI Publish',
       properties: {
@@ -333,7 +333,7 @@ export default class Publish extends Command {
 
   public async run() {
     try {
-      this.isLoggedIn()
+      await this.isLoggedIn()
       const { args } = this.parse(Publish)
 
       const publishPipeline = asyncPipe(

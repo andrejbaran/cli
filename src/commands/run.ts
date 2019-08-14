@@ -250,7 +250,7 @@ export default class Run extends Command {
         parsedArgs: { opParams },
       } = inputs
       if ('steps' in opOrWorkflow) {
-        await this.workflowService.run(opOrWorkflow, opParams, config)
+        await this.services.workflowService.run(opOrWorkflow, opParams, config)
       } else {
         if (!opOrWorkflow.isPublished) {
           const image = path.join(
@@ -263,7 +263,7 @@ export default class Run extends Command {
             image,
           }
         }
-        await this.opService.run(opOrWorkflow, parsedArgs, config)
+        await this.services.opService.run(opOrWorkflow, parsedArgs, config)
       }
       return { ...inputs, opOrWorkflow }
     } catch (err) {
@@ -284,12 +284,15 @@ export default class Run extends Command {
         search: nameOrPath,
         team_id: config.team.id,
       }
-      const { data: apiOps }: OpsFindResponse = await this.api.find('ops', {
-        query,
-        headers: {
-          Authorization: config.accessToken,
+      const { data: apiOps }: OpsFindResponse = await this.services.api.find(
+        'ops',
+        {
+          query,
+          headers: {
+            Authorization: config.tokens.accessToken,
+          },
         },
-      })
+      )
       const opsAndWorkflows = apiOps.map(op => {
         const isPublic = op.teamID !== config.team.id ? true : false
         return { ...op, isPublished: true, isPublic }
@@ -313,15 +316,14 @@ export default class Run extends Command {
         search: nameOrPath,
         teamId: config.team.id,
       }
-      let { data: apiWorkflows }: WorkflowsFindResponse = await this.api.find(
-        'workflows',
-        {
-          query,
-          headers: {
-            Authorization: config.accessToken,
-          },
+      let {
+        data: apiWorkflows,
+      }: WorkflowsFindResponse = await this.services.api.find('workflows', {
+        query,
+        headers: {
+          Authorization: config.tokens.accessToken,
         },
-      )
+      })
       apiWorkflows = apiWorkflows.map(workflow => {
         const isPublic = workflow.teamID !== config.team.id ? true : false
         return { ...workflow, isPublished: true, isPublic }
@@ -339,7 +341,7 @@ export default class Run extends Command {
       opOrWorkflow: { id, name, description },
       parsedArgs: { opParams },
     } = inputs
-    this.analytics.track(
+    this.services.analytics.track(
       {
         userId: this.user.email,
         event: 'Ops CLI Run',
@@ -360,7 +362,7 @@ export default class Run extends Command {
 
   async run() {
     try {
-      this.isLoggedIn()
+      await this.isLoggedIn()
       const { config } = this.state
 
       const parsedArgs: RunCommandArgs = this.customParse(Run, this.argv)

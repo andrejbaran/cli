@@ -32,7 +32,7 @@ USAGE
 # Commands
 
 <!-- commands -->
-* [`ops account:reset [TOKEN]`](#ops-accountreset-token)
+* [`ops account:reset`](#ops-accountreset)
 * [`ops account:signin`](#ops-accountsignin)
 * [`ops account:signout`](#ops-accountsignout)
 * [`ops account:signup`](#ops-accountsignup)
@@ -52,16 +52,13 @@ USAGE
 * [`ops update`](#ops-update)
 * [`ops whoami`](#ops-whoami)
 
-## `ops account:reset [TOKEN]`
+## `ops account:reset`
 
 Reset your password.
 
 ```
 USAGE
-  $ ops account:reset [TOKEN]
-
-ARGUMENTS
-  TOKEN  Reset password token.
+  $ ops account:reset
 ```
 
 _See code: [src/commands/account/reset.ts](https://github.com/cto.ai/ops/blob/v1.4.29/src/commands/account/reset.ts)_
@@ -75,9 +72,7 @@ USAGE
   $ ops account:signin
 
 OPTIONS
-  -e, --email=email        Email
-  -h, --help               show CLI help
-  -p, --password=password  Password
+  -h, --help  show CLI help
 ```
 
 _See code: [src/commands/account/signin.ts](https://github.com/cto.ai/ops/blob/v1.4.29/src/commands/account/signin.ts)_

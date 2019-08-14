@@ -84,12 +84,15 @@ export default class Remove extends Command {
       if (filter.length) Object.assign(query, { search: filter })
       const {
         data: apiResults,
-      }: { data: (Op | Workflow)[] } = await this.api.find(`${removeType}s`, {
-        query,
-        headers: {
-          Authorization: this.accessToken,
+      }: { data: (Op | Workflow)[] } = await this.services.api.find(
+        `${removeType}s`,
+        {
+          query,
+          headers: {
+            Authorization: this.accessToken,
+          },
         },
-      })
+      )
 
       return { ...inputs, apiResults }
     } catch (err) {
@@ -162,7 +165,7 @@ export default class Remove extends Command {
       } = inputs
       this.log('\n 🗑  Removing from registry...')
 
-      await this.api.remove(`${removeType}s`, id, {
+      await this.services.api.remove(`${removeType}s`, id, {
         headers: { Authorization: this.accessToken },
       })
       return inputs
@@ -198,7 +201,7 @@ export default class Remove extends Command {
       opOrWorkflow: { id, name, description },
       removeType,
     } = inputs
-    this.analytics.track(
+    this.services.analytics.track(
       {
         userId: email,
         event: 'Ops CLI Remove',
@@ -218,7 +221,7 @@ export default class Remove extends Command {
 
   async run() {
     try {
-      this.isLoggedIn()
+      await this.isLoggedIn()
       const {
         args: { filter },
       } = this.parse(Remove)

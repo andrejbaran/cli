@@ -1,8 +1,9 @@
 import * as Config from '@oclif/config'
 
-import TeamSwitch from '~/commands/team/switch'
+import TeamSwitch, { SwitchInputs } from '~/commands/team/switch'
 import { ConfigError, APIError } from '~/errors/CustomErrors'
 import { FeathersClient } from '~/services/Feathers'
+import { Services } from '~/types'
 import { createMockTeam } from '../../mocks'
 
 let cmd: TeamSwitch
@@ -38,9 +39,9 @@ describe('getTeamsFromApi', () => {
     const mockToken = 'FAKE_TOKEN'
     const mockFeathersService = new FeathersClient()
     mockFeathersService.find = jest.fn().mockReturnValue({ data: [mockTeam] })
-    cmd = new TeamSwitch([], config, mockFeathersService)
+    cmd = new TeamSwitch([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = mockToken
-    const res = await cmd.getTeamsFromApi({})
+    const res = await cmd.getTeamsFromApi({} as SwitchInputs)
     expect(res.teams[0]).toBe(mockTeam)
     expect(mockFeathersService.find).toBeCalledWith('teams', {
       headers: {
@@ -53,9 +54,9 @@ describe('getTeamsFromApi', () => {
     const mockToken = 'FAKE_TOKEN'
     const mockFeathersService = new FeathersClient()
     mockFeathersService.find = jest.fn().mockRejectedValue(new Error())
-    cmd = new TeamSwitch([], config, mockFeathersService)
+    cmd = new TeamSwitch([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = mockToken
-    await expect(cmd.getTeamsFromApi({})).rejects.toThrowError(
+    await expect(cmd.getTeamsFromApi({} as SwitchInputs)).rejects.toThrowError(
       new APIError(null),
     )
     expect(mockFeathersService.find).toBeCalledWith('teams', {

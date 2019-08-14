@@ -6,10 +6,9 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-import { UserCredentials, MeResponse } from '.'
+import { UserCredentials, MeResponse, Tokens } from '.'
 
 export interface SigninPipeline {
-  accessToken: string
+  tokens: Tokens
   meResponse: MeResponse
-  credentials: UserCredentials
 }

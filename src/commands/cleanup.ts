@@ -70,7 +70,7 @@ export class Cleanup extends Command {
       }: Output<{}, { opName: string }> = this.parse(Cleanup)
       this.docker = await getDocker(this, 'publish')
 
-      this.isLoggedIn()
+      await this.isLoggedIn()
 
       if (!this.docker) return
 
@@ -85,7 +85,7 @@ export class Cleanup extends Command {
         opName,
         this.team.id,
         this.accessToken,
-        this.api,
+        this.services.api,
       ).catch(err => {
         this.debug('%O', err)
         throw new Error('API error')
@@ -100,7 +100,7 @@ export class Cleanup extends Command {
       const imagebyName = formImageName(name, this.team.name, OPS_REGISTRY_HOST)
       await removeImage(this.docker, imagebyId)
       await removeImage(this.docker, imagebyName)
-      this.analytics.track(
+      this.services.analytics.track(
         {
           userId: this.user.email,
           teamId: this.team.id,

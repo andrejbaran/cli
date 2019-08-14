@@ -3,7 +3,7 @@ import Remove, { RemoveInputs } from '~/commands/remove'
 import { OP, WORKFLOW } from '~/constants/opConfig'
 import { APIError, NoResultsFoundForDeletion } from '~/errors/CustomErrors'
 import { FeathersClient } from '~/services/Feathers'
-import { Op, Workflow } from '~/types'
+import { Op, Workflow, Services } from '~/types'
 import { createMockOp } from '../mocks'
 
 let cmd: Remove
@@ -14,16 +14,15 @@ beforeEach(async () => {
 describe('getApiOpsOrWorkflows', () => {
   test('should successfully retrieve ops from the api', async () => {
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.find = jest.fn()
-    mockFeathersService.find.mockReturnValue({ data: <Op>{} })
+    mockFeathersService.find = jest.fn().mockReturnValue({ data: <Op>{} })
 
-    const inputs: Pick<RemoveInputs, 'filter' | 'removeType'> = {
+    const inputs = {
       filter: 'fakeFilter',
       removeType: OP,
-    }
+    } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
 
-    cmd = new Remove([], config, mockFeathersService, undefined)
+    cmd = new Remove([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
     cmd.team = {
       id: 'fakeTeamId',
@@ -46,16 +45,15 @@ describe('getApiOpsOrWorkflows', () => {
   test('should successfully retrieve workflows from the api', async () => {
     //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.find = jest.fn()
-    mockFeathersService.find.mockReturnValue({ data: <Workflow>{} })
+    mockFeathersService.find = jest.fn().mockReturnValue({ data: <Workflow>{} })
 
-    const inputs: Pick<RemoveInputs, 'filter' | 'removeType'> = {
+    const inputs = {
       filter: 'fakeFilter',
       removeType: WORKFLOW,
-    }
+    } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
     const config = await Config.load()
-    cmd = new Remove([], config, mockFeathersService, undefined)
+    cmd = new Remove([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
     cmd.team = {
       id: 'fakeTeamId',
@@ -79,16 +77,15 @@ describe('getApiOpsOrWorkflows', () => {
   test('should handle errors thrown from the api', async () => {
     //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.find = jest.fn()
-    mockFeathersService.find.mockRejectedValue(new Error())
+    mockFeathersService.find = jest.fn().mockRejectedValue(new Error())
 
-    const inputs: Pick<RemoveInputs, 'filter' | 'removeType'> = {
+    const inputs = {
       filter: 'fakeFilter',
       removeType: WORKFLOW,
-    }
+    } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
     const config = await Config.load()
-    cmd = new Remove([], config, mockFeathersService, undefined)
+    cmd = new Remove([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
     cmd.team = {
       id: 'fakeTeamId',
@@ -112,12 +109,12 @@ describe('filterResultsByTeam', () => {
       createMockOp({ teamID: '' }),
     ]
     const apiResults: (Op | Workflow)[] = [...otherOps, ...teamOps]
-    const inputs: Pick<RemoveInputs, 'apiResults' | 'removeType'> = {
+    const inputs = {
       removeType: OP,
       apiResults,
-    }
+    } as RemoveInputs
     const config = await Config.load()
-    cmd = new Remove([], config, undefined, undefined)
+    cmd = new Remove([], config)
     cmd.team = {
       id: teamId,
       name: '',
@@ -134,12 +131,12 @@ describe('filterResultsByTeam', () => {
       createMockOp({ teamID: '' }),
       createMockOp({ teamID: '' }),
     ]
-    const inputs: Pick<RemoveInputs, 'apiResults' | 'removeType'> = {
+    const inputs = {
       removeType: OP,
       apiResults,
-    }
+    } as RemoveInputs
     const config = await Config.load()
-    cmd = new Remove([], config, undefined, undefined)
+    cmd = new Remove([], config)
     cmd.team = {
       id: teamId,
       name: '',
@@ -156,20 +153,16 @@ describe('removeApiOpOrWorkflow', () => {
     const mockOpId = 'FAKE_OP_ID'
     //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.remove = jest.fn()
-    mockFeathersService.remove.mockReturnValue({ data: mockOpId })
+    mockFeathersService.remove = jest.fn().mockReturnValue({ data: mockOpId })
 
-    const inputs: Pick<
-      RemoveInputs,
-      'opOrWorkflow' | 'removeType' | 'confirmRemove'
-    > = {
+    const inputs = {
       opOrWorkflow: createMockOp({ id: mockOpId }),
       removeType: OP,
       confirmRemove: true,
-    }
+    } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
     const config = await Config.load()
-    cmd = new Remove([], config, mockFeathersService, undefined)
+    cmd = new Remove([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
     await cmd.removeApiOpOrWorkflow(inputs)
     expect(mockFeathersService.remove).toHaveBeenCalledWith(
@@ -187,20 +180,16 @@ describe('removeApiOpOrWorkflow', () => {
     const mockOpId = 'FAKE_OP_ID'
     //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.remove = jest.fn()
-    mockFeathersService.remove.mockRejectedValue(new Error())
+    mockFeathersService.remove = jest.fn().mockRejectedValue(new Error())
 
-    const inputs: Pick<
-      RemoveInputs,
-      'opOrWorkflow' | 'removeType' | 'confirmRemove'
-    > = {
+    const inputs = {
       opOrWorkflow: createMockOp({ id: mockOpId }),
       removeType: OP,
       confirmRemove: true,
-    }
+    } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
     const config = await Config.load()
-    cmd = new Remove([], config, mockFeathersService, undefined)
+    cmd = new Remove([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
     await expect(cmd.removeApiOpOrWorkflow(inputs)).rejects.toThrow(APIError)
   })
@@ -209,20 +198,16 @@ describe('removeApiOpOrWorkflow', () => {
     const mockOpId = 'FAKE_OP_ID'
     //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.remove = jest.fn()
-    mockFeathersService.remove.mockRejectedValue(new Error())
+    mockFeathersService.remove = jest.fn().mockRejectedValue(new Error())
 
-    const inputs: Pick<
-      RemoveInputs,
-      'opOrWorkflow' | 'removeType' | 'confirmRemove'
-    > = {
+    const inputs = {
       opOrWorkflow: createMockOp({ id: mockOpId }),
       removeType: OP,
       confirmRemove: false,
-    }
+    } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
     const config = await Config.load()
-    cmd = new Remove([], config, mockFeathersService, undefined)
+    cmd = new Remove([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
     await cmd.removeApiOpOrWorkflow(inputs)
     expect(mockFeathersService.remove).not.toHaveBeenCalled()

@@ -6,10 +6,10 @@
  * @copyright (c) 2019 Hack Capital
  */
 
-import { Team, User } from '.'
+import { Team, User, Tokens } from '.'
 
 export interface Config {
-  accessToken: string
+  tokens: Tokens
   team: Team
   user: User
   ignoreMountWarnings?: boolean

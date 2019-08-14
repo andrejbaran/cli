@@ -9,26 +9,26 @@
 
 import { ux as UX } from '@cto.ai/sdk'
 import Command, { flags } from '@oclif/command'
+import Debug from 'debug'
 import * as OClifConfig from '@oclif/config'
 import _inquirer from '@cto.ai/inquirer'
 import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
 import jwt from 'jsonwebtoken'
 
-import { asyncPipe, _trace, handleMandatory, handleUndefined } from './utils'
+import { asyncPipe, _trace } from './utils'
 
 import {
   Config,
   User,
   Team,
-  UserCredentials,
   ValidationFields,
-  AccessToken,
   MeResponse,
   RegistryAuth,
   SigninPipeline,
   RegistryResponse,
-  ApiService,
+  Tokens,
+  Services,
 } from './types'
 
 import {
@@ -41,8 +41,11 @@ import {
 
 import { FeathersClient } from './services/Feathers'
 import { AnalyticsService } from './services/Analytics'
-import { UserUnauthorized, APIError, SignInError } from './errors/CustomErrors'
-import { ErrorResponse } from './errors/ErrorTemplate'
+import {
+  UserUnauthorized,
+  APIError,
+  TokenExpiredError,
+} from './errors/CustomErrors'
 
 import { Publish } from './services/Publish'
 import { BuildSteps } from './services/BuildSteps'
@@ -50,6 +53,9 @@ import { ImageService } from './services/Image'
 
 import { WorkflowService } from './services/Workflow'
 import { OpService } from './services/Op'
+import { KeycloakService } from './services/Keycloak'
+
+const debug = Debug('ops:BaseCommand')
 
 abstract class CTOCommand extends Command {
   accessToken!: string
@@ -59,27 +65,47 @@ abstract class CTOCommand extends Command {
 
   ux = UX
 
+  services: Services
+
   constructor(
     argv: string[],
     config: OClifConfig.IConfig,
-    protected api: ApiService = new FeathersClient(),
-    protected publishService = new Publish(),
-    protected buildStepService = new BuildSteps(),
-    protected imageService = new ImageService(),
-    protected analytics = new AnalyticsService(OPS_SEGMENT_KEY),
-    protected workflowService = new WorkflowService(),
-    protected opService = new OpService(),
+    services: Services = {
+      api: new FeathersClient(),
+      publishService: new Publish(),
+      buildStepService: new BuildSteps(),
+      imageService: new ImageService(),
+      analytics: new AnalyticsService(OPS_SEGMENT_KEY),
+      workflowService: new WorkflowService(),
+      opService: new OpService(),
+      keycloakService: new KeycloakService(),
+    },
   ) {
     super(argv, config)
+    this.services = services
+    this.services.api = services.api || new FeathersClient()
+    this.services.publishService = services.publishService || new Publish()
+    this.services.buildStepService =
+      services.buildStepService || new BuildSteps()
+    this.services.imageService = services.imageService || new ImageService()
+    this.services.analytics =
+      services.analytics || new AnalyticsService(OPS_SEGMENT_KEY)
+    this.services.workflowService =
+      services.workflowService || new WorkflowService()
+    this.services.opService = services.opService || new OpService()
+    this.services.keycloakService =
+      services.keycloakService || new KeycloakService()
   }
 
   async init() {
     try {
+      await this.services.keycloakService.init()
       const config = await this.readConfig()
 
-      const { user, accessToken, team } = config
-      await this.checkValidAccessToken(accessToken)
-      this.accessToken = accessToken
+      const { user, tokens, team } = config
+      if (tokens) {
+        this.accessToken = tokens.accessToken
+      }
       this.user = user
       this.team = team
       this.state = { config }
@@ -88,21 +114,31 @@ abstract class CTOCommand extends Command {
     }
   }
 
-  checkValidAccessToken = async (accessToken: string): Promise<void> => {
-    if (!accessToken) return
-    const { exp } = jwt.decode(accessToken)
-    const clockTimestamp = Math.floor(Date.now() / 1000)
-    if (clockTimestamp >= exp) {
-      await this.clearConfig(accessToken)
-      this.log('')
-      this.log('⚠️  Sorry your session has expired.')
-      this.log(
-        `👨‍💻 You can sign in with ${this.ux.colors.green(
-          '$',
-        )} ${this.ux.colors.callOutCyan('ops account:signin')}`,
+  checkValidAccessToken = async (tokens: Tokens): Promise<void> => {
+    try {
+      if (!tokens) return
+      const { accessToken, refreshToken, idToken } = tokens
+      if (!accessToken || !refreshToken || !idToken) return
+
+      const { exp: refreshTokenExp } = jwt.decode(refreshToken)
+      const clockTimestamp = Math.floor(Date.now() / 1000)
+
+      if (clockTimestamp >= refreshTokenExp) {
+        throw new TokenExpiredError()
+      }
+
+      /**
+       * The following code updates the access token every time
+       */
+      const oldConfig = await this.readConfig()
+      const newTokens = await this.services.keycloakService.refreshAccessToken(
+        refreshToken,
       )
-      this.log('')
-      process.exit()
+      this.accessToken = newTokens.accessToken
+      await this.writeConfig(oldConfig, { tokens: newTokens })
+    } catch (error) {
+      await this.clearConfig(tokens)
+      throw new TokenExpiredError()
     }
   }
 
@@ -111,7 +147,7 @@ abstract class CTOCommand extends Command {
     teamName: string,
   ): Promise<RegistryAuth | undefined> => {
     try {
-      const registryResponse: RegistryResponse = await this.api.find(
+      const registryResponse: RegistryResponse = await this.services.api.find(
         'registry/token',
         {
           query: {
@@ -151,8 +187,12 @@ abstract class CTOCommand extends Command {
     }
   }
 
-  isLoggedIn() {
-    if (!this.user) {
+  async isLoggedIn() {
+    const { tokens } = await this.readConfig()
+    if (tokens) {
+      await this.checkValidAccessToken(tokens)
+    }
+    if (!this.user || !this.team || !this.accessToken) {
       this.log('')
       this.log('✋ Sorry you need to be logged in to do that.')
       this.log(
@@ -180,14 +220,6 @@ abstract class CTOCommand extends Command {
     }
   }
 
-  readConfig = async (): Promise<Config> => {
-    return readJson(path.join(this.config.configDir, 'config.json')).catch(
-      () => {
-        return {}
-      },
-    )
-  }
-
   handleTeamNotFound = () => {
     this.error('team not found')
     return {
@@ -204,23 +236,72 @@ abstract class CTOCommand extends Command {
   _includeRegistryHost = (debug: boolean) =>
     debug ? { registryHost: OPS_REGISTRY_HOST, nodeEnv: NODE_ENV } : {}
 
+  fetchUserInfo = async ({ tokens }: SigninPipeline) => {
+    if (!{ tokens }) {
+      this.ux.spinner.stop(`failed`)
+      this.log('missing parameter')
+      process.exit()
+    }
+
+    const { accessToken, idToken } = tokens
+    if (!accessToken || !idToken) {
+      this.ux.spinner.stop(`❗️\n`)
+      this.log(
+        `🤔 Sorry, we couldn’t find an account with that email or password.\nForgot your password? Run ${this.ux.colors.bold(
+          'ops account:reset',
+        )}.\n`,
+      )
+      process.exit()
+    }
+
+    const { sub, preferred_username, email } = jwt.decode(idToken)
+
+    const me = {
+      id: sub,
+      username: preferred_username,
+      email,
+    }
+
+    const { data: teams }: { data: Team[] } = await this.services.api
+      .find('teams', {
+        query: {
+          userId: sub,
+        },
+        headers: { Authorization: accessToken },
+      })
+      .catch(err => {
+        debug('%O', err)
+        throw new APIError(err)
+      })
+    const meResponse = {
+      me,
+      teams,
+    }
+    return { meResponse, tokens }
+  }
+
+  clearConfig = async (argv: unknown) => {
+    const configPath = path.join(this.config.configDir, 'config.json')
+    await remove(configPath)
+    return argv
+  }
+
   formatConfigObject = (signinData: SigninPipeline) => {
     const {
-      accessToken,
-      meResponse: {
-        teams,
-        me: { id, emails, username },
-      },
+      tokens: { accessToken, refreshToken, idToken },
+      meResponse: { teams, me },
     } = signinData
 
     const configObj: Config = {
-      team: this.getTeam(username, teams),
-      accessToken,
       user: {
-        _id: id,
-        email: emails[0].address,
-        username: username,
+        ...me,
         ...this._includeRegistryHost(OPS_DEBUG),
+      },
+      team: this.getTeam(me.username, teams),
+      tokens: {
+        accessToken,
+        refreshToken,
+        idToken,
       },
     }
     return configObj
@@ -241,67 +322,17 @@ abstract class CTOCommand extends Command {
     return mergedConfigObj
   }
 
-  clearConfig = async (args: unknown) => {
-    const configPath = path.join(this.config.configDir, 'config.json')
-    await remove(configPath)
-    return args
+  readConfig = async (): Promise<Config> => {
+    return readJson(path.join(this.config.configDir, 'config.json')).catch(
+      () => {
+        return {}
+      },
+    )
   }
 
-  authenticateUser = async ({
-    credentials = handleMandatory('credentials'),
-  }: Partial<SigninPipeline>) => {
-    if (!credentials || !credentials.password || !credentials.email) {
-      throw 'invalid user credentials'
-    }
-
-    const res: AccessToken = await this.api
-      .create('login', {
-        email: credentials.email,
-        password: credentials.password,
-      })
-      .catch((err: ErrorResponse) => {
-        this.debug('%O', err)
-        throw new SignInError(err)
-      })
-    const { data: accessToken = handleUndefined('accessToken') } = res
-    return { accessToken, credentials }
-  }
-
-  fetchUserInfo = async (args: SigninPipeline) => {
-    if (!args) {
-      this.ux.spinner.stop(`failed`)
-      this.log('missing parameter')
-      process.exit()
-    }
-
-    const { accessToken } = args
-    if (!accessToken) {
-      this.ux.spinner.stop(`❗️\n`)
-      this.log(
-        `🤔 Sorry, we couldn’t find an account with that email or password.\nForgot your password? Run ${this.ux.colors.bold(
-          'ops account:reset',
-        )}.\n`,
-      )
-      process.exit()
-    }
-    const {
-      data: meResponse,
-    }: {
-      data: MeResponse
-    } = await this.api
-      .find('me', {
-        headers: { Authorization: accessToken },
-      })
-      .catch(err => {
-        throw new APIError(err)
-      })
-    return { meResponse, accessToken }
-  }
-
-  async signinFlow(credentials: UserCredentials) {
+  async signinFlow(tokens: Tokens) {
     //to-do: check if credentials are set first
     const signinFlowPipeline = asyncPipe(
-      this.authenticateUser,
       this.fetchUserInfo,
       this.clearConfig,
       this.formatConfigObject,
@@ -309,12 +340,12 @@ abstract class CTOCommand extends Command {
       this.readConfig,
     )
 
-    const config: Config = await signinFlowPipeline({ credentials })
+    const config: Config = await signinFlowPipeline({ tokens, meResponse: {} })
     return config
   }
 
   async validateUniqueField(query: ValidationFields): Promise<boolean> {
-    const response = await this.api
+    const response = await this.services.api
       .find('validate', {
         query,
       })
