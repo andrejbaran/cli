@@ -88,12 +88,15 @@ export default class Search extends Command {
         ? { search: filter, team_id: this.team.id }
         : { team_id: this.team.id }
 
-      const findResponse: OpsFindResponse = await this.api.find('ops', {
-        query,
-        headers: {
-          Authorization: this.accessToken,
+      const findResponse: OpsFindResponse = await this.services.api.find(
+        'ops',
+        {
+          query,
+          headers: {
+            Authorization: this.accessToken,
+          },
         },
-      })
+      )
 
       const { data: apiOps } = findResponse
       return { apiOps, ...inputs }
@@ -127,7 +130,7 @@ export default class Search extends Command {
         ? { search: filter, teamId: this.team.id }
         : { teamId: this.team.id }
 
-      const findResponse: WorkflowsFindResponse = await this.api.find(
+      const findResponse: WorkflowsFindResponse = await this.services.api.find(
         'workflows',
         {
           query,
@@ -276,7 +279,7 @@ export default class Search extends Command {
     const remote =
       'remote' in selectedOpOrWorkflow ? selectedOpOrWorkflow.remote : false
     try {
-      this.analytics.track(
+      this.services.analytics.track(
         {
           userId: this.user.email,
           teamId: this.team.id,
@@ -342,7 +345,7 @@ export default class Search extends Command {
 
   async run() {
     try {
-      this.isLoggedIn()
+      await this.isLoggedIn()
 
       const {
         args: { filter = '' },

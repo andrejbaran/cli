@@ -7,6 +7,7 @@ import { InviteSendingInvite } from '~/errors/CustomErrors'
 const { white, red, callOutCyan, green, reset } = ux.colors
 
 export interface InviteInputs {
+  config: Config
   invitees: string
   inviteesArray: string[]
   team: Team
@@ -26,14 +27,11 @@ export default class TeamInvite extends Command {
     }),
   }
 
-  getActiveTeamId = async (inputs: InviteInputs): Promise<InviteInputs> => {
-    const { team } = await this.readConfig()
-    return { ...inputs, team }
-  }
-
   getInvitesPrompt = async (inputs: InviteInputs): Promise<InviteInputs> => {
     if (inputs.invitees) return inputs
-    const { team } = inputs
+    const {
+      config: { team },
+    } = inputs
     const { invitees } = await ux.prompt({
       type: 'input',
       name: 'invitees',
@@ -71,13 +69,15 @@ export default class TeamInvite extends Command {
 
   inviteUserToTeam = async (inputs: InviteInputs): Promise<InviteInputs> => {
     const {
-      team: { id },
+      config: {
+        team: { id },
+      },
       inviteesArray,
     } = inputs
     try {
       const {
         data: inviteResponses,
-      }: { data: Invite[] } = await this.api.create(
+      }: { data: Invite[] } = await this.services.api.create(
         `teams/${id}/invites`,
         { UserOrEmail: inviteesArray },
         { headers: { Authorization: this.accessToken } },
@@ -95,13 +95,7 @@ export default class TeamInvite extends Command {
     inviteResponses.forEach((inviteResponse, i) => {
       this.log('') // Gives and empty line
       // Logs succesful invite
-      if (!validateEmail(inviteesArray[i])) {
-        this.log(
-          `❗ The format of ${ux.colors.red(
-            inviteesArray[i],
-          )} is invalid, please check that it is correct and try again.`,
-        )
-      } else if (inviteResponse.sentStatus === 'sent successfully!') {
+      if (inviteResponse.sentStatus === 'sent successfully!') {
         numSuccess++
         this.log(
           `${green('✔')} ${white(`Invite Sent! ${inviteResponse.email}`)}`,
@@ -134,7 +128,7 @@ export default class TeamInvite extends Command {
       user: { email, username },
       team: { id: teamId },
     } = config
-    this.analytics.track(
+    this.services.analytics.track(
       {
         userId: email,
         teamId,
@@ -156,7 +150,7 @@ export default class TeamInvite extends Command {
         argv,
       } = this.parse(TeamInvite)
 
-      this.isLoggedIn()
+      await this.isLoggedIn()
       if (argv.length) {
         throw new Error(
           'team:invite doesn\'t accept any arguments. Please use the -i flag like this: ops team:invite "user1, user2@gmail.com, user3@something"',
@@ -164,7 +158,6 @@ export default class TeamInvite extends Command {
       }
 
       const invitePipeline = asyncPipe(
-        this.getActiveTeamId,
         this.getInvitesPrompt,
         this.splitInvitees,
         this.inviteUserToTeam,
@@ -172,7 +165,7 @@ export default class TeamInvite extends Command {
         this.sendAnalytics(this.state.config),
       )
 
-      await invitePipeline({ invitees })
+      await invitePipeline({ invitees, config: this.state.config })
     } catch (err) {
       this.debug('%O', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })

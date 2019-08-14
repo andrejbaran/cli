@@ -38,3 +38,4 @@ oclif-dev readme
 mkdir lib
 
 cp -R src/templates lib/templates
+cp -R src/constants/keycloakRedirect.html lib/constants/keycloakRedirect.html

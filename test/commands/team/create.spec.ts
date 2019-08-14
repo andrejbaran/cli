@@ -1,7 +1,8 @@
 import TeamCreate, { CreateInputs } from '~/commands/team/create'
 import { FeathersClient } from '~/services/Feathers'
-import { APIError, InvalidTeamNameFormat } from '~/errors/CustomErrors'
+import { InvalidTeamNameFormat } from '~/errors/CustomErrors'
 import { createMockTeam } from '../../mocks'
+import { Services } from '~/types'
 
 let cmd: TeamCreate
 let config
@@ -41,11 +42,10 @@ describe('createTeam', () => {
     const mockTeam = createMockTeam({ name })
 
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.create = jest.fn()
-    mockFeathersService.create.mockReturnValue({ data: mockTeam })
-    cmd = new TeamCreate([], config, mockFeathersService)
+    mockFeathersService.create = jest.fn().mockReturnValue({ data: mockTeam })
+    cmd = new TeamCreate([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
-    const res = await cmd.createTeam(inputs)
+    const res = await cmd.createTeam(inputs as CreateInputs)
     expect(mockFeathersService.create).toBeCalledWith(
       'teams',
       { name },
@@ -61,11 +61,10 @@ describe('createTeam', () => {
     const fakeToken = 'FAKETOKEN'
 
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.create = jest.fn()
-    mockFeathersService.create.mockReturnValue(new Error())
-    cmd = new TeamCreate([], config, mockFeathersService)
+    mockFeathersService.create = jest.fn().mockReturnValue(new Error())
+    cmd = new TeamCreate([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
-    await expect(cmd.createTeam(inputs)).rejects.toThrowError(
+    await expect(cmd.createTeam(inputs as CreateInputs)).rejects.toThrowError(
       new InvalidTeamNameFormat(null),
     )
   })
@@ -101,9 +100,8 @@ describe('validateTeamName', () => {
   test('should return an Error if anything goes wrong', async () => {
     const name = 'acceptable-format'
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.find = jest.fn()
-    mockFeathersService.find.mockReturnValue(new Error())
-    cmd = new TeamCreate([], config, mockFeathersService)
+    mockFeathersService.find = jest.fn().mockReturnValue(new Error())
+    cmd = new TeamCreate([], config, { api: mockFeathersService } as Services)
     await expect(cmd.validateTeamName(name)).rejects.toThrowError(
       new InvalidTeamNameFormat(null),
     )

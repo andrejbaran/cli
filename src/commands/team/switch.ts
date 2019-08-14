@@ -36,7 +36,7 @@ export default class TeamSwitch extends Command {
 
   getTeamsFromApi = async (inputs: SwitchInputs): Promise<SwitchInputs> => {
     try {
-      const { data: teams } = await this.api.find('teams', {
+      const { data: teams } = await this.services.api.find('teams', {
         headers: { Authorization: this.accessToken },
       })
       return { ...inputs, teams }
@@ -115,7 +115,7 @@ export default class TeamSwitch extends Command {
       activeTeam: { id: oldTeamId },
       teamSelected: { id: newTeamId },
     } = inputs
-    this.analytics.track(
+    this.services.analytics.track(
       {
         userId: email,
         event: 'Ops CLI Team:Switch',
@@ -131,7 +131,7 @@ export default class TeamSwitch extends Command {
   }
 
   async run() {
-    this.isLoggedIn()
+    await this.isLoggedIn()
 
     try {
       const switchPipeline = asyncPipe(

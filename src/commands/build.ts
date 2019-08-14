@@ -84,7 +84,7 @@ export default class Build extends Command {
 
   executeOpService = async (inputs: BuildInputs): Promise<BuildInputs> => {
     const { opsToBuild, opPath, config } = inputs
-    await this.opService.opsBuildLoop(opsToBuild, opPath, config)
+    await this.services.opService.opsBuildLoop(opsToBuild, opPath, config)
     return inputs
   }
 
@@ -93,7 +93,7 @@ export default class Build extends Command {
       const {
         args: { path },
       } = this.parse(Build)
-      this.isLoggedIn()
+      await this.isLoggedIn()
 
       const buildPipeline = asyncPipe(
         this.resolvePath,

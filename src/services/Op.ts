@@ -47,7 +47,7 @@ export class OpService {
     const {
       team: { name: teamName },
       user,
-      accessToken,
+      tokens: { accessToken },
     } = config
     for (const op of ops) {
       if (!isValidOpName(op)) {
@@ -144,7 +144,7 @@ export class OpService {
   pullImageFromRegistry = async (op: Op, config: Config) => {
     const teamName = op.isPublic ? 'ops' : config.team.name
     const { authconfig } = await this.registryAuthService.get(
-      config.accessToken,
+      config.tokens.accessToken,
       teamName,
     )
     return this.imageService.pull(op, authconfig)
@@ -166,7 +166,7 @@ export class OpService {
       NODE_ENV: 'production',
       LOGGER_PLUGINS_STDOUT_ENABLED: 'true',
       RUN_ID: op.runId,
-      OPS_ACCESS_TOKEN: config.accessToken,
+      OPS_ACCESS_TOKEN: config.tokens.accessToken,
       OPS_API_PATH,
       OPS_API_HOST,
       OPS_OP_ID: op.id,

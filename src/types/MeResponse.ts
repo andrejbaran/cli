@@ -11,21 +11,8 @@ export interface MeResponse {
   me: Me
   teams: Team[]
 }
-
-interface Email {
-  verified: boolean
-  address: string
-}
-
 interface Me {
   id: string
   username: string
-  password: string
-  emails: Email[]
-  firstName: string
-  lastName: string
-  registry_user?: string
-  registry_pass?: string
-  createdAt: string
-  updatedAt: string
+  email: string
 }

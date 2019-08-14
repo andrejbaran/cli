@@ -54,7 +54,7 @@ export default class TeamCreate extends Command {
   createTeam = async (inputs: CreateInputs): Promise<CreateInputs> => {
     try {
       const { name } = inputs
-      const res: { data: Team } = await this.api.create(
+      const res: { data: Team } = await this.services.api.create(
         'teams',
         { name },
         { headers: { Authorization: this.accessToken } },
@@ -84,7 +84,7 @@ export default class TeamCreate extends Command {
     const {
       team: { id: teamId, name },
     } = inputs
-    this.analytics.track(
+    this.services.analytics.track(
       {
         event: 'Ops Team Create',
         userId,
@@ -114,7 +114,7 @@ export default class TeamCreate extends Command {
 
   async run(): Promise<void> {
     try {
-      this.isLoggedIn()
+      await this.isLoggedIn()
       let {
         flags: { name },
       } = this.parse(TeamCreate)

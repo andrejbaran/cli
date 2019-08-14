@@ -15,6 +15,7 @@ import getDocker from '../utils/get-docker'
 const debug = Debug('ops:ImageService')
 
 export class Publish {
+  constructor() {}
   public publishOpToAPI = async (
     op: Op,
     version: string,
@@ -69,6 +70,8 @@ export class Publish {
       const all: any[] = []
       let size = 0
 
+      const seenChunks: { [k: string]: true } = {}
+
       const parser = through.obj(function(
         this: any,
         chunk: any,
@@ -95,7 +98,11 @@ export class Publish {
           )
           size = chunk.aux.Size
         } else if (chunk.id) {
-          console.log(`${chunk.status}: ${ux.colors.white(chunk.id)}`)
+          const chunkString = `${chunk.status}: ${ux.colors.white(chunk.id)}`
+          if (!seenChunks[chunkString]) {
+            console.log(`${chunk.status}: ${ux.colors.white(chunk.id)}`)
+            seenChunks[chunkString] = true
+          }
         }
         cb()
       })

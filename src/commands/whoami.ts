@@ -1,6 +1,5 @@
 import Command, { flags } from '../base'
 import { Config } from '../types'
-import { DEBUG } from '../constants/env'
 
 export default class Whoami extends Command {
   static description = 'Display your user information'
@@ -10,24 +9,9 @@ export default class Whoami extends Command {
   }
 
   async run() {
+    await this.isLoggedIn()
+
     const config: Config = await this.readConfig()
-
-    if (!this.user) {
-      this.log('')
-      this.log(`✋ You don't appear to be logged in.`)
-      this.log(
-        `🎳 You can sign up with ${this.ux.colors.green(
-          '$',
-        )} ${this.ux.colors.callOutCyan(
-          'ops account:signup',
-        )}, or sign in with ${this.ux.colors.green(
-          '$',
-        )} ${this.ux.colors.callOutCyan('ops account:signin')}`,
-      )
-      this.log('')
-
-      process.exit()
-    }
     // console.log('%O', config)
 
     this.log('\n')
@@ -61,7 +45,7 @@ export default class Whoami extends Command {
       )
     }
     this.log('\n')
-    this.analytics.track(
+    this.services.analytics.track(
       {
         userId: this.user.email,
         teamId: this.team.id,

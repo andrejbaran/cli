@@ -8,6 +8,7 @@ import { terminalText } from '~/utils'
 const expectedSource = {
   source: errorSource.EXPECTED,
 }
+
 const { actionBlue, white, dim } = ux.colors
 
 const problemContinues = `If the problem continues please contact us at: ${actionBlue(
@@ -442,6 +443,34 @@ export class YamlPortError extends ErrorTemplate {
         )} ${actionBlue('{HostPort}:{InternalPort}')}${dim(
           '. For example:',
         )} ${actionBlue('3000:3000')}`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class SSOError extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `🤔 We're having trouble signing you in. Please try running ${actionBlue(
+          '$ ops account:signin',
+        )} again!`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class TokenExpiredError extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `\n⚠️  Sorry your session has expired. \n\n 👨‍💻 You can sign in with ${ux.colors.green(
+          '$',
+        )} ${ux.colors.callOutCyan('ops account:signin')}`,
       ),
       undefined,
       expectedSource,

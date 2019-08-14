@@ -16,7 +16,7 @@ export default class Update extends Command {
   }
 
   async run() {
-    this.isLoggedIn()
+    await this.isLoggedIn()
     try {
       self = this
       const latestVersion = await getLatestVersion()
@@ -43,7 +43,7 @@ export default class Update extends Command {
   }
 
   private _trackAnalytics(newVersion: string | undefined) {
-    this.analytics.track(
+    this.services.analytics.track(
       {
         userId: this.user.email,
         teamId: this.team.id,

@@ -106,7 +106,7 @@ const setRunEnv = (workflow: Workflow, config: Config): void => {
     RUN_ID: workflow.runId,
     OPS_OP_NAME: workflow.name,
     OPS_TEAM_NAME: config.team.name,
-    OPS_ACCESS_TOKEN: config.accessToken,
+    OPS_ACCESS_TOKEN: config.tokens.accessToken,
   }
   const opsYamlEnv: Container<string> = workflow.env
     ? workflow.env.reduce(convertEnvStringsToObject, {})

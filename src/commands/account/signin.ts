@@ -8,9 +8,15 @@
 
 import cloneDeep from 'lodash/cloneDeep'
 import Command, { flags } from '../../base'
-import { Question, Config, Container, UserCredentials } from '../../types'
+import {
+  Question,
+  Config,
+  Container,
+  UserCredentials,
+  Tokens,
+} from '../../types'
 import { asyncPipe } from '../../utils/asyncPipe'
-import { AnalyticsError } from '../../errors/CustomErrors'
+import { AnalyticsError, SSOError } from '../../errors/CustomErrors'
 
 export const signinPrompts: Container<Question> = {
   email: {
@@ -31,36 +37,38 @@ export default class AccountSignin extends Command {
 
   static flags = {
     help: flags.help({ char: 'h' }),
-    email: flags.string({ char: 'e', description: 'Email' }),
-    password: flags.string({ char: 'p', description: 'Password' }),
   }
 
-  sendAnalytics = (config: Config) => {
-    try {
-      this.analytics.identify({
-        userId: config.user.email,
-        traits: {
-          beta: true,
-          email: config.user.email,
-          username: config.user.username,
-        },
+  logMessages = () => {
+    this.log('')
+    this.log(
+      `💻 ${this.ux.colors.multiBlue(
+        'CTO.ai Ops',
+      )} - ${this.ux.colors.actionBlue('The CLI built for Teams')} 🚀`,
+    )
+    this.log('')
+    this.log(
+      `👋 ${this.ux.colors.white(
+        'Welcome to the',
+      )} ${this.ux.colors.callOutCyan('Ops CLI beta')}! \n`,
+    )
+  }
+
+  keycloakSignInFlow = async (): Promise<Tokens> => {
+    this.ux.spinner.start('Authenticating using Single Sign On')
+    const tokens = await this.services.keycloakService
+      .keycloakSignInFlow()
+      .catch(() => {
+        throw new SSOError()
       })
-      this.analytics.track(
-        {
-          userId: config.user.email,
-          event: 'Ops CLI Signin',
-          properties: {
-            email: config.user.email,
-            username: config.user.username,
-          },
-        },
-        config.accessToken,
-      )
-    } catch (err) {
-      this.debug('%O', err)
-      throw new AnalyticsError(err)
-    }
-    return cloneDeep(config)
+    this.ux.spinner.stop('Finished')
+    return tokens
+  }
+
+  signin = async (tokens: Tokens) => {
+    this.log('')
+    this.ux.spinner.start(`${this.ux.colors.white('Authenticating')}`)
+    return this.signinFlow(tokens)
   }
 
   showWelcomeMessage = (config: Config) => {
@@ -81,73 +89,49 @@ export default class AccountSignin extends Command {
     return cloneDeep(config)
   }
 
-  signin = async (credentials: UserCredentials) => {
-    this.log('')
-    this.ux.spinner.start(`${this.ux.colors.white('Authenticating')}`)
-    return this.signinFlow(credentials)
-  }
-
-  determineQuestions = (prompts: Container<Question>) => (
-    flags: UserCredentials,
-  ) => {
-    const removeIfPassedToFlags = ([key, _question]: [string, Question]) =>
-      !Object.entries(flags)
-        .map(([flagKey]) => flagKey)
-        .includes(key)
-
-    const questions = Object.entries(prompts)
-      .filter(removeIfPassedToFlags)
-      .map(([_key, question]) => question)
-
-    return questions
-  }
-
-  askQuestions = async (
-    questions: Question[],
-  ): Promise<UserCredentials | {}> => {
-    if (!questions.length) {
-      return {}
+  sendAnalytics = (config: Config) => {
+    try {
+      this.services.analytics.identify({
+        userId: config.user.email,
+        traits: {
+          beta: true,
+          email: config.user.email,
+          username: config.user.username,
+        },
+      })
+      this.services.analytics.track(
+        {
+          userId: config.user.email,
+          event: 'Ops CLI Signin',
+          properties: {
+            email: config.user.email,
+            username: config.user.username,
+          },
+        },
+        config.tokens.accessToken,
+      )
+    } catch (err) {
+      this.debug('%O', err)
+      throw new AnalyticsError(err)
     }
-    this.log(`${this.ux.colors.white('Please login to get started.')}\n`)
-    return this.ux.prompt<Partial<UserCredentials>>(questions)
-  }
-
-  determineUserCredentials = (flags: Partial<UserCredentials>) => (
-    answers: Partial<UserCredentials>,
-  ): Partial<UserCredentials> => ({ ...flags, ...answers })
-
-  logMessages = (input: UserCredentials) => {
-    this.log('')
-    this.log(
-      `💻 ${this.ux.colors.multiBlue(
-        'CTO.ai Ops',
-      )} - ${this.ux.colors.actionBlue('The CLI built for Teams')} 🚀`,
-    )
-    this.log('')
-    this.log(
-      `👋 ${this.ux.colors.white(
-        'Welcome to the',
-      )} ${this.ux.colors.callOutCyan('Ops CLI beta')}! \n`,
-    )
-    return { ...input }
+    return cloneDeep(config)
   }
 
   async run() {
     try {
-      const { flags } = this.parse(AccountSignin)
+      this.parse(AccountSignin)
 
       const signinPipeline = asyncPipe(
         this.logMessages,
-        this.determineQuestions(signinPrompts),
-        this.askQuestions,
-        this.determineUserCredentials(flags),
+        this.keycloakSignInFlow,
         this.signin,
         this.showWelcomeMessage,
         this.sendAnalytics,
       )
 
-      await signinPipeline(flags)
+      await signinPipeline()
     } catch (err) {
+      this.ux.spinner.stop('Failed')
       this.debug('%O', err)
       this.config.runHook('error', { err })
     }
