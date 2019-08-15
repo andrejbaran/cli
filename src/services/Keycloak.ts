@@ -7,12 +7,11 @@ import path from 'path'
 import inert from '@hapi/inert'
 import open from 'open'
 import Debug from 'debug'
-import { Grant } from 'keycloak-connect'
 import { getFirstActivePort } from '~/utils'
 import { ux } from '@cto.ai/sdk'
 import axios from 'axios'
 import { SSOError } from '~/errors/CustomErrors'
-import { Tokens } from '~/types'
+import { Tokens, OpsGrant, Config } from '~/types'
 import { OPS_KEYCLOAK_HOST } from '~/constants/env'
 
 const debug = Debug('ops:KeycloakService')
@@ -106,12 +105,14 @@ export class KeycloakService {
   /**
    * Converts the Keycloak Grant object to Tokens
    */
-  _formatGrantToTokens = (grant: Grant): Tokens => {
+  _formatGrantToTokens = (grant: OpsGrant): Tokens => {
     if (
       !grant ||
       !grant.access_token ||
       !grant.refresh_token ||
-      !grant.id_token
+      !grant.id_token ||
+      !grant.access_token.content ||
+      !grant.access_token.content.session_state
     ) {
       throw new SSOError()
     }
@@ -119,6 +120,7 @@ export class KeycloakService {
     const accessToken = grant.access_token.token
     const refreshToken = grant.refresh_token.token
     const idToken = grant.id_token.token
+    const sessionState = grant.access_token.content.session_state
 
     if (!accessToken || !refreshToken || !idToken) throw new SSOError()
 
@@ -126,6 +128,7 @@ export class KeycloakService {
       accessToken,
       refreshToken,
       idToken,
+      sessionState,
     }
   }
 
@@ -202,13 +205,16 @@ export class KeycloakService {
    * e.g.
    * http://localhost:8080/auth/realms/ops/protocol/openid-connect/token
    */
-  _buildRefreshAccessTokenIfExpiredUrl = () => {
+  _buildRefreshAccessTokenUrl = () => {
     return `${KEYCLOAK_CONFIG['auth-server-url']}/realms/ops/protocol/openid-connect/token`
   }
 
-  refreshAccessToken = async (refreshToken: string): Promise<Tokens> => {
+  refreshAccessToken = async (
+    oldConfig: Config,
+    refreshToken: string,
+  ): Promise<Tokens> => {
     try {
-      const refreshUrl = this._buildRefreshAccessTokenIfExpiredUrl()
+      const refreshUrl = this._buildRefreshAccessTokenUrl()
 
       /**
        * This endpoint expects a x-form-url-encoded header, not JSON
@@ -233,6 +239,7 @@ export class KeycloakService {
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
         idToken: data.id_token,
+        sessionState: oldConfig.tokens.sessionState,
       }
     } catch (error) {
       throw new SSOError()
@@ -243,10 +250,10 @@ export class KeycloakService {
    * Spins up a hapi server, that listens to the callback from Keycloak
    * Once it receive a response, the promise is fulfilled and data is returned
    */
-  _setupCallbackServerForGrant = async (): Promise<Grant> => {
+  _setupCallbackServerForGrant = async (): Promise<OpsGrant> => {
     return new Promise(async (resolve, reject) => {
       try {
-        let responsePayload: Grant
+        let responsePayload: OpsGrant
 
         await this.hapiServer.register(inert) // To read from a HTML file and return it
         this.hapiServer.route({
@@ -274,7 +281,8 @@ export class KeycloakService {
                   },
                   req.query.code,
                 )
-                .then((res: Grant) => {
+                .then((res: OpsGrant) => {
+                  console.log('res.access_token :', res.access_token)
                   responsePayload = res
                 })
 
