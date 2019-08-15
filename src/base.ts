@@ -132,6 +132,7 @@ abstract class CTOCommand extends Command {
        */
       const oldConfig = await this.readConfig()
       const newTokens = await this.services.keycloakService.refreshAccessToken(
+        oldConfig,
         refreshToken,
       )
       this.accessToken = newTokens.accessToken
@@ -288,7 +289,7 @@ abstract class CTOCommand extends Command {
 
   formatConfigObject = (signinData: SigninPipeline) => {
     const {
-      tokens: { accessToken, refreshToken, idToken },
+      tokens: { accessToken, refreshToken, idToken, sessionState },
       meResponse: { teams, me },
     } = signinData
 
@@ -302,6 +303,7 @@ abstract class CTOCommand extends Command {
         accessToken,
         refreshToken,
         idToken,
+        sessionState,
       },
     }
     return configObj
