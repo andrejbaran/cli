@@ -330,6 +330,18 @@ abstract class CTOCommand extends Command {
     )
   }
 
+  invalidateKeycloakSession = async () => {
+    // Obtains the session state if exists
+    const sessionState = this.state.config
+      ? this.state.config.tokens
+        ? this.state.config.tokens.sessionState
+        : null
+      : null
+
+    // If session state exists, invalidate it
+    if (sessionState) await this.services.api.remove('sessions', sessionState)
+  }
+
   async signinFlow(tokens: Tokens) {
     //to-do: check if credentials are set first
     const signinFlowPipeline = asyncPipe(
