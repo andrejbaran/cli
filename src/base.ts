@@ -132,7 +132,6 @@ abstract class CTOCommand extends Command {
        */
       const oldConfig = await this.readConfig()
       const newTokens = await this.services.keycloakService.refreshAccessToken(
-        oldConfig,
         refreshToken,
       )
       this.accessToken = newTokens.accessToken
@@ -289,7 +288,7 @@ abstract class CTOCommand extends Command {
 
   formatConfigObject = (signinData: SigninPipeline) => {
     const {
-      tokens: { accessToken, refreshToken, idToken, sessionState },
+      tokens: { accessToken, refreshToken, idToken },
       meResponse: { teams, me },
     } = signinData
 
@@ -303,7 +302,6 @@ abstract class CTOCommand extends Command {
         accessToken,
         refreshToken,
         idToken,
-        sessionState,
       },
     }
     return configObj
@@ -330,18 +328,6 @@ abstract class CTOCommand extends Command {
         return {}
       },
     )
-  }
-
-  invalidateKeycloakSession = async () => {
-    // Obtains the session state if exists
-    const sessionState = this.state.config
-      ? this.state.config.tokens
-        ? this.state.config.tokens.sessionState
-        : null
-      : null
-
-    // If session state exists, invalidate it
-    if (sessionState) await this.services.api.remove('sessions', sessionState)
   }
 
   async signinFlow(tokens: Tokens) {
