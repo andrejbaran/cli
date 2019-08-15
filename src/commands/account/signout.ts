@@ -70,6 +70,7 @@ export default class AccountSignout extends Command {
       const signoutPipeline = asyncPipe(
         this.checkForAccessToken,
         this.startSpinner,
+        this.invalidateKeycloakSession,
         this.signUserOut,
         this.stopSpinner,
         this.logMessage,

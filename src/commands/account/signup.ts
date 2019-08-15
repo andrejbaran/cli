@@ -58,6 +58,7 @@ export default class AccountSignup extends Command {
     try {
       const signupPipeline = asyncPipe(
         this.logHelpMessage,
+        this.invalidateKeycloakSession,
         this.keycloakSignUpFlow,
         this.signin,
       )
