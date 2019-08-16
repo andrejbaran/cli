@@ -29,8 +29,7 @@ export const OPS_DEBUG = !!process.env.OPS_DEBUG
 
 export const HOME = process.env.HOME || '~'
 
-export const INTERCOM_EMAIL =
-  process.env.INTERCOM_EMAIL || 'h1gw0mit@ctoai.intercom-mail.com'
+export const INTERCOM_EMAIL = process.env.INTERCOM_EMAIL || 'support@cto.ai'
 
 export const DOCKER_SOCKET = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
 
