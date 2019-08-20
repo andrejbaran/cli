@@ -74,6 +74,7 @@ export default class AccountSignout extends Command {
         this.stopSpinner,
         this.logMessage,
         this.sendAnalytics,
+        this.invalidateKeycloakSession,
       )
 
       await signoutPipeline()

@@ -93,6 +93,7 @@ export const createMockTokens = (inputs: Partial<Tokens>): Tokens => {
       accessToken: '',
       refreshToken: '',
       idToken: '',
+      sessionState: '',
     },
     inputs,
   )
