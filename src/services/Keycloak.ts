@@ -317,4 +317,23 @@ export class KeycloakService {
       }
     })
   }
+
+  /**
+   * Returns the URL used to invalidate the current user's session
+   */
+  buildInvalidateSessionUrl = (): string => {
+    return `${OPS_KEYCLOAK_HOST}/realms/ops/protocol/openid-connect/logout`
+  }
+
+  /**
+   * Returns the necessary headers to invalidate the session
+   */
+  buildInvalidateSessionHeaders = (
+    sessionState: string,
+    accessToken: string,
+  ): { Cookie: string } => {
+    return {
+      Cookie: `$KEYCLOAK_SESSION=ops/${sessionState}; KEYCLOAK_IDENTITY=${accessToken}`,
+    }
+  }
 }

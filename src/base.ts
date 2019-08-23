@@ -15,6 +15,7 @@ import _inquirer from '@cto.ai/inquirer'
 import { outputJson, readJson, remove } from 'fs-extra'
 import * as path from 'path'
 import jwt from 'jsonwebtoken'
+import axios from 'axios'
 
 import { asyncPipe, _trace } from './utils'
 
@@ -37,6 +38,7 @@ import {
   OPS_SEGMENT_KEY,
   INTERCOM_EMAIL,
   OPS_DEBUG,
+  OPS_KEYCLOAK_HOST,
 } from './constants/env'
 
 import { FeathersClient } from './services/Feathers'
@@ -341,7 +343,16 @@ abstract class CTOCommand extends Command {
       : null
 
     // If session state exists, invalidate it
-    if (sessionState) await this.services.api.remove('sessions', sessionState)
+    if (sessionState)
+      await axios.get(
+        this.services.keycloakService.buildInvalidateSessionUrl(),
+        {
+          headers: this.services.keycloakService.buildInvalidateSessionHeaders(
+            sessionState,
+            this.accessToken,
+          ),
+        },
+      )
   }
 
   async signinFlow(tokens: Tokens) {
