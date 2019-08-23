@@ -10,6 +10,9 @@ ops:
       - Dockerfile
       - index.js
       - demo.js
+      - constants
+      - prompts
+      - utils
       - package.json
       - .dockerignore
     mountCwd: false
