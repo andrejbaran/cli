@@ -38,9 +38,13 @@ type KeycloakRefreshTokenInterfaces = {
 }
 
 export class KeycloakService {
-  KEYCLOAK_REDIRECT_FILE = path.join(
+  KEYCLOAK_SIGNIN_FILEPATH = path.join(
     __dirname,
-    '../constants/keycloakRedirect.html',
+    '../keycloakPages/signinRedirect.html',
+  )
+  KEYCLOAK_SIGNUP_FILEPATH = path.join(
+    __dirname,
+    '../keycloakPages/signupRedirect.html',
   )
   KEYCLOAK_REALM = 'ops'
   CALLBACK_HOST = 'localhost'
@@ -137,7 +141,7 @@ export class KeycloakService {
    */
   keycloakSignInFlow = async (): Promise<Tokens> => {
     open(this._buildAuthorizeUrl())
-    const grant = await this._setupCallbackServerForGrant()
+    const grant = await this._setupCallbackServerForGrant('signin')
     return this._formatGrantToTokens(grant)
   }
 
@@ -170,7 +174,7 @@ export class KeycloakService {
       )} \n\n`,
     )
 
-    const grant = await this._setupCallbackServerForGrant()
+    const grant = await this._setupCallbackServerForGrant('signup')
     return this._formatGrantToTokens(grant)
   }
 
@@ -250,7 +254,11 @@ export class KeycloakService {
    * Spins up a hapi server, that listens to the callback from Keycloak
    * Once it receive a response, the promise is fulfilled and data is returned
    */
-  _setupCallbackServerForGrant = async (): Promise<OpsGrant> => {
+  _setupCallbackServerForGrant = async (caller): Promise<OpsGrant> => {
+    const redirectFilePath =
+      caller === 'signin'
+        ? this.KEYCLOAK_SIGNIN_FILEPATH
+        : this.KEYCLOAK_SIGNUP_FILEPATH
     return new Promise(async (resolve, reject) => {
       try {
         let responsePayload: OpsGrant
@@ -286,7 +294,7 @@ export class KeycloakService {
                 })
 
               // Sends the HTML that contains code to close the tab automatically
-              return reply.file(this.KEYCLOAK_REDIRECT_FILE, {
+              return reply.file(redirectFilePath, {
                 confine: false,
               })
             } catch (err) {
