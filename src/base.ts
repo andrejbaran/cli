@@ -1,8 +1,8 @@
 /**
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Friday, 5th April 2019 12:06:07 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Tuesday, 11th June 2019 1:50:03 pm
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Monday, 26th August 2019 10:14:18 am
  * @copyright (c) 2019 CTO.ai
  *
  */
@@ -116,18 +116,20 @@ abstract class CTOCommand extends Command {
     }
   }
 
+  isTokenValid = (tokens: Tokens): Boolean => {
+    const { refreshToken } = tokens
+    const { exp: refreshTokenExp } = jwt.decode(refreshToken)
+    const clockTimestamp = Math.floor(Date.now() / 1000)
+    return clockTimestamp < refreshTokenExp
+  }
+
   checkValidAccessToken = async (tokens: Tokens): Promise<void> => {
     try {
       if (!tokens) return
       const { accessToken, refreshToken, idToken } = tokens
       if (!accessToken || !refreshToken || !idToken) return
 
-      const { exp: refreshTokenExp } = jwt.decode(refreshToken)
-      const clockTimestamp = Math.floor(Date.now() / 1000)
-
-      if (clockTimestamp >= refreshTokenExp) {
-        throw new TokenExpiredError()
-      }
+      if (!this.isTokenValid(tokens)) throw new TokenExpiredError()
 
       /**
        * The following code updates the access token every time
