@@ -75,11 +75,14 @@ export default class TeamInvite extends Command {
       inviteesArray,
     } = inputs
     try {
+      const filteredInviteesArray: string[] = inviteesArray.filter(invitee =>
+        validateEmail(invitee),
+      )
       const {
         data: inviteResponses,
       }: { data: Invite[] } = await this.services.api.create(
         `teams/${id}/invites`,
-        { UserOrEmail: inviteesArray },
+        { UserOrEmail: filteredInviteesArray },
         { headers: { Authorization: this.accessToken } },
       )
       return { ...inputs, inviteResponses }
@@ -92,8 +95,8 @@ export default class TeamInvite extends Command {
   printInviteResponses = (inputs: InviteInputs): InviteInputs => {
     const { inviteResponses, inviteesArray } = inputs
     let numSuccess = 0
-    inviteResponses.forEach((inviteResponse, i) => {
-      this.log('') // Gives and empty line
+    this.log('') // Gives and empty line
+    inviteResponses.forEach(inviteResponse => {
       // Logs succesful invite
       if (inviteResponse.sentStatus === 'sent successfully!') {
         numSuccess++
@@ -109,6 +112,15 @@ export default class TeamInvite extends Command {
         )
       }
     })
+    inviteesArray
+      .filter(invitee => !validateEmail(invitee))
+      .forEach(invalidEmailInvitee => {
+        this.log(
+          `❗ The format of ${ux.colors.red(
+            invalidEmailInvitee,
+          )} is invalid, please check that it is correct and try again.`,
+        )
+      })
     // Logs the summary of invites
     if (!numSuccess) {
       this.log(`\n ${white(`❌ Invited ${numSuccess} team members`)}`)
