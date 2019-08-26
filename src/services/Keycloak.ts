@@ -192,14 +192,23 @@ export class KeycloakService {
     return `${KEYCLOAK_CONFIG['auth-server-url']}/realms/${this.KEYCLOAK_REALM}/login-actions/reset-credentials?${params}`
   }
 
-  keycloakResetFlow = () => {
-    const resetUrl = this._buildResetUrl()
-    open(resetUrl)
+  /**
+   * Generates the initial URL with qury string parameters fire of to Keycloak
+   * e.g.
+   * http://localhost:8080/auth/realms/ops/account/password
+   */
+  _buildAccountUrl = () => {
+    return `${KEYCLOAK_CONFIG['auth-server-url']}/realms/${this.KEYCLOAK_REALM}/account/password`
+  }
 
+  keycloakResetFlow = isUserSignedIn => {
+    // open up account page if the user is signed in otherwise open up password reset page
+    const url = isUserSignedIn ? this._buildAccountUrl() : this._buildResetUrl()
+    open(url)
     console.log(`\n💻  Please follow the prompts in the browser window`)
     console.log(
       `\n If the link doesn't open, please click the following URL: ${ux.colors.dim(
-        resetUrl,
+        url,
       )} \n\n`,
     )
   }
