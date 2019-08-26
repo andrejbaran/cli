@@ -12,8 +12,8 @@ beforeEach(async () => {
 })
 describe('inviteUserToTeam', () => {
   test('should successfully create invites in the api', async () => {
-    const fakeEmail = 'FAKE_EMAIL'
-    const mockInvite = createMockInvite({ email: 'FAKE_EMAIL' })
+    const fakeEmail = 'FAKE_VALID_EMAIL@EMAIL.COM'
+    const mockInvite = createMockInvite({ email: fakeEmail })
     const mockTeam = createMockTeam({ id: 'FAKE_ID', name: 'FAKE_TEAM_NAME' })
     const mockConfig = createMockConfig({ team: mockTeam })
     //MOCK FEATHERS
@@ -44,7 +44,7 @@ describe('inviteUserToTeam', () => {
     )
   })
   test('should handle errors thrown by the api', async () => {
-    const fakeEmail = 'FAKE_EMAIL'
+    const fakeEmail = 'FAKE_VALID_EMAIL@EMAIL.COM'
     const mockTeam = createMockTeam({ id: 'FAKE_ID', name: 'FAKE_TEAM_NAME' })
     const mockConfig = createMockConfig({ team: mockTeam })
     //MOCK FEATHERS
@@ -59,6 +59,44 @@ describe('inviteUserToTeam', () => {
     cmd = new TeamInvite([], config, { api: mockFeathersService } as Services)
     await expect(cmd.inviteUserToTeam(inputs)).rejects.toThrow(
       new InviteSendingInvite(''),
+    )
+  })
+
+  test('should only send API requests to valid emails', async () => {
+    const fakeValidEmail = 'FAKE_VALID_EMAIL@EMAIL.COM'
+    const fakeInvalidEmail = 'FAKE_INVALID_EMAIL@FAKE_DOMAIN'
+    const mockInvite = createMockInvite({ email: fakeValidEmail })
+    const mockTeam = createMockTeam({ id: 'FAKE_ID', name: 'FAKE_TEAM_NAME' })
+    const mockConfig = createMockConfig({ team: mockTeam })
+
+    // MOCK FEATHERS
+    const mockFeathersService = new FeathersClient()
+    mockFeathersService.create = jest.fn().mockReturnValue({
+      data: mockInvite,
+    })
+
+    const inputs = {
+      config: mockConfig,
+      inviteesArray: [
+        fakeValidEmail,
+        fakeInvalidEmail,
+        fakeInvalidEmail,
+        fakeInvalidEmail,
+      ],
+    } as InviteInputs
+
+    cmd = new TeamInvite([], config, { api: mockFeathersService } as Services)
+    await cmd.inviteUserToTeam(inputs)
+    expect(mockFeathersService.create).toHaveBeenCalledWith(
+      `teams/${mockTeam.id}/invites`,
+      {
+        UserOrEmail: [fakeValidEmail],
+      },
+      {
+        headers: {
+          Authorization: cmd.accessToken,
+        },
+      },
     )
   })
 })
