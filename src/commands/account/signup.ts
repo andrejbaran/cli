@@ -3,6 +3,7 @@ import { INTERCOM_EMAIL } from '~/constants/env'
 import { asyncPipe } from '../../utils/asyncPipe'
 import { SSOError } from '~/errors/CustomErrors'
 import { Tokens } from '~/types'
+import { terminalText } from '../../utils/terminalText'
 
 export default class AccountSignup extends Command {
   static description = 'Creates an account to use with ops CLI.'
@@ -37,6 +38,26 @@ export default class AccountSignup extends Command {
     this.log(`⚡️  Let's get you ${this.ux.colors.callOutCyan('started')}...`)
   }
 
+  logSignupWelcomeMessage = () => {
+    this.log(`\n🎉 Account sign up complete - Ready to go!\n`)
+
+    this.log(
+      `${this.ux.colors.actionBlue(
+        `You're ready to build and share Ops with your team!`,
+      )}`,
+    )
+    this.log(`Get started by trying the following commands:\n`)
+
+    this.log(`${this.ux.colors.reset.green('→')} Search for an Op`)
+    this.log(`  ${terminalText('ops search')}\n`)
+
+    this.log(`${this.ux.colors.reset.green('→')} Create an Op`)
+    this.log(`  ${terminalText('ops init')}\n`)
+
+    this.log(`${this.ux.colors.reset.green('→')} Publish an Op`)
+    this.log(`  ${terminalText('ops publish')}\n`)
+  }
+
   keycloakSignUpFlow = async (): Promise<Tokens> => {
     this.ux.spinner.start('Authenticating using Single Sign On')
     const tokens = await this.services.keycloakService
@@ -49,8 +70,6 @@ export default class AccountSignup extends Command {
   }
 
   signin = async (tokens: Tokens) => {
-    this.log('')
-    this.ux.spinner.start(`${this.ux.colors.white('Authenticating')}`)
     return this.signinFlow(tokens)
   }
 
@@ -64,6 +83,7 @@ export default class AccountSignup extends Command {
       )
 
       await signupPipeline()
+      this.logSignupWelcomeMessage()
     } catch (err) {
       this.debug('%O', err)
       this.config.runHook('error', { err })
