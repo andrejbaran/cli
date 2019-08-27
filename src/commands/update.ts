@@ -16,7 +16,6 @@ export default class Update extends Command {
   }
 
   async run() {
-    await this.isLoggedIn()
     try {
       self = this
       const latestVersion = await getLatestVersion()
