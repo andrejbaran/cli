@@ -1,8 +1,8 @@
 /**
  * @author: Prachi Singh (prachi@hackcapital.com)
  * @date: Tuesday, 23rd April 2019 10:55:23 am
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Tuesday, 11th June 2019 4:35:24 pm
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Monday, 26th August 2019 4:19:13 pm
  *
  * DESCRIPTION: This hook is used for error handling
  *
@@ -42,10 +42,6 @@ export default async function error(
       )
       .catch(err => {
         this.debug('%O', err)
-        this.log(
-          `\n 😰 We've encountered a problem. Please try again or contact ${INTERCOM_EMAIL} and we'll do our best to help. \n`,
-        )
-        process.exit(1)
       })
   }
 
