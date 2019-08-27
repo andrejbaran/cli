@@ -19,7 +19,7 @@ export const OPS_REGISTRY_HOST: string =
   process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
 
 export const OPS_KEYCLOAK_HOST: string =
-  process.env.OPS_KEYCLOAK_HOST || 'https://cto.ai/auth'
+  process.env.OPS_KEYCLOAK_HOST || 'https://uaa.prod-platform.hc.ai/auth'
 
 export const NODE_ENV = process.env.NODE_ENV || 'production'
 
