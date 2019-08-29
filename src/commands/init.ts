@@ -85,11 +85,13 @@ export default class Init extends Command {
       )}`,
       choices: [
         {
-          name: 'Op - A template for building a portable operation',
+          name:
+            'Command - A template for building commands which can be distributed via The Ops Platform.',
           value: OP,
         },
         {
-          name: 'Workflow - A template for combining many Ops into a workflow',
+          name:
+            'Workflow - A template for combining many commands into a workflow which can be distributed via The Ops Platform.',
           value: WORKFLOW,
         },
       ],
