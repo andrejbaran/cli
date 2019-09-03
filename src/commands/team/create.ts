@@ -2,7 +2,7 @@ import { ux } from '@cto.ai/sdk'
 import Command, { flags } from '~/base'
 import { InvalidTeamNameFormat } from '~/errors/CustomErrors'
 import { Team } from '~/types'
-import { asyncPipe, validChars } from '~/utils'
+import { asyncPipe, validCharsTeamName } from '~/utils'
 
 const { white, reset } = ux.colors
 
@@ -99,7 +99,7 @@ export default class TeamCreate extends Command {
 
   validateTeamName = async (name: string): Promise<boolean | string> => {
     try {
-      if (!validChars.test(name)) {
+      if (!validCharsTeamName.test(name)) {
         return `Invalid team name. May contain only letters (case-sensitive), numbers, dashes (-), and underscores (_).`
       }
       const unique = await this.validateUniqueField({ username: name })
