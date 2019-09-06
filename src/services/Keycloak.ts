@@ -46,6 +46,10 @@ export class KeycloakService {
     __dirname,
     '../keycloakPages/signupRedirect.html',
   )
+  KEYCLOAK_ERROR_FILEPATH = path.join(
+    __dirname,
+    '../keycloakPages/errorRedirect.html',
+  )
   KEYCLOAK_REALM = 'ops'
   CALLBACK_HOST = 'localhost'
   CALLBACK_ENDPOINT = 'callback'
@@ -264,7 +268,7 @@ export class KeycloakService {
    * Once it receive a response, the promise is fulfilled and data is returned
    */
   _setupCallbackServerForGrant = async (caller): Promise<OpsGrant> => {
-    const redirectFilePath =
+    let redirectFilePath =
       caller === 'signin'
         ? this.KEYCLOAK_SIGNIN_FILEPATH
         : this.KEYCLOAK_SIGNUP_FILEPATH
@@ -278,30 +282,33 @@ export class KeycloakService {
           path: `/${this.CALLBACK_ENDPOINT}`,
           handler: async (req, reply) => {
             try {
-              await this.grantManager
-                .obtainFromCode(
-                  /**
-                   * The following code is a hack to get the authentication token
-                   * to authorization token excahnge working.
-                   *
-                   * Keycloak expects a redirect_uri to be exactly the same
-                   * as the redirect_uri found when obtaining the authentication
-                   * token in the first place, but the keycloak_connect package
-                   * expects the variable to be stored in a specific way, as such:
-                   *
-                   * node_modules/keycloak-connect/middleware/auth-utils/grant-manager.js Line 98
-                   */
-                  {
-                    session: {
-                      auth_redirect_uri: this.CALLBACK_URL,
+              if (req.query.code) {
+                await this.grantManager
+                  .obtainFromCode(
+                    /**
+                     * The following code is a hack to get the authentication token
+                     * to authorization token excahnge working.
+                     *
+                     * Keycloak expects a redirect_uri to be exactly the same
+                     * as the redirect_uri found when obtaining the authentication
+                     * token in the first place, but the keycloak_connect package
+                     * expects the variable to be stored in a specific way, as such:
+                     *
+                     * node_modules/keycloak-connect/middleware/auth-utils/grant-manager.js Line 98
+                     */
+                    {
+                      session: {
+                        auth_redirect_uri: this.CALLBACK_URL,
+                      },
                     },
-                  },
-                  req.query.code,
-                )
-                .then((res: OpsGrant) => {
-                  responsePayload = res
-                })
-
+                    req.query.code,
+                  )
+                  .then((res: OpsGrant) => {
+                    responsePayload = res
+                  })
+              } else {
+                redirectFilePath = this.KEYCLOAK_ERROR_FILEPATH
+              }
               // Sends the HTML that contains code to close the tab automatically
               return reply.file(redirectFilePath, {
                 confine: false,
@@ -310,8 +317,13 @@ export class KeycloakService {
               debug('%O', err)
               reject(err)
             } finally {
-              this.hapiServer.stop()
-              resolve(responsePayload)
+              if (responsePayload) {
+                this.hapiServer.stop()
+                resolve(responsePayload)
+              } else {
+                ux.spinner.stop('failed')
+                this.hapiServer.stop()
+              }
             }
           },
         })
