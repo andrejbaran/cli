@@ -332,9 +332,9 @@ export default class Publish extends Command {
   }
 
   public async run() {
+    const { args } = this.parse(Publish)
     try {
       await this.isLoggedIn()
-      const { args } = this.parse(Publish)
 
       const publishPipeline = asyncPipe(
         this.resolvePath,

@@ -6,8 +6,6 @@ import Command, { flags } from '../base'
 import getLatestVersion from '../utils/get-latest-version'
 import { PermissionsError } from '../errors/CustomErrors'
 
-let self
-
 export default class Update extends Command {
   static description = 'Update the ops CLI.'
 
@@ -16,8 +14,8 @@ export default class Update extends Command {
   }
 
   async run() {
+    this.parse(Update)
     try {
-      self = this
       const latestVersion = await getLatestVersion()
       await this._logUpdateMessage(latestVersion)
       await this._askQuestion()
@@ -30,7 +28,7 @@ export default class Update extends Command {
   }
 
   private _logUpdateMessage(latestVersion: string | undefined) {
-    self.log(
+    this.log(
       `${ux.colors.white(
         `\n📦 ${ux.colors.actionBlue(
           'INSTALL UPDATE?',

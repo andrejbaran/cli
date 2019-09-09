@@ -113,12 +113,11 @@ export default class TeamCreate extends Command {
   }
 
   async run(): Promise<void> {
+    let {
+      flags: { name },
+    } = this.parse(TeamCreate)
     try {
       await this.isLoggedIn()
-      let {
-        flags: { name },
-      } = this.parse(TeamCreate)
-
       const createPipeline = asyncPipe(
         this.guardAgainstInvalidName,
         this.promptForTeamName,

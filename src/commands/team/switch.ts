@@ -131,9 +131,9 @@ export default class TeamSwitch extends Command {
   }
 
   async run() {
-    await this.isLoggedIn()
-
+    this.parse(TeamSwitch)
     try {
+      await this.isLoggedIn()
       const switchPipeline = asyncPipe(
         this.getActiveTeam,
         this.getTeamsFromApi,

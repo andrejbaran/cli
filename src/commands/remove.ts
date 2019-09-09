@@ -220,12 +220,11 @@ export default class Remove extends Command {
   }
 
   async run() {
+    const {
+      args: { filter },
+    } = this.parse(Remove)
     try {
       await this.isLoggedIn()
-      const {
-        args: { filter },
-      } = this.parse(Remove)
-
       const removePipeline = asyncPipe(
         this.removeTypePrompt,
         this.promptFilter,

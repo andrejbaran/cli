@@ -9,6 +9,7 @@ export default class AccountSupport extends Command {
   }
 
   async run(this: any) {
+    this.parse(AccountSupport)
     await this.isLoggedIn()
 
     this.log('')

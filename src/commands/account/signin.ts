@@ -118,9 +118,8 @@ export default class AccountSignin extends Command {
   }
 
   async run() {
+    this.parse(AccountSignin)
     try {
-      this.parse(AccountSignin)
-
       const signinPipeline = asyncPipe(
         this.logMessages,
         this.keycloakSignInFlow,

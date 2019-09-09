@@ -89,12 +89,11 @@ export default class Build extends Command {
   }
 
   async run(this: any) {
+    const {
+      args: { path },
+    } = this.parse(Build)
     try {
-      const {
-        args: { path },
-      } = this.parse(Build)
       await this.isLoggedIn()
-
       const buildPipeline = asyncPipe(
         this.resolvePath,
         this.getOpsFromFileSystem,
