@@ -64,10 +64,10 @@ export class Cleanup extends Command {
   docker: Docker | undefined
 
   async run() {
+    const {
+      args: { opName },
+    }: Output<{}, { opName: string }> = this.parse(Cleanup)
     try {
-      const {
-        args: { opName },
-      }: Output<{}, { opName: string }> = this.parse(Cleanup)
       this.docker = await getDocker(this, 'publish')
 
       await this.isLoggedIn()

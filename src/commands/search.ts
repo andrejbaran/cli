@@ -344,12 +344,11 @@ export default class Search extends Command {
   }
 
   async run() {
+    const {
+      args: { filter = '' },
+    } = this.parse(Search)
     try {
       await this.isLoggedIn()
-
-      const {
-        args: { filter = '' },
-      } = this.parse(Search)
 
       const searchPipeline = asyncPipe(
         this.searchTypePrompt,

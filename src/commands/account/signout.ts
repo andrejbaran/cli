@@ -66,6 +66,7 @@ export default class AccountSignout extends Command {
   }
 
   async run() {
+    this.parse(AccountSignout)
     try {
       const signoutPipeline = asyncPipe(
         this.checkForAccessToken,

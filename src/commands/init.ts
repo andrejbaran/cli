@@ -354,9 +354,9 @@ export default class Init extends Command {
   }
 
   async run() {
+    this.parse(Init)
     try {
       await this.isLoggedIn()
-
       const initPipeline = asyncPipe(
         this.determineTemplate,
         this.determineQuestions,

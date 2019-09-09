@@ -101,6 +101,7 @@ export default class TeamJoin extends Command {
   }
 
   async run() {
+    this.parse(TeamJoin)
     try {
       await this.isLoggedIn()
       const joinPipeline = asyncPipe(

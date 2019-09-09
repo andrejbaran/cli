@@ -9,6 +9,7 @@ export default class Whoami extends Command {
   }
 
   async run() {
+    this.parse(Whoami)
     await this.isLoggedIn()
 
     const config: Config = await this.readConfig()

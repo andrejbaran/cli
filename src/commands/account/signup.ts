@@ -74,6 +74,7 @@ export default class AccountSignup extends Command {
   }
 
   async run() {
+    this.parse(AccountSignup)
     try {
       const signupPipeline = asyncPipe(
         this.logHelpMessage,

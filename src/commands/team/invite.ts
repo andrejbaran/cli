@@ -156,12 +156,11 @@ export default class TeamInvite extends Command {
   }
 
   async run(): Promise<void> {
+    const {
+      flags: { invitees },
+      argv,
+    } = this.parse(TeamInvite)
     try {
-      const {
-        flags: { invitees },
-        argv,
-      } = this.parse(TeamInvite)
-
       await this.isLoggedIn()
       if (argv.length) {
         throw new Error(
