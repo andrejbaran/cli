@@ -51,7 +51,7 @@ export class BuildSteps {
       mountHome: false,
       name: opName,
       network: 'host',
-      run: 'node /ops/index.js',
+      run: '/bin/sdk-daemon node /ops/index.js',
       src: ['Dockerfile', 'index.js', 'package.json', '.dockerignore'],
     }
 
