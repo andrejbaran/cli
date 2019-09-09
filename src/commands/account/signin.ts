@@ -91,14 +91,6 @@ export default class AccountSignin extends Command {
 
   sendAnalytics = (config: Config) => {
     try {
-      this.services.analytics.identify({
-        userId: config.user.email,
-        traits: {
-          beta: true,
-          email: config.user.email,
-          username: config.user.username,
-        },
-      })
       this.services.analytics.track(
         {
           userId: config.user.email,

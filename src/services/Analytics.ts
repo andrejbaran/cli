@@ -43,14 +43,6 @@ export class AnalyticsService {
     this.api = new FeathersClient()
   }
 
-  /* The identify method lets you tie a user to their actions and record traits about them. */
-  identify(payload: SegmentIdentify) {
-    if (OPS_DEBUG) {
-      return null
-    }
-    return this.segmentClient.identify(payload)
-  }
-
   /* The track method lets you record the actions your users perform. */
   track(payload: AnalyticsTrack, accessToken?: string) {
     if (OPS_DEBUG) {
