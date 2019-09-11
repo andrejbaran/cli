@@ -1,8 +1,8 @@
 import Command, { flags } from '~/base'
 import { INTERCOM_EMAIL } from '~/constants/env'
 import { asyncPipe } from '../../utils/asyncPipe'
-import { SSOError } from '~/errors/CustomErrors'
-import { Tokens } from '~/types'
+import { AnalyticsError, SSOError } from '~/errors/CustomErrors'
+import { Config, Tokens } from '~/types'
 import { terminalText } from '../../utils/terminalText'
 
 export default class AccountSignup extends Command {
@@ -73,6 +73,25 @@ export default class AccountSignup extends Command {
     return this.signinFlow(tokens)
   }
 
+  sendAnalytics = (config: Config) => {
+    try {
+      this.services.analytics.track(
+        {
+          userId: config.user.email,
+          event: 'Ops CLI Signup',
+          properties: {
+            email: config.user.email,
+            username: config.user.username,
+          },
+        },
+        config.tokens.accessToken,
+      )
+    } catch (err) {
+      this.debug('%O', err)
+      throw new AnalyticsError(err)
+    }
+  }
+
   async run() {
     this.parse(AccountSignup)
     try {
@@ -81,6 +100,7 @@ export default class AccountSignup extends Command {
         this.invalidateKeycloakSession,
         this.keycloakSignUpFlow,
         this.signin,
+        this.sendAnalytics,
       )
 
       await signupPipeline()
