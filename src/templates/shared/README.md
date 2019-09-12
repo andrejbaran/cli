@@ -1,6 +1,6 @@
-# Inquirer.js
+# CTO.ai Ops CLI
 
-A collection of common interactive command line user interfaces.
+This Op was generated with `ops init`. Have a look at [`demo.js`](./demo.js) and the examples below to see how you can leverage the `@cto.ai/sdk` to build ops.
 
 ## Table of Contents
 
