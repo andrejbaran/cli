@@ -10,8 +10,14 @@ import {
   CopyTemplateFilesError,
   CouldNotInitializeOp,
 } from '~/errors/CustomErrors'
-import { WORKFLOW, OP, OpTypes } from '~/constants/opConfig'
-import { classProperty } from '@babel/types'
+import {
+  WORKFLOW,
+  OP,
+  OpTypes,
+  HELP_COMMENTS,
+  YAML_TYPE_SEQUENCE,
+  YAML_TYPE_STRING,
+} from '~/constants/opConfig'
 
 export default class Init extends Command {
   static description = 'Easily create a new op.'
@@ -205,13 +211,21 @@ export default class Init extends Command {
     try {
       const { destDir } = initPaths
 
-      const opsYamlObj = yaml.parse(
+      // Parse YAML as document so we can work with comments
+      const opsYamlDoc = yaml.parseDocument(
         fs.readFileSync(`${destDir}/ops.yml`, 'utf8'),
       )
-      await this.customizeOpsYaml(initParams, opsYamlObj)
-      await this.customizeWorkflowYaml(initParams, opsYamlObj)
 
-      const newOpsString = yaml.stringify(opsYamlObj)
+      await this.customizeOpsYaml(initParams, opsYamlDoc)
+      await this.customizeWorkflowYaml(initParams, opsYamlDoc)
+
+      // Process each root level section of the YAML file & add comments
+      Object.keys(HELP_COMMENTS).forEach(rootKey => {
+        this.addHelpCommentsFor(rootKey, opsYamlDoc)
+      })
+
+      // Get the YAML file as string
+      const newOpsString = opsYamlDoc.toString()
       fs.writeFileSync(`${destDir}/ops.yml`, newOpsString)
       return { initPaths, initParams }
     } catch (err) {
@@ -220,24 +234,67 @@ export default class Init extends Command {
     }
   }
 
-  customizeOpsYaml = async (initParams, opsYamlObj) => {
-    const { templates, opName, opDescription } = initParams
-    if (!templates.includes(OP)) {
-      delete opsYamlObj.ops
-      return
+  // The `yaml` library has a pretty bad API for handling comments
+  // More: https://eemeli.org/yaml/#comments'
+  // TODO: Review type checking for yamlDoc (yaml.ast.Document) & remove tsignores
+  addHelpCommentsFor = (key: string, yamlDoc: yaml.ast.Document) => {
+    const docContents = yamlDoc.contents as yaml.ast.SeqNode
+    const docContentsItems = docContents.items as Array<yaml.ast.Pair | null>
+    const configItem = docContentsItems.find(item => {
+      if (!item || !item.key) return
+      const itemKey = item.key as yaml.ast.Scalar
+      return itemKey.value === key
+    })
+
+    // Simple config fields (`version`)
+    if (
+      configItem &&
+      configItem.value &&
+      configItem.value.type === YAML_TYPE_STRING &&
+      HELP_COMMENTS[key]
+    ) {
+      configItem.comment = ` ${HELP_COMMENTS[key]}`
     }
-    opsYamlObj.ops[0].name = opName
-    opsYamlObj.ops[0].description = opDescription
+
+    // Config fields with nested values (`ops`, `workflows`)
+    if (
+      configItem &&
+      configItem.value &&
+      configItem.value.type === YAML_TYPE_SEQUENCE
+    ) {
+      // @ts-ignore
+      yamlDoc.getIn([key, 0]).items.map(configItem => {
+        const comment: string = HELP_COMMENTS[key][configItem.key]
+        if (comment)
+          configItem.comment = ` ${HELP_COMMENTS[key][configItem.key]}`
+      })
+    }
   }
 
-  customizeWorkflowYaml = async (initParams, opsYamlObj) => {
-    const { templates, workflowName, workflowDescription } = initParams
-    if (!templates.includes(WORKFLOW)) {
-      delete opsYamlObj.workflows
+  customizeOpsYaml = async (initParams, yamlDoc: yaml.ast.Document) => {
+    const { templates, opName, opDescription } = initParams
+    if (!templates.includes(OP)) {
+      // @ts-ignore
+      yamlDoc.delete('ops')
       return
     }
-    opsYamlObj.workflows[0].name = workflowName
-    opsYamlObj.workflows[0].description = workflowDescription
+    // @ts-ignore
+    yamlDoc.getIn(['ops', 0]).set('name', opName)
+    // @ts-ignore
+    yamlDoc.getIn(['ops', 0]).set('description', opDescription)
+  }
+
+  customizeWorkflowYaml = async (initParams, yamlDoc: yaml.ast.Document) => {
+    const { templates, workflowName, workflowDescription } = initParams
+    if (!templates.includes(WORKFLOW)) {
+      // @ts-ignore
+      yamlDoc.delete('workflows')
+      return
+    }
+    // @ts-ignore
+    yamlDoc.getIn(['workflows', 0]).set('name', workflowName)
+    // @ts-ignore
+    yamlDoc.getIn(['workflows', 0]).set('description', workflowDescription)
   }
 
   logMessages = async ({
