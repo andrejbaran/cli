@@ -1,8 +1,17 @@
+import axios from 'axios'
+
 import { KeycloakService } from '~/services/Keycloak'
-import { OpsGrant } from '~/types'
+import { OpsGrant, Tokens } from '~/types'
+
+jest.mock('axios')
+
+const mockAccessToken = 'test-access-token'
+const mockRefreshToken = 'test-refresh-token'
+const mockIdToken = 'test-id-token'
+const mockSessionState = '11111111-1111-1111-111111111111'
 
 describe('KeycloakService', () => {
-  it('keycloakService:_buildStandardFlowParams should build valid query string params', () => {
+  it('_buildStandardFlowParams should build valid query string params', () => {
     const keycloakService = new KeycloakService()
     keycloakService.CLIENT_ID = 'test-client'
     keycloakService.CALLBACK_URL = 'test-client'
@@ -11,13 +20,8 @@ describe('KeycloakService', () => {
     expect(params).toBeTruthy()
   })
 
-  it('keycloakService:_formatGrantToTokens should consume a grant and return a Tokens object', () => {
+  it('_formatGrantToTokens should consume a grant and return a Tokens object', () => {
     const keycloakService = new KeycloakService()
-
-    const mockAccessToken = 'test-access-token'
-    const mockRefreshToken = 'test-refresh-token'
-    const mockIdToken = 'test-id-token'
-    const mockSessionState = '11111111-1111-1111-111111111111'
 
     const mockGrant = {
       access_token: {
@@ -34,7 +38,95 @@ describe('KeycloakService', () => {
     expect(tokens.idToken).toEqual(mockIdToken)
   })
 
-  it('keycloakService:_buildAuthorizeUrl should build a valid url', () => {
+  it('getTokenFromPasswordGrant should call the UAA API and return a valid token object', async () => {
+    const keycloakService = new KeycloakService()
+
+    const mockUserCredentials = {
+      user: 'username',
+      password: 'password',
+    }
+    const mockApiResponse = {
+      data: {
+        access_token: mockAccessToken,
+        refresh_token: mockRefreshToken,
+        id_token: mockIdToken,
+        session_state: mockSessionState,
+      },
+    }
+
+    axios.post = jest.fn().mockReturnValue(mockApiResponse)
+
+    const expectedTokenObject: Tokens = {
+      accessToken: mockAccessToken,
+      refreshToken: mockRefreshToken,
+      idToken: mockIdToken,
+      sessionState: mockSessionState,
+    }
+
+    const result = await keycloakService.getTokenFromPasswordGrant(
+      mockUserCredentials,
+    )
+
+    expect(axios.post).toHaveBeenCalledTimes(1)
+    expect(result).toEqual(expectedTokenObject)
+    ;(axios as any).mockClear()
+  })
+
+  it('refreshAccessToken should call the UAA API and return a valid token object', async () => {
+    const keycloakService = new KeycloakService()
+
+    const newAccessToken = 'test-new-access-token'
+    const newRefreshToken = 'test-new-refresh-token'
+    const newIdToken = 'test-new-id-token'
+    const newSessionState = 'test-new-session-state'
+
+    const mockPreviousConfig = {
+      tokens: {
+        accessToken: mockAccessToken,
+        refreshToken: mockRefreshToken,
+        idToken: mockIdToken,
+        sessionState: mockSessionState,
+      },
+      team: {
+        id: 'test-123',
+        name: 'test-abcd',
+      },
+      user: {
+        username: 'test-user',
+        email: 'test-email@email.com',
+        id: 'test-id-12345',
+      },
+    }
+
+    const mockApiResponse = {
+      data: {
+        access_token: newAccessToken,
+        refresh_token: newRefreshToken,
+        id_token: newIdToken,
+        session_state: newSessionState,
+      },
+    }
+
+    const expectedTokenObject: Tokens = {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      idToken: newIdToken,
+      sessionState: mockSessionState,
+    }
+
+    axios.post = jest.fn().mockReturnValue(mockApiResponse)
+
+    const result = await keycloakService.refreshAccessToken(
+      mockPreviousConfig,
+      mockRefreshToken,
+    )
+
+    expect(axios.post).toHaveBeenCalledTimes(1)
+    expect(result).toEqual(expectedTokenObject)
+    ;(axios as any).mockClear()
+  })
+
+  it('_buildAuthorizeUrl should build a valid url', () => {
     const keycloakService = new KeycloakService()
     keycloakService.CLIENT_ID = 'test-client'
     keycloakService.CALLBACK_URL = 'test-url'
@@ -44,7 +136,7 @@ describe('KeycloakService', () => {
     expect(url).toBeTruthy()
   })
 
-  it('keycloakService:_buildRegisterUrl should build a valid url', () => {
+  it('_buildRegisterUrl should build a valid url', () => {
     const keycloakService = new KeycloakService()
     keycloakService.CLIENT_ID = 'test-client'
     keycloakService.KEYCLOAK_REALM = 'test-realm'
@@ -53,19 +145,12 @@ describe('KeycloakService', () => {
     expect(url).toBeTruthy()
   })
 
-  it('keycloakService:_buildResetUrl should build a valid url', () => {
+  it('_buildResetUrl should build a valid url', () => {
     const keycloakService = new KeycloakService()
     keycloakService.CLIENT_ID = 'test-client'
     keycloakService.KEYCLOAK_REALM = 'test-realm'
 
     const url = keycloakService._buildResetUrl()
-    expect(url).toBeTruthy()
-  })
-
-  it('keycloakService:_buildRefreshAccessTokenIfExpiredUrl should build a valid url', () => {
-    const keycloakService = new KeycloakService()
-
-    const url = keycloakService._buildRefreshAccessTokenUrl()
     expect(url).toBeTruthy()
   })
 })

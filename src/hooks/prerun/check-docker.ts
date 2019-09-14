@@ -11,7 +11,7 @@ const hook: Hook<'prerun'> = async function(opts) {
     const dockerDependentCommands = ['publish', 'build', 'cleanup']
 
     if (dockerDependentCommands.includes(command)) {
-      const docker = await getDocker(CTOCommand, command)
+      await getDocker(CTOCommand, command)
     }
   } catch (err) {
     this.debug('%O', err)

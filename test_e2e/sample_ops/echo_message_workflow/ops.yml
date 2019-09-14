@@ -1,0 +1,12 @@
+version: "1"
+workflows:
+  - name: echo_message_workflow
+    description: sample workflow that echoes a message
+    remote: false
+    steps:
+      - echo hello 1
+      - echo hello 2
+      - echo hello 3
+    env:
+      - USER=world
+      - OPS_ACCESS_TOKEN

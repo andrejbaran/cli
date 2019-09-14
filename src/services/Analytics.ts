@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Sunday, 28th April 2019 1:16:46 am
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Thursday, 6th June 2019 6:30:19 pm
+ * @lastModifiedTime: Wednesday, 4th September 2019 3:08:35 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -11,7 +11,6 @@ import Debug from 'debug'
 import { OPS_SEGMENT_KEY, NODE_ENV, OPS_DEBUG } from '../constants/env'
 import { FeathersClient } from './Feathers'
 import { ApiService } from '~/types'
-import { APIError } from '~/errors/CustomErrors'
 const debug = Debug('ops:AnalyticsService')
 
 interface SegmentIdentify {

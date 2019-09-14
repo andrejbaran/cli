@@ -2,8 +2,11 @@ import { ux } from '@cto.ai/sdk'
 
 import { errorSource } from '~/constants/errorSource'
 import { INTERCOM_EMAIL } from '~/constants/env'
-import { ErrorResponse, ErrorTemplate } from '~/errors/ErrorTemplate'
+import { ErrorTemplate } from '~/errors/ErrorTemplate'
 import { terminalText } from '~/utils'
+import Debug from 'debug'
+
+const debug = Debug('ops:CustomErrors')
 
 const expectedSource = {
   source: errorSource.EXPECTED,
@@ -451,7 +454,8 @@ export class YamlPortError extends ErrorTemplate {
 }
 
 export class SSOError extends ErrorTemplate {
-  constructor() {
+  constructor(message?: string) {
+    message && debug(message)
     super(
       white(
         `🤔 We're having trouble signing you in. Please try running ${actionBlue(

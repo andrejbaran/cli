@@ -19,13 +19,13 @@ import {
   WorkflowsFindResponse,
 } from '~/types'
 
-import {
-  APIError,
-  CouldNotGetRegistryToken,
-  MissingRequiredArgument,
-} from '~/errors/CustomErrors'
+import { APIError, MissingRequiredArgument } from '~/errors/CustomErrors'
 
-import { OP_FILE } from '~/constants/opConfig'
+import {
+  OP_FILE,
+  WORKFLOW_ENDPOINT,
+  COMMAND_ENDPOINT,
+} from '~/constants/opConfig'
 import { OPS_REGISTRY_HOST } from '~/constants/env'
 import { asyncPipe } from '~/utils'
 const { multiBlue, multiOrange, green, dim, reset, bold } = ux.colors
@@ -285,7 +285,7 @@ export default class Run extends Command {
         team_id: config.team.id,
       }
       const { data: apiOps }: OpsFindResponse = await this.services.api.find(
-        'ops',
+        COMMAND_ENDPOINT,
         {
           query,
           headers: {
@@ -318,12 +318,15 @@ export default class Run extends Command {
       }
       let {
         data: apiWorkflows,
-      }: WorkflowsFindResponse = await this.services.api.find('workflows', {
-        query,
-        headers: {
-          Authorization: config.tokens.accessToken,
+      }: WorkflowsFindResponse = await this.services.api.find(
+        WORKFLOW_ENDPOINT,
+        {
+          query,
+          headers: {
+            Authorization: config.tokens.accessToken,
+          },
         },
-      })
+      )
       apiWorkflows = apiWorkflows.map(workflow => {
         const isPublic = workflow.teamID !== config.team.id ? true : false
         return { ...workflow, isPublished: true, isPublic }

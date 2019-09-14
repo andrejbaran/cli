@@ -27,7 +27,7 @@ export default class AccountSignout extends Command {
 
   signUserOut = async () => {
     try {
-      await this.clearConfig(this)
+      await this.clearConfig()
       const { tokens } = await this.readConfig()
       if (tokens && tokens.accessToken) {
         throw new SignOutError(null)

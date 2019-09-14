@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Sunday, 28th April 2019 2:54:44 am
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 31st May 2019 5:13:51 pm
+ * @lastModifiedTime: Monday, 9th September 2019 12:15:02 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -25,7 +25,7 @@ export const NODE_ENV = process.env.NODE_ENV || 'production'
 
 export const DEBUG = process.env.DEBUG
 
-export const OPS_DEBUG = !!process.env.OPS_DEBUG
+export const OPS_DEBUG = Boolean(process.env.OPS_DEBUG)
 
 export const HOME = process.env.HOME || '~'
 
@@ -34,3 +34,6 @@ export const INTERCOM_EMAIL = process.env.INTERCOM_EMAIL || 'support@cto.ai'
 export const DOCKER_SOCKET = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
 
 export const SEGMENT_URL = process.env.SEGMENT_URL || 'https://api.segment.io'
+
+export const OPS_CLIENT_SECRET =
+  process.env.OPS_CLIENT_SECRET || '860d0973-dd17-423f-823c-34c2a661976f'

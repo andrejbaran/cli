@@ -11,8 +11,9 @@ import { getFirstActivePort } from '~/utils'
 import { ux } from '@cto.ai/sdk'
 import axios from 'axios'
 import { SSOError } from '~/errors/CustomErrors'
-import { Tokens, OpsGrant, Config } from '~/types'
-import { OPS_KEYCLOAK_HOST } from '~/constants/env'
+import { UserCredentials, Tokens, OpsGrant, Config } from '~/types'
+import { OPS_KEYCLOAK_HOST, OPS_CLIENT_SECRET } from '~/constants/env'
+import jwt from 'jsonwebtoken'
 
 const debug = Debug('ops:KeycloakService')
 
@@ -24,6 +25,17 @@ const KEYCLOAK_CONFIG = {
   'public-client': true,
   'confidential-port': 0,
 }
+
+/**
+ * The token endpoint which provides fresh tokens
+ * e.g.
+ * http://localhost:8080/auth/realms/ops/protocol/openid-connect/token
+ *
+ * for more info see: https://uaa.prod-platform.hc.ai/auth/realms/ops/.well-known/openid-configuration
+ */
+const keycloakTokenEndpoint = `${KEYCLOAK_CONFIG['auth-server-url']}/realms/${KEYCLOAK_CONFIG.realm}/protocol/openid-connect/token`
+
+const accountUrl = `${KEYCLOAK_CONFIG['auth-server-url']}/realms/${KEYCLOAK_CONFIG.realm}/account/password`
 
 type KeycloakRefreshTokenInterfaces = {
   access_token: string
@@ -54,6 +66,7 @@ export class KeycloakService {
   CALLBACK_HOST = 'localhost'
   CALLBACK_ENDPOINT = 'callback'
   CLIENT_ID = 'ops-cli'
+  CONFIDENTIAL_CLIENT_ID = 'ops-cli-confidential'
   CALLBACK_PORT: number | null = null
   CALLBACK_URL: string | null = null
   POSSIBLE_PORTS = [10234, 28751, 38179, 41976, 49164]
@@ -183,7 +196,7 @@ export class KeycloakService {
   }
 
   /**
-   * Generates the initial URL with qury string parameters fire of to Keycloak
+   * Generates the initial URL with query string parameters fired off to Keycloak
    * e.g.
    * http://localhost:8080/auth/realms/ops/login-actions/reset-credentials?client_id=cli
    */
@@ -196,18 +209,9 @@ export class KeycloakService {
     return `${KEYCLOAK_CONFIG['auth-server-url']}/realms/${this.KEYCLOAK_REALM}/login-actions/reset-credentials?${params}`
   }
 
-  /**
-   * Generates the initial URL with qury string parameters fire of to Keycloak
-   * e.g.
-   * http://localhost:8080/auth/realms/ops/account/password
-   */
-  _buildAccountUrl = () => {
-    return `${KEYCLOAK_CONFIG['auth-server-url']}/realms/${this.KEYCLOAK_REALM}/account/password`
-  }
-
-  keycloakResetFlow = isUserSignedIn => {
+  keycloakResetFlow = (isUserSignedIn: boolean) => {
     // open up account page if the user is signed in otherwise open up password reset page
-    const url = isUserSignedIn ? this._buildAccountUrl() : this._buildResetUrl()
+    const url = isUserSignedIn ? accountUrl : this._buildResetUrl()
     open(url)
     console.log(`\n💻  Please follow the prompts in the browser window`)
     console.log(
@@ -217,13 +221,16 @@ export class KeycloakService {
     )
   }
 
-  /**
-   * Generates the refresh access token URL
-   * e.g.
-   * http://localhost:8080/auth/realms/ops/protocol/openid-connect/token
+  /*
+   * this is necessary because we have two clients and one is confidential. Only
+   * the confidential client requires a client secret.
    */
-  _buildRefreshAccessTokenUrl = () => {
-    return `${KEYCLOAK_CONFIG['auth-server-url']}/realms/ops/protocol/openid-connect/token`
+  includeClientSecret = (clientName: string) => {
+    return clientName === this.CLIENT_ID
+      ? {}
+      : {
+          client_secret: OPS_CLIENT_SECRET,
+        }
   }
 
   refreshAccessToken = async (
@@ -231,26 +238,34 @@ export class KeycloakService {
     refreshToken: string,
   ): Promise<Tokens> => {
     try {
-      const refreshUrl = this._buildRefreshAccessTokenUrl()
+      const decodedToken = jwt.decode(refreshToken)
+      /*
+       * the refresh token contains the client ID (azp). There are two possible
+       * clients, ops-cli-confidential or ops-cli. The client ID in the request params
+       * has to match the client ID embedded in the token.
+       */
+      const clientName: string =
+        decodedToken && decodedToken.azp ? decodedToken.azp : this.CLIENT_ID
 
       /**
        * This endpoint expects a x-form-url-encoded header, not JSON
        */
       const refreshData = querystring.stringify({
         grant_type: 'refresh_token',
-        client_id: this.CLIENT_ID,
+        client_id: clientName,
         refresh_token: refreshToken,
+        ...this.includeClientSecret(clientName),
       })
 
       const {
         data,
       }: { data: KeycloakRefreshTokenInterfaces } = await axios.post(
-        refreshUrl,
+        keycloakTokenEndpoint,
         refreshData,
       )
 
       if (!data.access_token || !data.refresh_token || !data.id_token)
-        throw new SSOError()
+        throw new SSOError('There are UAA tokens missing.')
 
       return {
         accessToken: data.access_token,
@@ -259,6 +274,54 @@ export class KeycloakService {
         sessionState: oldConfig.tokens.sessionState,
       }
     } catch (error) {
+      debug('%O', error)
+      // console.log({ error })
+      throw new SSOError()
+    }
+  }
+
+  getTokenFromPasswordGrant = async ({
+    user,
+    password,
+  }: Pick<UserCredentials, 'user' | 'password'>): Promise<Tokens> => {
+    try {
+      /**
+       * This endpoint expects a x-form-url-encoded header, not JSON
+       */
+      debug('getting token from password grant')
+
+      const postBody = querystring.stringify({
+        grant_type: 'password',
+        client_id: this.CONFIDENTIAL_CLIENT_ID,
+        client_secret: OPS_CLIENT_SECRET,
+        username: user,
+        password,
+        scope: 'openid',
+      })
+
+      const {
+        data,
+      }: { data: KeycloakRefreshTokenInterfaces } = await axios.post(
+        keycloakTokenEndpoint,
+        postBody,
+      )
+
+      if (
+        !data.access_token ||
+        !data.refresh_token ||
+        !data.id_token ||
+        !data.session_state
+      )
+        throw new SSOError('There are UAA tokens missing.')
+
+      return {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        idToken: data.id_token,
+        sessionState: data.session_state,
+      }
+    } catch (error) {
+      debug('%O', error)
       throw new SSOError()
     }
   }

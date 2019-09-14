@@ -2,15 +2,13 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 11th June 2019 6:30:38 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Wednesday, 12th June 2019 11:51:18 am
+ * @lastModifiedTime: Thursday, 12th September 2019 11:21:56 am
  * @copyright (c) 2019 CTO.ai
  */
 
-import { run, signin, sleep } from '../../utils/cmd'
+import { run, sleep, cleanup, signin } from '../../utils/cmd'
 import {
   ENTER,
-  EXISTING_USER_EMAIL,
-  EXISTING_USER_PASSWORD,
   getValidTeamName,
   INVALID_TEAM_NAME,
 } from '../../utils/constants'
@@ -23,21 +21,25 @@ beforeEach(async () => {
 
 afterAll(async () => {
   // avoid jest open handle error
+  await cleanup()
   await sleep(500)
 })
 
-test('it should create a new team when prompting', async () => {
-  console.log('it should create a new team by prompting')
-  await signin(EXISTING_USER_EMAIL, EXISTING_USER_PASSWORD)
+test('it should create a new team by prompting for a team name', async () => {
+  console.log('it should create a new team by prompting for a team name')
+
+  await signin()
   await sleep(500)
+
+  // const result = await run(['whoami'])
+
   const result = await run(['team:create'], [getValidTeamName(), ENTER])
   expect(result).toContain('team has been created')
 })
 
 test('it should create a new team when name flag set', async () => {
   console.log('it should create a new team when name flag set')
-  await signin(EXISTING_USER_EMAIL, EXISTING_USER_PASSWORD)
-  await sleep(500)
+  await signin()
   const result = await run(['team:create', '-n', getValidTeamName()])
   expect(result).toContain('team has been created')
 })
@@ -46,8 +48,7 @@ test('it should fail to create a new team when prompted with an invalid name', a
   console.log(
     'it should fail to create a new team when prompted with an invalid name',
   )
-  await signin(EXISTING_USER_EMAIL, EXISTING_USER_PASSWORD)
-  await sleep(500)
+  await signin()
   const result = await run(['team:create'], [INVALID_TEAM_NAME, ENTER])
   expect(result).toContain('Invalid team name')
 })
@@ -56,8 +57,7 @@ test('it should fail to create a new team when flag is set to invalid name', asy
   console.log(
     'it should fail to create a new team when flag is set to invalid name',
   )
-  await signin(EXISTING_USER_EMAIL, EXISTING_USER_PASSWORD)
-  await sleep(500)
+  await signin()
   const result = await run(['team:create', '-n', INVALID_TEAM_NAME])
   expect(result).toContain('invalid team name')
 })

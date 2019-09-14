@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 30th April 2019 12:07:49 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Wednesday, 12th June 2019 9:57:48 am
+ * @lastModifiedTime: Wednesday, 11th September 2019 4:07:44 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -12,22 +12,22 @@ import {
   Question,
   Config,
   Container,
-  UserCredentials,
   Tokens,
+  UserCredentials,
 } from '../../types'
 import { asyncPipe } from '../../utils/asyncPipe'
 import { AnalyticsError, SSOError } from '../../errors/CustomErrors'
 
 export const signinPrompts: Container<Question> = {
-  email: {
+  user: {
     type: 'input',
-    name: 'email',
-    message: 'Enter email: ',
+    name: 'user',
+    message: 'Username or email: ',
   },
   password: {
     type: 'password',
     name: 'password',
-    message: 'Enter password: ',
+    message: 'Password: ',
     mask: '*',
   },
 }
@@ -37,6 +37,9 @@ export default class AccountSignin extends Command {
 
   static flags = {
     help: flags.help({ char: 'h' }),
+    interactive: flags.boolean({ char: 'i', description: 'Interactive Mode' }),
+    user: flags.string({ char: 'u', description: 'Username or email' }),
+    password: flags.string({ char: 'p', description: 'Password' }),
   }
 
   logMessages = () => {
@@ -68,7 +71,7 @@ export default class AccountSignin extends Command {
   signin = async (tokens: Tokens) => {
     this.log('')
     this.ux.spinner.start(`${this.ux.colors.white('Authenticating')}`)
-    return this.signinFlow(tokens)
+    return this.initConfig(tokens)
   }
 
   showWelcomeMessage = (config: Config) => {
@@ -109,18 +112,83 @@ export default class AccountSignin extends Command {
     return cloneDeep(config)
   }
 
+  determineQuestions = (
+    prompts: Container<Question>,
+    flags: Partial<UserCredentials>,
+  ) => () => {
+    const removeIfPassedToFlags = ([key, _question]: [string, Question]) =>
+      !Object.entries(flags)
+        .map(([flagKey]) => flagKey)
+        .includes(key)
+
+    const questions = Object.entries(prompts)
+      .filter(removeIfPassedToFlags)
+      .map(([_key, question]) => question)
+
+    return questions
+  }
+
+  getRefreshToken = async (
+    credentials: Pick<UserCredentials, 'user' | 'password'>,
+  ) => {
+    const tokens = await this.services.keycloakService.getTokenFromPasswordGrant(
+      credentials,
+    )
+    return tokens
+  }
+
+  askQuestions = async (
+    questions: Question[],
+  ): Promise<UserCredentials | {}> => {
+    if (!questions.length) {
+      return {}
+    }
+    this.log(`${this.ux.colors.white('Please login to get started.')}\n`)
+    return this.ux.prompt<Partial<UserCredentials>>(questions)
+  }
+
+  determineUserCredentials = (flags: Partial<UserCredentials>) => (
+    answers: Partial<UserCredentials>,
+  ): Partial<UserCredentials> => ({ ...flags, ...answers })
+
+  browserSigninPipeline = asyncPipe(
+    this.logMessages,
+    this.keycloakSignInFlow,
+    this.signin,
+    this.showWelcomeMessage,
+    this.sendAnalytics,
+  )
+
+  cliSigninPipeline = (flags: Partial<UserCredentials>) =>
+    asyncPipe(
+      this.logMessages,
+      this.determineQuestions(signinPrompts, flags),
+      this.askQuestions,
+      this.determineUserCredentials(flags),
+      this.getRefreshToken,
+      this.signin,
+      this.showWelcomeMessage,
+      this.sendAnalytics,
+    )
+
   async run() {
     this.parse(AccountSignin)
     try {
-      const signinPipeline = asyncPipe(
-        this.logMessages,
-        this.keycloakSignInFlow,
-        this.signin,
-        this.showWelcomeMessage,
-        this.sendAnalytics,
-      )
+      const { flags } = this.parse(AccountSignin)
+      await this.services.keycloakService.init()
 
-      await signinPipeline()
+      /*
+       * If -u, -p, or -i flags are passed, sign-in via the CLI as opposed to
+       * the browser.
+       *
+       * If -i AND either -u or -p are passed, it doesn't matter because the CLI
+       * will prompt for all missing flags.
+       */
+      if (flags.interactive || flags.user || flags.password) {
+        return await this.cliSigninPipeline(flags)()
+      }
+
+      return await this.browserSigninPipeline()
     } catch (err) {
       this.ux.spinner.stop('Failed')
       this.debug('%O', err)

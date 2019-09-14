@@ -1,14 +1,19 @@
 import Command, { flags } from '../base'
 import { ux } from '@cto.ai/sdk'
-import { asyncPipe } from '~/utils'
+import { asyncPipe, titleCase } from '~/utils'
 import { OPS_REGISTRY_HOST } from '../constants/env'
 import { APIError, NoResultsFoundForDeletion } from '../errors/CustomErrors'
 import { Op, Workflow, User } from '~/types'
-import { WORKFLOW, OP } from '~/constants/opConfig'
+import {
+  WORKFLOW,
+  COMMAND,
+  getEndpointFromOpType,
+  OpTypes,
+} from '~/constants/opConfig'
 
 export interface RemoveInputs {
   filter: string
-  removeType: string
+  removeType: OpTypes
   apiResults: (Op | Workflow)[]
   opOrWorkflow: Op | Workflow
   confirmRemove: boolean
@@ -32,18 +37,23 @@ export default class Remove extends Command {
   removeTypePrompt = async (
     filter: string,
   ): Promise<Pick<RemoveInputs, 'filter' | 'removeType'>> => {
-    const { removeType } = await this.ux.prompt<{ removeType: string }>({
+    const { removeType } = await this.ux.prompt<{ removeType: OpTypes }>({
       type: 'list',
       name: 'removeType',
       message: `Start by selecting either private ${this.ux.colors.multiBlue(
-        'Op',
+        titleCase(COMMAND),
       )} or ${this.ux.colors.multiOrange(
-        'Workflow',
+        titleCase(WORKFLOW),
       )} to remove  ${this.ux.colors.reset.green('→')}`,
       choices: [
-        { name: `${this.ux.colors.multiBlue('\u2022')} Op`, value: OP },
         {
-          name: `${this.ux.colors.multiOrange('\u2022')} Workflow`,
+          name: `${this.ux.colors.multiBlue('\u2022')} ${titleCase(COMMAND)}`,
+          value: COMMAND,
+        },
+        {
+          name: `${this.ux.colors.multiOrange('\u2022')} ${titleCase(
+            WORKFLOW,
+          )}`,
           value: WORKFLOW,
         },
       ],
@@ -75,17 +85,16 @@ export default class Remove extends Command {
   ): Promise<RemoveInputs> => {
     try {
       const { filter, removeType } = inputs
-      let query = {}
-      if (removeType === OP) {
-        query = { team_id: this.team.id }
-      } else {
-        query = { teamId: this.team.id }
-      }
+      const query =
+        removeType === COMMAND
+          ? { team_id: this.team.id }
+          : { teamId: this.team.id }
+
       if (filter.length) Object.assign(query, { search: filter })
       const {
         data: apiResults,
       }: { data: (Op | Workflow)[] } = await this.services.api.find(
-        `${removeType}s`,
+        getEndpointFromOpType(removeType),
         {
           query,
           headers: {
@@ -165,7 +174,7 @@ export default class Remove extends Command {
       } = inputs
       this.log('\n 🗑  Removing from registry...')
 
-      await this.services.api.remove(`${removeType}s`, id, {
+      await this.services.api.remove(getEndpointFromOpType(removeType), id, {
         headers: { Authorization: this.accessToken },
       })
       return inputs
@@ -223,8 +232,10 @@ export default class Remove extends Command {
     const {
       args: { filter },
     } = this.parse(Remove)
+
     try {
       await this.isLoggedIn()
+
       const removePipeline = asyncPipe(
         this.removeTypePrompt,
         this.promptFilter,

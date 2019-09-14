@@ -1,24 +1,33 @@
 import * as Config from '@oclif/config'
 import Remove, { RemoveInputs } from '~/commands/remove'
-import { OP, WORKFLOW } from '~/constants/opConfig'
+
+import { COMMAND, WORKFLOW, getEndpointFromOpType } from '~/constants/opConfig'
 import { APIError, NoResultsFoundForDeletion } from '~/errors/CustomErrors'
 import { FeathersClient } from '~/services/Feathers'
 import { Op, Workflow, Services } from '~/types'
 import { createMockOp } from '../mocks'
+import { sleep } from '../utils'
 
 let cmd: Remove
 let config
+
 beforeEach(async () => {
   config = await Config.load()
 })
+
+afterEach(async () => {
+  // avoid jest open handle error
+  await sleep(500)
+})
+
 describe('getApiOpsOrWorkflows', () => {
   test('should successfully retrieve ops from the api', async () => {
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.find = jest.fn().mockReturnValue({ data: <Op>{} })
+    mockFeathersService.find = jest.fn().mockReturnValue({ data: {} as Op })
 
     const inputs = {
       filter: 'fakeFilter',
-      removeType: OP,
+      removeType: COMMAND,
     } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
 
@@ -30,7 +39,7 @@ describe('getApiOpsOrWorkflows', () => {
     }
     await cmd.getApiOpsOrWorkflows(inputs)
     expect(mockFeathersService.find).toHaveBeenCalledWith(
-      `${inputs.removeType}s`,
+      getEndpointFromOpType(inputs.removeType),
       {
         query: {
           search: inputs.filter,
@@ -110,7 +119,7 @@ describe('filterResultsByTeam', () => {
     ]
     const apiResults: (Op | Workflow)[] = [...otherOps, ...teamOps]
     const inputs = {
-      removeType: OP,
+      removeType: COMMAND,
       apiResults,
     } as RemoveInputs
     const config = await Config.load()
@@ -132,7 +141,7 @@ describe('filterResultsByTeam', () => {
       createMockOp({ teamID: '' }),
     ]
     const inputs = {
-      removeType: OP,
+      removeType: COMMAND,
       apiResults,
     } as RemoveInputs
     const config = await Config.load()
@@ -157,7 +166,7 @@ describe('removeApiOpOrWorkflow', () => {
 
     const inputs = {
       opOrWorkflow: createMockOp({ id: mockOpId }),
-      removeType: OP,
+      removeType: COMMAND,
       confirmRemove: true,
     } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
@@ -166,7 +175,7 @@ describe('removeApiOpOrWorkflow', () => {
     cmd.accessToken = fakeToken
     await cmd.removeApiOpOrWorkflow(inputs)
     expect(mockFeathersService.remove).toHaveBeenCalledWith(
-      `${inputs.removeType}s`,
+      getEndpointFromOpType(inputs.removeType),
       mockOpId,
       {
         headers: {
@@ -184,7 +193,7 @@ describe('removeApiOpOrWorkflow', () => {
 
     const inputs = {
       opOrWorkflow: createMockOp({ id: mockOpId }),
-      removeType: OP,
+      removeType: COMMAND,
       confirmRemove: true,
     } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
@@ -202,7 +211,7 @@ describe('removeApiOpOrWorkflow', () => {
 
     const inputs = {
       opOrWorkflow: createMockOp({ id: mockOpId }),
-      removeType: OP,
+      removeType: COMMAND,
       confirmRemove: false,
     } as RemoveInputs
     const fakeToken = 'FAKETOKEN'

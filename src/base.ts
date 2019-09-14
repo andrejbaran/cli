@@ -1,8 +1,8 @@
 /**
  * @author: Brett Campbell (brett@hackcapital.com)
  * @date: Friday, 5th April 2019 12:06:07 pm
- * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Monday, 26th August 2019 10:14:18 am
+ * @lastModifiedBy: JP Lew (jp@cto.ai)
+ * @lastModifiedTime: Thursday, 12th September 2019 11:07:19 am
  * @copyright (c) 2019 CTO.ai
  *
  */
@@ -12,19 +12,23 @@ import Command, { flags } from '@oclif/command'
 import Debug from 'debug'
 import * as OClifConfig from '@oclif/config'
 import _inquirer from '@cto.ai/inquirer'
-import { outputJson, readJson, remove } from 'fs-extra'
-import * as path from 'path'
 import jwt from 'jsonwebtoken'
 import axios from 'axios'
 
-import { asyncPipe, _trace } from './utils'
+import {
+  asyncPipe,
+  _trace,
+  writeConfig,
+  readConfig,
+  clearConfig,
+  formatConfigObject,
+} from './utils'
 
 import {
   Config,
   User,
   Team,
   ValidationFields,
-  MeResponse,
   RegistryAuth,
   SigninPipeline,
   RegistryResponse,
@@ -33,12 +37,9 @@ import {
 } from './types'
 
 import {
-  NODE_ENV,
   OPS_REGISTRY_HOST,
   OPS_SEGMENT_KEY,
   INTERCOM_EMAIL,
-  OPS_DEBUG,
-  OPS_KEYCLOAK_HOST,
 } from './constants/env'
 
 import { FeathersClient } from './services/Feathers'
@@ -101,7 +102,7 @@ abstract class CTOCommand extends Command {
 
   async init() {
     try {
-      await this.services.keycloakService.init()
+      debug('initiating base command')
       const config = await this.readConfig()
 
       const { user, tokens, team } = config
@@ -116,14 +117,19 @@ abstract class CTOCommand extends Command {
     }
   }
 
-  isTokenValid = (tokens: Tokens): Boolean => {
+  isTokenValid = (tokens: Tokens): boolean => {
     const { refreshToken } = tokens
     const { exp: refreshTokenExp } = jwt.decode(refreshToken)
     const clockTimestamp = Math.floor(Date.now() / 1000)
+
+    /*
+     * Note: when the token is an offline token, refreshTokenExp will be equal to 0. We are not issuing offline tokens at the moment, but if we do, we need to add the extra condition that refreshTokenExp !== 0
+     */
     return clockTimestamp < refreshTokenExp
   }
 
   checkValidAccessToken = async (tokens: Tokens): Promise<void> => {
+    debug('checking for valid access token')
     try {
       if (!tokens) return
       const { accessToken, refreshToken, idToken } = tokens
@@ -132,7 +138,7 @@ abstract class CTOCommand extends Command {
       if (!this.isTokenValid(tokens)) throw new TokenExpiredError()
 
       /**
-       * The following code updates the access token every time
+       * The following code updates the access token every time a command is run
        */
       const oldConfig = await this.readConfig()
       const newTokens = await this.services.keycloakService.refreshAccessToken(
@@ -142,7 +148,8 @@ abstract class CTOCommand extends Command {
       this.accessToken = newTokens.accessToken
       await this.writeConfig(oldConfig, { tokens: newTokens })
     } catch (error) {
-      await this.clearConfig(tokens)
+      debug('%O', error)
+      await this.clearConfig()
       throw new TokenExpiredError()
     }
   }
@@ -192,8 +199,11 @@ abstract class CTOCommand extends Command {
     }
   }
 
-  async isLoggedIn() {
-    const { tokens } = await this.readConfig()
+  async isLoggedIn(): Promise<Config> {
+    debug('checking if user is logged in')
+    const config = await this.readConfig()
+    const { tokens } = config
+
     if (tokens) {
       await this.checkValidAccessToken(tokens)
     }
@@ -223,26 +233,11 @@ abstract class CTOCommand extends Command {
 
       process.exit()
     }
+    return config
   }
-
-  handleTeamNotFound = () => {
-    this.error('team not found')
-    return {
-      id: '',
-      name: 'not found',
-    }
-  }
-
-  getTeam = (username: string, teams: Team[]) => {
-    const team = teams.find(({ name }) => name === username)
-    return team || this.handleTeamNotFound()
-  }
-
-  _includeRegistryHost = (debug: boolean) =>
-    debug ? { registryHost: OPS_REGISTRY_HOST, nodeEnv: NODE_ENV } : {}
 
   fetchUserInfo = async ({ tokens }: SigninPipeline) => {
-    if (!{ tokens }) {
+    if (!tokens) {
       this.ux.spinner.stop(`failed`)
       this.log('missing parameter')
       process.exit()
@@ -285,55 +280,19 @@ abstract class CTOCommand extends Command {
     return { meResponse, tokens }
   }
 
-  clearConfig = async (argv: unknown) => {
-    const configPath = path.join(this.config.configDir, 'config.json')
-    await remove(configPath)
-    return argv
-  }
-
-  formatConfigObject = (signinData: SigninPipeline) => {
-    const {
-      tokens: { accessToken, refreshToken, idToken, sessionState },
-      meResponse: { teams, me },
-    } = signinData
-
-    const configObj: Config = {
-      user: {
-        ...me,
-        ...this._includeRegistryHost(OPS_DEBUG),
-      },
-      team: this.getTeam(me.username, teams),
-      tokens: {
-        accessToken,
-        refreshToken,
-        idToken,
-        sessionState,
-      },
-    }
-    return configObj
-  }
-
   writeConfig = async (
     oldConfigObj: Partial<Config> | null = {},
     newConfigObj: Partial<Config>,
   ): Promise<Partial<Config>> => {
-    const mergedConfigObj = {
-      ...oldConfigObj,
-      ...newConfigObj,
-    }
-    await outputJson(
-      path.join(this.config.configDir, 'config.json'),
-      mergedConfigObj,
-    )
-    return mergedConfigObj
+    return writeConfig(oldConfigObj, newConfigObj, this.config.configDir)
   }
 
   readConfig = async (): Promise<Config> => {
-    return readJson(path.join(this.config.configDir, 'config.json')).catch(
-      () => {
-        return {}
-      },
-    )
+    return readConfig(this.config.configDir)
+  }
+
+  clearConfig = async () => {
+    return clearConfig(this.config.configDir)
   }
 
   invalidateKeycloakSession = async () => {
@@ -357,12 +316,12 @@ abstract class CTOCommand extends Command {
       )
   }
 
-  async signinFlow(tokens: Tokens) {
-    //to-do: check if credentials are set first
+  initConfig = async (tokens: Tokens) => {
+    await this.clearConfig()
+
     const signinFlowPipeline = asyncPipe(
       this.fetchUserInfo,
-      this.clearConfig,
-      this.formatConfigObject,
+      formatConfigObject,
       this.writeConfig,
       this.readConfig,
     )

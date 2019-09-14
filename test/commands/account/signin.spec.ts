@@ -2,21 +2,29 @@ import * as OclifConfig from '@oclif/config'
 import AccountSignin from '~/commands/account/signin'
 import { KeycloakService } from '~/services/Keycloak'
 import { Config, Services } from '~/types'
+import { signinPrompts } from '~/commands/account/signin'
 
 let cmd: AccountSignin
-let config
+let config: OclifConfig.IConfig
 
 beforeEach(async () => {
   config = await OclifConfig.load()
 })
 
-describe('ops account:signin tests', () => {
-  test('account:signin.logMessages should log messages', async () => {
+describe('ops account:signin', () => {
+  test('logMessages should log messages', async () => {
     cmd = new AccountSignin([], config)
     await expect(cmd.logMessages()).toBe(undefined)
   })
 
-  test('account:signin.keycloakSignInFlow shoulud call the keycloak service and expect tokens', async () => {
+  test('showWelcomeMessage', async () => {
+    cmd = new AccountSignin([], config)
+
+    const inputConfig = { user: { username: 'test-username' } } as Config
+    await expect(cmd.showWelcomeMessage(inputConfig)).toStrictEqual(inputConfig)
+  })
+
+  test('keycloakSignInFlow should call the keycloak service and expect tokens', async () => {
     const keycloakService = new KeycloakService()
 
     const fakeAccessToken = 'test-access-token'
@@ -39,10 +47,153 @@ describe('ops account:signin tests', () => {
     expect(response.idToken).toEqual(fakeIdToken)
   })
 
-  test('account:signin.showWelcomeMessage', async () => {
+  test('getRefreshToken should call the keycloak service and receive tokens', async () => {
+    const keycloakService = new KeycloakService()
+    cmd = new AccountSignin([], config, { keycloakService } as Services)
+
+    const expectedResponse = {
+      accessToken: 'test-access-token',
+      refreshToken: 'test-refresh-token',
+      idToken: 'test-id-token',
+      sessionState: 'test-session-state',
+    }
+
+    keycloakService.getTokenFromPasswordGrant = jest
+      .fn()
+      .mockResolvedValue(expectedResponse)
+
+    const userCredentials = {
+      user: 'username',
+      password: 'password',
+    }
+
+    const response = await cmd.getRefreshToken(userCredentials)
+
+    expect(keycloakService.getTokenFromPasswordGrant).toBeCalledWith(
+      userCredentials,
+    )
+    expect(response).toEqual(expectedResponse)
+  })
+
+  test('should use browser signin flow when no flags are passed', async () => {
+    const keycloakService = new KeycloakService()
+    keycloakService.init = jest.fn()
+
+    cmd = new AccountSignin([], config, {
+      keycloakService,
+    } as Services)
+
+    cmd.cliSigninPipeline = jest.fn()
+    cmd.browserSigninPipeline = jest.fn()
+
+    await cmd.run()
+
+    expect(keycloakService.init).toHaveBeenCalledTimes(1)
+    await expect(cmd.cliSigninPipeline).not.toHaveBeenCalled()
+    await expect(cmd.browserSigninPipeline).toHaveBeenCalled()
+  })
+
+  test('should use cli signin flow when -u and -p flags are passed', async () => {
+    const keycloakService = new KeycloakService()
+    keycloakService.init = jest.fn()
+
+    cmd = new AccountSignin(['-u', 'username', '-p', 'password'], config, {
+      keycloakService,
+    } as Services)
+
+    cmd.cliSigninPipeline = jest.fn()
+    cmd.browserSigninPipeline = jest.fn()
+
+    await cmd.run()
+    expect(keycloakService.init).toHaveBeenCalledTimes(1)
+    await expect(cmd.cliSigninPipeline).toHaveBeenCalled()
+    await expect(cmd.browserSigninPipeline).not.toHaveBeenCalled()
+  })
+
+  test('should use cli signin flow when -i flag passed', async () => {
+    const keycloakService = new KeycloakService()
+    keycloakService.init = jest.fn()
+
+    cmd = new AccountSignin(['-i'], config, {
+      keycloakService,
+    } as Services)
+
+    cmd.cliSigninPipeline = jest.fn()
+    cmd.browserSigninPipeline = jest.fn()
+
+    await cmd.run()
+    expect(keycloakService.init).toHaveBeenCalledTimes(1)
+    await expect(cmd.cliSigninPipeline).toHaveBeenCalled()
+    await expect(cmd.browserSigninPipeline).not.toHaveBeenCalled()
+  })
+
+  test('determineQuestions should prompt for user and password if no flags passed', async () => {
+    // it doesn't matter what flags we send because we're overriding them
     cmd = new AccountSignin([], config)
 
-    const inputConfig = { user: { username: 'test-username' } } as Config
-    await expect(cmd.showWelcomeMessage(inputConfig)).toStrictEqual(inputConfig)
+    // -i
+    const flagsInteractive = { interactive: true }
+    const resultInteractive = cmd.determineQuestions(
+      signinPrompts,
+      flagsInteractive,
+    )()
+    await expect(resultInteractive).toEqual([
+      signinPrompts.user,
+      signinPrompts.password,
+    ])
+  })
+
+  test('determineQuestions should prompt for password if user flag passed', async () => {
+    cmd = new AccountSignin([], config)
+
+    // -u
+    const flagsNoPassword = { user: 'username' }
+    const resultNoPassword = cmd.determineQuestions(
+      signinPrompts,
+      flagsNoPassword,
+    )()
+    await expect(resultNoPassword).toEqual([signinPrompts.password])
+  })
+
+  test('determineQuestions should prompt for username if password flag passed', async () => {
+    cmd = new AccountSignin([], config)
+
+    // -p
+    const flagsNoUser = { password: 'password' }
+    const resultNoUser = cmd.determineQuestions(signinPrompts, flagsNoUser)()
+    await expect(resultNoUser).toMatchObject([signinPrompts.user])
+  })
+
+  test('determineQuestions should not prompt if username and password flags passed', async () => {
+    cmd = new AccountSignin([], config)
+
+    // -u & -p
+    const flagsAll = { password: 'password', user: 'username' }
+    const resultAll = cmd.determineQuestions(signinPrompts, flagsAll)()
+    await expect(resultAll).toEqual([])
+  })
+
+  test('determineUserCredentials should merge user and password flag data with zero prompted data', async () => {
+    cmd = new AccountSignin([], config)
+
+    // ops account:signin -u username -p password
+    const flagsAll = { password: 'password', user: 'username' }
+    const resultAll = cmd.determineUserCredentials(flagsAll)({})
+
+    const expectedCredentials = { password: 'password', user: 'username' }
+    await expect(resultAll).toEqual(expectedCredentials)
+  })
+
+  test('determineUserCredentials should merge user flag data with prompted password data', async () => {
+    cmd = new AccountSignin([], config)
+
+    // ops account:signin -u
+    const flags = { user: 'username' }
+    const result = cmd.determineUserCredentials(flags)({
+      password: 'password',
+    })
+
+    const expectedCredentials = { password: 'password', user: 'username' }
+    await expect(result).toEqual(expectedCredentials)
   })
 })
