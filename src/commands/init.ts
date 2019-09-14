@@ -12,12 +12,13 @@ import {
 } from '~/errors/CustomErrors'
 import {
   WORKFLOW,
-  OP,
+  COMMAND,
   OpTypes,
   HELP_COMMENTS,
   YAML_TYPE_SEQUENCE,
   YAML_TYPE_STRING,
 } from '~/constants/opConfig'
+import { titleCase, appendSuffix } from '~/utils'
 
 export default class Init extends Command {
   static description = 'Easily create a new op.'
@@ -28,14 +29,12 @@ export default class Init extends Command {
 
   srcDir = path.resolve(__dirname, '../templates/')
   destDir = path.resolve(process.cwd())
-  opName = ''
-  opDescription = ''
 
   initPrompts: Container<Question> = {
-    opName: {
+    [appendSuffix(COMMAND, 'Name')]: {
       type: 'input',
-      name: 'opName',
-      message: `\n Provide a name for your new op ${ux.colors.reset.green(
+      name: appendSuffix(COMMAND, 'Name'),
+      message: `\n Provide a name for your new command ${ux.colors.reset.green(
         '→',
       )}\n${ux.colors.reset(
         ux.colors.secondary('Names must be lowercase'),
@@ -46,9 +45,9 @@ export default class Init extends Command {
       transformer: input => ux.colors.cyan(input.toLocaleLowerCase()),
       filter: input => input.toLowerCase(),
     },
-    opDescription: {
+    [appendSuffix(COMMAND, 'Description')]: {
       type: 'input',
-      name: 'opDescription',
+      name: appendSuffix(COMMAND, 'Description'),
       message: `\nProvide a description ${ux.colors.reset.green(
         '→',
       )}  \n📝 ${ux.colors.white('Description:')}`,
@@ -56,9 +55,9 @@ export default class Init extends Command {
       afterMessageAppend: ux.colors.reset(' added!'),
       validate: this._validateDescription,
     },
-    workflowName: {
+    [appendSuffix(WORKFLOW, 'Name')]: {
       type: 'input',
-      name: 'workflowName',
+      name: appendSuffix(WORKFLOW, 'Name'),
       message: `\n Provide a name for your new workflow ${ux.colors.reset.green(
         '→',
       )}\n${ux.colors.reset(
@@ -70,9 +69,9 @@ export default class Init extends Command {
       transformer: input => ux.colors.cyan(input.toLocaleLowerCase()),
       filter: input => input.toLowerCase(),
     },
-    workflowDescription: {
+    [appendSuffix(WORKFLOW, 'Description')]: {
       type: 'input',
-      name: 'workflowDescription',
+      name: appendSuffix(WORKFLOW, 'Description'),
       message: `\nProvide a description ${ux.colors.reset.green(
         '→',
       )}\n\n📝 ${ux.colors.white('Description:')}`,
@@ -91,13 +90,15 @@ export default class Init extends Command {
       )}`,
       choices: [
         {
-          name:
-            'Command - A template for building commands which can be distributed via The Ops Platform.',
-          value: OP,
+          name: `${titleCase(
+            COMMAND,
+          )} - A template for building commands which can be distributed via The Ops Platform.`,
+          value: COMMAND,
         },
         {
-          name:
-            'Workflow - A template for combining many commands into a workflow which can be distributed via The Ops Platform.',
+          name: `${titleCase(
+            WORKFLOW,
+          )} - A template for combining many commands into a workflow which can be distributed via The Ops Platform.`,
           value: WORKFLOW,
         },
       ],
@@ -115,14 +116,14 @@ export default class Init extends Command {
     templates: OpTypes[]
   }) => {
     // Filters initPrompts based on the templates selected in determineTemplate
-    const removeIfNotSelectedTemplate = prompt => {
-      return (
-        prompt[0].includes(templates[0]) || prompt[0].includes(templates[1])
-      )
+    const removeIfNotSelectedTemplate = ([key, _val]: [string, Question]) => {
+      return key.includes(templates[0]) || key.includes(templates[1])
     }
+
     const questions = Object.entries(prompts)
       .filter(removeIfNotSelectedTemplate)
       .map(([_key, question]) => question)
+
     return { questions, templates }
   }
 
@@ -165,8 +166,8 @@ export default class Init extends Command {
 
       await fs.ensureDir(destDir)
       // copies op files if selected
-      if (templates.includes(OP)) {
-        await fs.copy(`${this.srcDir}/${OP}`, destDir)
+      if (templates.includes(COMMAND)) {
+        await fs.copy(`${this.srcDir}/${COMMAND}`, destDir)
       }
       // copies shared files
       await fs.copy(sharedDir, destDir)
@@ -271,20 +272,26 @@ export default class Init extends Command {
     }
   }
 
-  customizeOpsYaml = async (initParams, yamlDoc: yaml.ast.Document) => {
-    const { templates, opName, opDescription } = initParams
-    if (!templates.includes(OP)) {
+  customizeOpsYaml = async (
+    initParams: InitParams,
+    yamlDoc: yaml.ast.Document,
+  ) => {
+    const { templates, commandName, commandDescription } = initParams
+    if (!templates.includes(COMMAND)) {
       // @ts-ignore
       yamlDoc.delete('ops')
       return
     }
     // @ts-ignore
-    yamlDoc.getIn(['ops', 0]).set('name', opName)
+    yamlDoc.getIn(['ops', 0]).set('name', commandName)
     // @ts-ignore
-    yamlDoc.getIn(['ops', 0]).set('description', opDescription)
+    yamlDoc.getIn(['ops', 0]).set('description', commandDescription)
   }
 
-  customizeWorkflowYaml = async (initParams, yamlDoc: yaml.ast.Document) => {
+  customizeWorkflowYaml = async (
+    initParams: InitParams,
+    yamlDoc: yaml.ast.Document,
+  ) => {
     const { templates, workflowName, workflowDescription } = initParams
     if (!templates.includes(WORKFLOW)) {
       // @ts-ignore
@@ -307,7 +314,9 @@ export default class Init extends Command {
     const { destDir } = initPaths
     const { templates } = initParams
     const { name } = this.getNameAndDescription(initParams)
-    this.log('\n🎉 Success! Your op is ready to start coding... \n')
+
+    this.logSuccessMessage(templates)
+
     fs.readdirSync(`${destDir}`).forEach((file: any) => {
       let callout = ''
       if (file.indexOf('index.js') > -1) {
@@ -324,8 +333,8 @@ export default class Init extends Command {
       this.log(`📁 .${msg}`)
     })
 
-    if (templates.includes(OP)) {
-      this.logOpsMessage(initParams)
+    if (templates.includes(COMMAND)) {
+      this.logCommandMessage(initParams)
     }
 
     if (templates.includes(WORKFLOW)) {
@@ -335,25 +344,39 @@ export default class Init extends Command {
     return { initPaths, initParams }
   }
 
-  logOpsMessage = initParams => {
-    const { opName } = initParams
+  logCommandMessage = (initParams: InitParams) => {
+    const { commandName } = initParams
     this.log(
-      `\n🚀 To test your op run: ${ux.colors.green(
+      `\n🚀 To test your ${COMMAND} run: ${ux.colors.green(
         '$',
-      )} ${ux.colors.callOutCyan(`ops run ${opName}`)}`,
+      )} ${ux.colors.callOutCyan(`ops run ${commandName}`)}`,
     )
   }
 
-  logWorkflowMessage = initParams => {
+  logWorkflowMessage = (initParams: InitParams) => {
     const { workflowName } = initParams
     const { name } = this.getNameAndDescription(initParams)
     this.log(
-      `\n🚀 To test your workflow run: ${ux.colors.green(
+      `\n🚀 To test your ${WORKFLOW} run: ${ux.colors.green(
         '$',
       )} ${ux.colors.callOutCyan(
         `cd ${name} && npm install && ops run ${workflowName}`,
       )}`,
     )
+  }
+
+  logSuccessMessage = (templates: OpTypes[]) => {
+    const successMessageBoth = `\n🎉 Success! Your ${COMMAND} and ${WORKFLOW} template Ops are ready to start coding... \n`
+    const getSuccessMessage = (opType: string) =>
+      `\n🎉 Success! Your ${opType} template Op is ready to start coding... \n`
+
+    if (templates.includes(COMMAND) && templates.includes(WORKFLOW)) {
+      return this.log(successMessageBoth)
+    }
+
+    const opType = templates.includes(COMMAND) ? COMMAND : WORKFLOW
+
+    return this.log(getSuccessMessage(opType))
   }
 
   sendAnalytics = async ({
@@ -391,8 +414,9 @@ export default class Init extends Command {
 
   private getNameAndDescription = (initParams: Partial<InitParams>) => {
     return {
-      name: initParams.opName || initParams.workflowName,
-      description: initParams.opDescription || initParams.workflowDescription,
+      name: initParams.commandName || initParams.workflowName,
+      description:
+        initParams.commandDescription || initParams.workflowDescription,
     }
   }
 

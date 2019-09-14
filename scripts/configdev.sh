@@ -28,4 +28,4 @@ tsc -b src
 
 link-module-alias
 
-export DEBUG=1
+export DEBUG=ops:*

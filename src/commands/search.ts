@@ -5,7 +5,6 @@ import * as yaml from 'yaml'
 import Command, { flags } from '../base'
 import {
   Answers,
-  SourceResult,
   Op,
   Fuzzy,
   Workflow,
@@ -17,7 +16,17 @@ import {
 } from '../types'
 import { asyncPipe } from '../utils/asyncPipe'
 import { AnalyticsError, APIError } from '../errors/CustomErrors'
-import { OP_FILE, PUBLIC, PRIVATE, LOCAL } from '../constants/opConfig'
+import {
+  OP_FILE,
+  PUBLIC,
+  PRIVATE,
+  LOCAL,
+  COMMAND,
+  WORKFLOW,
+  COMMAND_ENDPOINT,
+  WORKFLOW_ENDPOINT,
+} from '../constants/opConfig'
+import { pluralize, titleCase } from '~/utils'
 
 interface SearchInputs {
   filter: string
@@ -52,9 +61,9 @@ export default class Search extends Command {
       type: 'checkbox',
       name: 'searchTypes',
       message: `Start by selecting the types of ${this.ux.colors.multiBlue(
-        'Ops',
+        pluralize(titleCase(COMMAND)),
       )} or ${this.ux.colors.multiOrange(
-        'Workflows',
+        pluralize(titleCase(WORKFLOW)),
       )} to search ${this.ux.colors.reset.green('→')}\n`,
       choices,
       default: choices,
@@ -75,7 +84,7 @@ export default class Search extends Command {
       .replace(/,(?!.*,)/gim, ' and')} ${workspaceText} for`
     this.log(
       `\n🔍 ${this.ux.colors.white(searchText)} ${this.ux.colors.callOutCyan(
-        filter || 'all ops and workflows',
+        filter || `all ${pluralize(COMMAND)} and ${pluralize(WORKFLOW)}`,
       )}.`,
     )
     return inputs
@@ -89,7 +98,7 @@ export default class Search extends Command {
         : { team_id: this.team.id }
 
       const findResponse: OpsFindResponse = await this.services.api.find(
-        'ops',
+        COMMAND_ENDPOINT,
         {
           query,
           headers: {
@@ -131,7 +140,7 @@ export default class Search extends Command {
         : { teamId: this.team.id }
 
       const findResponse: WorkflowsFindResponse = await this.services.api.find(
-        'workflows',
+        WORKFLOW_ENDPOINT,
         {
           query,
           headers: {

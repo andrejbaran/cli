@@ -72,7 +72,10 @@ USAGE
   $ ops account:signin
 
 OPTIONS
-  -h, --help  show CLI help
+  -h, --help               show CLI help
+  -i, --interactive        Interactive Mode
+  -p, --password=password  Password
+  -u, --user=user          Username or email
 ```
 
 _See code: [src/commands/account/signin.ts](https://github.com/cto.ai/ops/blob/v1.5.10/src/commands/account/signin.ts)_
@@ -338,3 +341,26 @@ OPTIONS
 
 _See code: [src/commands/whoami.ts](https://github.com/cto.ai/ops/blob/v1.5.10/src/commands/whoami.ts)_
 <!-- commandsstop -->
+
+
+
+### OClif Source Repo
+
+Useful reference for writing tests:
+
+ * https://github.com/oclif/command/blob/master/src/command.ts
+ * https://github.com/oclif/config/blob/master/src/plugin.ts
+
+
+### Testing Tips
+
+Run a single unit test, or filter them by filename, like this:
+
+    npx jest --testPathPattern=keycloak
+
+Run a single E2E test, or filter them by filename, like this:
+
+    npm run test:e2e -- --testPathPattern=signin
+
+To run E2E tests locally, see notes in `test_e2e/utils/cmd.ts`.
+

@@ -4,17 +4,18 @@ import Docker, { AuthConfig } from 'dockerode'
 import json from 'JSONStream'
 import through from 'through2'
 
+import { DockerBuildImageError } from '~/errors/CustomErrors'
+import { ErrorService } from '~/services/Error'
 import { Op } from '~/types'
 import getDocker from '~/utils/get-docker'
-import { ErrorService } from '~/services/Error'
-import { DockerBuildImageError } from '~/errors/CustomErrors'
+
 const debug = Debug('ops:ImageService')
 
 export class ImageService {
   constructor(protected error = new ErrorService()) {}
-  public log = console.log
+  log = console.log
 
-  public checkLocalImage = async (opImageUrl: string) => {
+  checkLocalImage = async (opImageUrl: string) => {
     const docker = await getDocker(console, 'ImageService')
 
     const list: Docker.ImageInfo[] = await docker.listImages()
@@ -24,16 +25,14 @@ export class ImageService {
       .find((repoTag: string) => !!repoTag)
   }
 
-  public imageFilterPredicate = (repo: string) => ({
-    RepoTags,
-  }: Docker.ImageInfo) => {
+  imageFilterPredicate = (repo: string) => ({ RepoTags }: Docker.ImageInfo) => {
     if (!RepoTags) {
       return
     }
     return RepoTags.find((repoTag: string) => repoTag.includes(repo))
   }
 
-  public pull = async (op: Op, authconfig: AuthConfig): Promise<void> => {
+  pull = async (op: Op, authconfig: AuthConfig): Promise<void> => {
     this.log(`🔋 Pulling ${ux.colors.dim(op.name)} from registry...\n`)
     const docker = await getDocker(console, 'ImageServicePull')
     const stream = await docker.pull(op.image || '', { authconfig })
@@ -50,7 +49,7 @@ export class ImageService {
     this.log(`\n🙌 Saved ${msg} locally! \n`)
   }
 
-  public setParser = (
+  setParser = (
     op: Op,
     getFn: (status: string, op: Op) => { speed: string },
   ) => {
@@ -83,7 +82,7 @@ export class ImageService {
     return { parser, bar }
   }
 
-  public getProgressBarText = (status: string, { name }: Op) => {
+  getProgressBarText = (status: string, { name }: Op) => {
     const mapping = {
       [`Pulling from ${name}`]: `✅ Pulling from ${name}...`,
       'Already exists': '✅ Already exists!',
@@ -97,10 +96,10 @@ export class ImageService {
     return { speed: mapping[status] }
   }
 
-  public updateStatusBar = (
-    stream: NodeJS.ReadWriteStream,
-    { parser, bar },
-  ) => async (resolve: (data: any) => void, reject: (err: Error) => void) => {
+  updateStatusBar = (stream: NodeJS.ReadWriteStream, { parser, bar }) => async (
+    resolve: (data: any) => void,
+    reject: (err: Error) => void,
+  ) => {
     const allData: any[] = []
     const size = 100
 
@@ -120,7 +119,7 @@ export class ImageService {
       })
   }
 
-  public build = async (tag: string, opPath: string, op: Op) => {
+  build = async (tag: string, opPath: string, op: Op) => {
     try {
       const all: any[] = []
       const errors: any[] = []

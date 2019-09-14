@@ -69,10 +69,6 @@ export default class AccountSignup extends Command {
     return tokens
   }
 
-  signin = async (tokens: Tokens) => {
-    return this.signinFlow(tokens)
-  }
-
   sendAnalytics = (config: Config) => {
     try {
       this.services.analytics.track(
@@ -95,15 +91,18 @@ export default class AccountSignup extends Command {
   async run() {
     this.parse(AccountSignup)
     try {
+      await this.services.keycloakService.init()
+      this.logHelpMessage()
+      await this.invalidateKeycloakSession()
+
       const signupPipeline = asyncPipe(
-        this.logHelpMessage,
-        this.invalidateKeycloakSession,
         this.keycloakSignUpFlow,
-        this.signin,
+        this.initConfig,
         this.sendAnalytics,
       )
 
       await signupPipeline()
+
       this.logSignupWelcomeMessage()
     } catch (err) {
       this.debug('%O', err)

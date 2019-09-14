@@ -8,13 +8,21 @@ import { OPS_REGISTRY_HOST } from '~/constants/env'
 import { APIError } from '~/errors/CustomErrors'
 import { createMockOp, createMockWorkflow } from '../mocks'
 import { Services } from '~/types'
+import { COMMAND_ENDPOINT } from '~/constants/opConfig'
+import { sleep } from '../utils'
 
 let cmd: Run
 const nameOrPath = './src/templates/shared/'
 let config
 const apiError = new APIError('error')
+
 beforeEach(async () => {
   config = await Config.load()
+})
+
+afterEach(async () => {
+  // avoid jest open handle error
+  await sleep(500)
 })
 
 describe('checkPathOpsYmlExists', () => {
@@ -84,7 +92,7 @@ describe('checkForHelpMessage', () => {
 
     cmd = new Run([], config)
     cmd.printCustomHelp = jest.fn()
-    await cmd.checkForHelpMessage(inputs)
+    cmd.checkForHelpMessage(inputs)
     expect(cmd.printCustomHelp).not.toBeCalled()
   })
   test('should not call printCustomHelp if opOrWorkflow is a workflow', async () => {
@@ -103,7 +111,7 @@ describe('checkForHelpMessage', () => {
     }
     cmd = new Run([], config)
     cmd.printCustomHelp = jest.fn()
-    await cmd.checkForHelpMessage(inputs)
+    cmd.checkForHelpMessage(inputs)
     expect(cmd.printCustomHelp).not.toBeCalled()
   })
 })
@@ -229,7 +237,7 @@ describe('getApiOps', () => {
 
     cmd = new Run([], config, { api: mockFeathersService } as Services)
     await cmd.getApiOps(inputs)
-    expect(mockFeathersService.find).toHaveBeenCalledWith('ops', {
+    expect(mockFeathersService.find).toHaveBeenCalledWith(COMMAND_ENDPOINT, {
       query: {
         search: nameOrPath,
         team_id: config.team.id,

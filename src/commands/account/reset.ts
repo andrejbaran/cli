@@ -7,7 +7,7 @@ export default class AccountReset extends Command {
     try {
       const { tokens } = await this.readConfig()
       const isUserSignedIn =
-        !!tokens && this.user && this.team && this.isTokenValid(tokens)
+        Boolean(tokens) && this.user && this.team && this.isTokenValid(tokens)
 
       await this.services.keycloakService.keycloakResetFlow(isUserSignedIn)
       if (isUserSignedIn) {

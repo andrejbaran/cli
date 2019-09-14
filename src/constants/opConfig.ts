@@ -1,16 +1,23 @@
 export type IOpFile = 'ops.yml'
 export type IWorkflow = 'workflow'
-export type IOp = 'op'
+export type ICommand = 'command'
 
 export const OP_FILE: IOpFile = 'ops.yml'
 export const WORKFLOW: IWorkflow = 'workflow'
-export const OP: IOp = 'op'
+export const COMMAND: ICommand = 'command'
 
 export const PUBLIC = 'Public 🌎'
 export const PRIVATE = 'Private 🔑'
 export const LOCAL = 'Local 💻'
 
-export type OpTypes = IWorkflow | IOp
+export type OpTypes = IWorkflow | ICommand
+
+export const COMMAND_ENDPOINT = 'ops'
+export const WORKFLOW_ENDPOINT = 'workflows'
+
+export const getEndpointFromOpType = (opType: OpTypes) => {
+  return opType === WORKFLOW ? WORKFLOW_ENDPOINT : COMMAND_ENDPOINT
+}
 
 export const YAML_TYPE_STRING = 'QUOTE_SINGLE'
 export const YAML_TYPE_SEQUENCE = 'SEQ'

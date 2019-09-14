@@ -10,10 +10,7 @@ export default class Whoami extends Command {
 
   async run() {
     this.parse(Whoami)
-    await this.isLoggedIn()
-
-    const config: Config = await this.readConfig()
-    // console.log('%O', config)
+    const config = await this.isLoggedIn()
 
     this.log('\n')
     this.log(

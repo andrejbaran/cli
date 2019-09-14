@@ -1,8 +1,8 @@
 import { OpTypes } from '../constants/opConfig'
 
 export interface InitParams {
-  opName: string | undefined
-  opDescription: string | undefined
+  commandName: string | undefined
+  commandDescription: string | undefined
   workflowName: string | undefined
   workflowDescription: string | undefined
   templates: OpTypes[]

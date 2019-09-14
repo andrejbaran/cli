@@ -5,7 +5,12 @@ import * as path from 'path'
 import * as yaml from 'yaml'
 import Command, { flags } from '../base'
 import { OPS_REGISTRY_HOST } from '../constants/env'
-import { OP, OP_FILE, WORKFLOW } from '../constants/opConfig'
+import {
+  COMMAND,
+  OP_FILE,
+  WORKFLOW,
+  WORKFLOW_ENDPOINT,
+} from '../constants/opConfig'
 import {
   CouldNotCreateWorkflow,
   FileNotFoundError,
@@ -76,7 +81,7 @@ export default class Publish extends Command {
         '→',
       )}`,
       choices: [
-        { name: 'Ops', value: OP },
+        { name: 'Commands', value: COMMAND },
         { name: 'Workflows', value: WORKFLOW },
         'Both',
       ],
@@ -98,7 +103,7 @@ export default class Publish extends Command {
       })
 
     const { ops, version, workflows }: OpsYml = manifest && yaml.parse(manifest)
-    if (!ops && (opsAndWorkflows === OP || opsAndWorkflows === 'Both')) {
+    if (!ops && (opsAndWorkflows === COMMAND || opsAndWorkflows === 'Both')) {
       throw new NoOpsFound()
     }
     if (
@@ -118,7 +123,7 @@ export default class Publish extends Command {
     opsAndWorkflows,
   }: PublishInputs) => {
     switch (opsAndWorkflows) {
-      case OP:
+      case COMMAND:
         ops = await this.selectOps(ops)
         break
       case WORKFLOW:
@@ -186,7 +191,7 @@ export default class Publish extends Command {
 
   public publishOpsAndWorkflows = async (inputs: PublishInputs) => {
     switch (inputs.opsAndWorkflows) {
-      case OP:
+      case COMMAND:
         await this.opsPublishLoop(inputs)
         break
       case WORKFLOW:
@@ -290,7 +295,7 @@ export default class Publish extends Command {
         const {
           data: apiWorkflow,
         }: { data: Op } = await this.services.api.create(
-          'workflows',
+          WORKFLOW_ENDPOINT,
           { ...workflow, version, teamID: this.team.id },
           {
             headers: {
@@ -332,9 +337,9 @@ export default class Publish extends Command {
   }
 
   public async run() {
-    const { args } = this.parse(Publish)
     try {
       await this.isLoggedIn()
+      const { args } = this.parse(Publish)
 
       const publishPipeline = asyncPipe(
         this.resolvePath,
