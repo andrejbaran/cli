@@ -278,14 +278,16 @@ export default class Publish extends Command {
               registryAuth,
               this.state.config,
             )
-          }
 
-          if (!this.services.buildStepService.isOpRun(newStep)) {
-            this.debug('InvalidStepsFound - Step:', newStep)
-            throw new InvalidStepsFound(newStep)
-          }
+            newSteps.push(newStep)
+          } else {
+            if (!this.services.buildStepService.isOpRun(step)) {
+              this.debug('InvalidStepsFound - Step:', step)
+              throw new InvalidStepsFound(step)
+            }
 
-          newSteps.push(newStep)
+            newSteps.push(step)
+          }
         }
 
         workflow.steps = newSteps
