@@ -1,8 +1,8 @@
 /**
  * @author: JP Lew (jp@cto.ai)
  * @date: Wednesday, 1st May 2019 1:38:47 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 7th June 2019 2:05:18 pm
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Thursday, 12th September 2019 11:13:28 am
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -27,7 +27,7 @@ export { Invite } from './Invite'
 export { OpsYml, Workflow, Op } from './OpsYml'
 export { MeResponse } from './MeResponse'
 export { RegistryAuth } from './RegistryAuth'
-export { RegistryResponse } from './RegistryResponse'
+export { RegistryCreateResponse } from './RegistryResponse'
 export { RunPipeline, RunCommandArgs } from './RunPipeline'
 export { SigninPipeline } from './SigninPipeline'
 export { Team } from './Team'

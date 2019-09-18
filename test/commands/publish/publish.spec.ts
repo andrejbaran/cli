@@ -3,6 +3,7 @@ import Publish from '~/commands/publish'
 import { PublishInputs } from '~/commands/publish'
 import { BuildSteps } from '~/services/BuildSteps'
 import { FeathersClient } from '~/services/Feathers'
+import { RegistryAuthService } from '~/services/RegistryAuth'
 import { ImageService } from '~/services/Image'
 import { Op, RegistryAuth, User } from '~/types'
 import { Workflow } from '~/types/OpsYml'
@@ -46,10 +47,19 @@ describe('BuildStep', () => {
 
     mockBuildStepService.isOpRun = jest.fn().mockReturnValue(true)
 
+    const mockRegistryAuthService = new RegistryAuthService()
+    mockRegistryAuthService.delete = jest
+      .fn()
+      .mockReturnValue({} as RegistryAuth)
+    mockRegistryAuthService.create = jest
+      .fn()
+      .mockReturnValue({} as RegistryAuth)
+
     const config = await Config.load()
     cmd = new Publish([], config, {
       api: mockFeathersService,
       buildStepService: mockBuildStepService,
+      registryAuthService: mockRegistryAuthService,
     } as Services)
     cmd.team = {
       id: 'team-id',
@@ -62,7 +72,6 @@ describe('BuildStep', () => {
         user: {} as User,
       },
     }
-    cmd.getRegistryAuth = jest.fn().mockReturnValue({} as RegistryAuth)
 
     await cmd.workflowsPublishLoop(inputs)
 
@@ -112,10 +121,19 @@ describe('BuildStep', () => {
 
     mockBuildStepService.isOpRun = jest.fn().mockReturnValue(true)
 
+    const mockRegistryAuthService = new RegistryAuthService()
+    mockRegistryAuthService.delete = jest
+      .fn()
+      .mockReturnValue({} as RegistryAuth)
+    mockRegistryAuthService.create = jest
+      .fn()
+      .mockReturnValue({} as RegistryAuth)
+
     const config = await Config.load()
     cmd = new Publish([], config, {
       api: mockFeathersService,
       buildStepService: mockBuildStepService,
+      registryAuthService: mockRegistryAuthService,
     } as Services)
     cmd.team = {
       id: 'team-id',
@@ -167,9 +185,14 @@ it('should publish ops in a loop', async () => {
     } as Op,
   })
 
+  const mockRegistryAuthService = new RegistryAuthService()
+  mockRegistryAuthService.delete = jest.fn().mockReturnValue({} as RegistryAuth)
+  mockRegistryAuthService.create = jest.fn().mockReturnValue({} as RegistryAuth)
+
   cmd = new Publish([], mockConfig, {
     publishService: mockPublishService,
     imageService: mockImageService,
+    registryAuthService: mockRegistryAuthService,
   } as Services)
   cmd.team = {
     id: 'team-id',

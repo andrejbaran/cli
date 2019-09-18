@@ -6,6 +6,7 @@ import { AnalyticsService } from '~/services/Analytics'
 import { WorkflowService } from '~/services/Workflow'
 import { OpService } from '~/services/Op'
 import { KeycloakService } from '~/services/Keycloak'
+import { RegistryAuthService } from 'services/RegistryAuth'
 
 export type Services = {
   api: ApiService
@@ -16,4 +17,5 @@ export type Services = {
   workflowService: WorkflowService
   opService: OpService
   keycloakService: KeycloakService
+  registryAuthService: RegistryAuthService
 }

@@ -19,14 +19,15 @@ import {
   NoOpsFound,
   NoWorkflowsFound,
   DockerPublishNoImageFound,
+  CouldNotGetRegistryToken,
 } from '../errors/CustomErrors'
 import {
   Container,
   Op,
   OpsYml,
-  RegistryAuth,
   SourceResult,
   Workflow,
+  RegistryAuth,
 } from '../types'
 import { asyncPipe } from '../utils/asyncPipe'
 import getDocker from '../utils/get-docker'
@@ -39,7 +40,6 @@ export interface PublishInputs {
   version: string
   ops: Op[]
   workflows: Workflow[]
-  registryAuth: RegistryAuth
 }
 
 export default class Publish extends Command {
@@ -178,15 +178,21 @@ export default class Publish extends Command {
     return answers.workflows
   }
 
-  public checkRegistryAuth = async (inputs: PublishInputs) => {
-    const registryAuth: RegistryAuth | undefined = await this.getRegistryAuth(
-      this.accessToken,
-      this.team.name,
-    )
-    if (!registryAuth) {
-      throw new Error('could not get registry auth')
+  getRegistryAuth = async (name, version): Promise<RegistryAuth> => {
+    try {
+      const registryAuth = await this.services.registryAuthService.create(
+        this.accessToken,
+        this.team.name,
+        name,
+        version,
+        false,
+        true, // pushAccess is true as its publish
+      )
+
+      return registryAuth
+    } catch (err) {
+      throw new CouldNotGetRegistryToken(err)
     }
-    return { ...inputs, registryAuth }
   }
 
   public publishOpsAndWorkflows = async (inputs: PublishInputs) => {
@@ -203,11 +209,7 @@ export default class Publish extends Command {
     }
   }
 
-  public opsPublishLoop = async ({
-    ops,
-    registryAuth,
-    version,
-  }: PublishInputs) => {
+  public opsPublishLoop = async ({ ops, version }: PublishInputs) => {
     for (const op of ops) {
       if (!isValidOpName(op)) {
         throw new InvalidInputCharacter('Op Name')
@@ -231,10 +233,23 @@ export default class Publish extends Command {
         this.services.api,
       )
 
+      // TODO: Setting version as 'platform version' for now
+      // but it has to be changed to op.version when versioning is added
+      const registryAuth = await this.getRegistryAuth(op.name, version)
+
       await this.services.publishService.publishOpToRegistry(
         apiOp,
         registryAuth,
         this.team.name,
+      )
+
+      // delete registry token
+      await this.services.registryAuthService.delete(
+        this.accessToken,
+        registryAuth.robotID,
+        this.team.name,
+        op.name,
+        version, // TODO: Change to op.version
       )
 
       this.sendAnalytics('op', apiOp)
@@ -246,20 +261,16 @@ export default class Publish extends Command {
     version,
   }: PublishInputs) => {
     for (const workflow of workflows) {
+      // TODO: Setting version as 'platform version' for now
+      // but it has to be changed to workflow.version when versioning is added
+      const registryAuth = await this.getRegistryAuth(workflow.name, version)
+
       if (workflow.remote) {
         const newSteps: string[] = []
         for (const step of workflow.steps) {
           let newStep = ''
 
           if (await this.services.buildStepService.isGlueCode(step)) {
-            const registryAuth = await this.getRegistryAuth(
-              this.accessToken,
-              this.team.name,
-            )
-            if (registryAuth === undefined) {
-              throw new InvalidStepsFound(newStep) // TODO: incorrect error message
-            }
-
             const opPath = path.resolve(
               __dirname,
               './../templates/workflowsteps/js/',
@@ -290,6 +301,15 @@ export default class Publish extends Command {
 
         workflow.steps = newSteps
       }
+
+      // delete registry token
+      await this.services.registryAuthService.delete(
+        this.accessToken,
+        registryAuth.robotID,
+        this.team.name,
+        workflow.name,
+        version, // TODO: Change to workflow.version when versioning is added
+      )
 
       try {
         const {
@@ -347,7 +367,6 @@ export default class Publish extends Command {
         this.determineQuestions,
         this.getOpsAndWorkFlows,
         this.selectOpsAndWorkFlows,
-        this.checkRegistryAuth,
         this.publishOpsAndWorkflows,
       )
       await publishPipeline(args.path)
