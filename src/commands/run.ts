@@ -44,6 +44,7 @@ export interface RunInputs {
   config: Config
   opsAndWorkflows: (Op | Workflow)[]
   opOrWorkflow: Op | Workflow
+  version: string
 }
 
 export default class Run extends Command {
@@ -105,11 +106,16 @@ export default class Run extends Command {
       let {
         ops = [],
         workflows = [],
-      }: { ops: Op[]; workflows: Workflow[] } = await yaml.parse(opsYml)
+        version,
+      }: {
+        ops: Op[]
+        workflows: Workflow[]
+        version: string
+      } = await yaml.parse(opsYml)
 
       if (workflows && workflows.length) opsAndWorkflows = [...workflows]
       if (ops && ops.length) opsAndWorkflows = opsAndWorkflows.concat(ops)
-      return { ...inputs, opsAndWorkflows }
+      return { ...inputs, opsAndWorkflows, version }
     } catch (err) {
       this.debug('%O', err)
       throw err
@@ -247,6 +253,7 @@ export default class Run extends Command {
         config,
         parsedArgs,
         parsedArgs: { opParams },
+        version,
       } = inputs
       if ('steps' in opOrWorkflow) {
         await this.services.workflowService.run(opOrWorkflow, opParams, config)
@@ -262,7 +269,12 @@ export default class Run extends Command {
             image,
           }
         }
-        await this.services.opService.run(opOrWorkflow, parsedArgs, config)
+        await this.services.opService.run(
+          opOrWorkflow,
+          parsedArgs,
+          config,
+          version,
+        )
       }
       return { ...inputs, opOrWorkflow }
     } catch (err) {

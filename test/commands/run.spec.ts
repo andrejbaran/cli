@@ -13,6 +13,7 @@ import { sleep } from '../utils'
 
 let cmd: Run
 const nameOrPath = './src/templates/shared/'
+const version = '1'
 let config
 const apiError = new APIError('error')
 
@@ -66,6 +67,7 @@ describe('checkForHelpMessage', () => {
         flags: { help: true },
       },
       config,
+      version,
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
     }
@@ -88,6 +90,7 @@ describe('checkForHelpMessage', () => {
         flags: { help: false },
       },
       config,
+      version,
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
     }
@@ -108,6 +111,7 @@ describe('checkForHelpMessage', () => {
         flags: { help: true },
       },
       config,
+      version,
       opsAndWorkflows: [mockWorkflow],
       opOrWorkflow: mockWorkflow,
     }
@@ -133,6 +137,7 @@ describe('executeOpOrWorkflowService', () => {
         flags: {},
       },
       config,
+      version,
       opsAndWorkflows: [mockWorkflow],
       opOrWorkflow: mockWorkflow,
     }
@@ -160,6 +165,7 @@ describe('executeOpOrWorkflowService', () => {
         flags: {},
       },
       config,
+      version,
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
     }
@@ -171,6 +177,7 @@ describe('executeOpOrWorkflowService', () => {
       mockOp,
       inputs.parsedArgs,
       config,
+      version,
     )
   })
   test('should set the image if the  opOrWorkflow is a op and not published', async () => {
@@ -190,6 +197,7 @@ describe('executeOpOrWorkflowService', () => {
         flags: {},
       },
       config,
+      version,
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
     }
@@ -205,6 +213,7 @@ describe('executeOpOrWorkflowService', () => {
       mockOp,
       inputs.parsedArgs,
       config,
+      version,
     )
   })
 })

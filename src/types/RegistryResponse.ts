@@ -1,8 +1,8 @@
 /**
  * @author: JP Lew (jp@cto.ai)
  * @date: Thursday, 25th April 2019 11:44:48 am
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 3rd May 2019 3:22:22 pm
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Friday, 13th September 2019 5:25:20 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -12,8 +12,11 @@ interface Token {
   registryPass: string
 }
 
-export interface RegistryResponse {
+export interface RegistryCreateResponse {
   data: {
-    registry_tokens: Token[]
+    teamName: string
+    robotAccountName: string
+    token: string
+    robotID: number
   }
 }

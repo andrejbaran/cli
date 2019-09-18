@@ -1,12 +1,3 @@
-/**
- * @author: Brett Campbell (brett@hackcapital.com)
- * @date: Friday, 5th April 2019 12:06:07 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Thursday, 12th September 2019 11:07:19 am
- * @copyright (c) 2019 CTO.ai
- *
- */
-
 import { ux as UX } from '@cto.ai/sdk'
 import Command, { flags } from '@oclif/command'
 import Debug from 'debug'
@@ -29,26 +20,16 @@ import {
   User,
   Team,
   ValidationFields,
-  RegistryAuth,
   SigninPipeline,
-  RegistryResponse,
   Tokens,
   Services,
 } from './types'
 
-import {
-  OPS_REGISTRY_HOST,
-  OPS_SEGMENT_KEY,
-  INTERCOM_EMAIL,
-} from './constants/env'
+import { OPS_SEGMENT_KEY, INTERCOM_EMAIL } from './constants/env'
 
 import { FeathersClient } from './services/Feathers'
 import { AnalyticsService } from './services/Analytics'
-import {
-  UserUnauthorized,
-  APIError,
-  TokenExpiredError,
-} from './errors/CustomErrors'
+import { APIError, TokenExpiredError } from './errors/CustomErrors'
 
 import { Publish } from './services/Publish'
 import { BuildSteps } from './services/BuildSteps'
@@ -57,6 +38,7 @@ import { ImageService } from './services/Image'
 import { WorkflowService } from './services/Workflow'
 import { OpService } from './services/Op'
 import { KeycloakService } from './services/Keycloak'
+import { RegistryAuthService } from './services/RegistryAuth'
 
 const debug = Debug('ops:BaseCommand')
 
@@ -82,6 +64,7 @@ abstract class CTOCommand extends Command {
       workflowService: new WorkflowService(),
       opService: new OpService(),
       keycloakService: new KeycloakService(),
+      registryAuthService: new RegistryAuthService(),
     },
   ) {
     super(argv, config)
@@ -98,6 +81,8 @@ abstract class CTOCommand extends Command {
     this.services.opService = services.opService || new OpService()
     this.services.keycloakService =
       services.keycloakService || new KeycloakService()
+    this.services.registryAuthService =
+      services.registryAuthService || new RegistryAuthService()
   }
 
   async init() {
@@ -151,51 +136,6 @@ abstract class CTOCommand extends Command {
       debug('%O', error)
       await this.clearConfig()
       throw new TokenExpiredError()
-    }
-  }
-
-  getRegistryAuth = async (
-    accessToken: string,
-    teamName: string,
-  ): Promise<RegistryAuth | undefined> => {
-    try {
-      const registryResponse: RegistryResponse = await this.services.api.find(
-        'registry/token',
-        {
-          query: {
-            registryProject: teamName,
-          },
-          headers: { Authorization: accessToken },
-        },
-      )
-      if (
-        !registryResponse.data ||
-        !registryResponse.data.registry_tokens.length
-      ) {
-        throw new UserUnauthorized(this.state)
-      }
-
-      const {
-        registryProject = '',
-        registryUser = '',
-        registryPass = '',
-      } = registryResponse.data.registry_tokens[0]
-
-      const projectFullName = `${OPS_REGISTRY_HOST}/${registryProject}`
-      const projectUrl = `https://${projectFullName}`
-
-      const registryAuth: RegistryAuth = {
-        authconfig: {
-          username: registryUser,
-          password: registryPass,
-          serveraddress: projectUrl,
-        },
-        projectFullName,
-      }
-
-      return registryAuth
-    } catch (err) {
-      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 

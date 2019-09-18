@@ -112,46 +112,49 @@ export class Publish {
         return _pipe(dest)
       }
 
-      image.tag({ repo: imageUniqueId }, (err: any, _data: any) => {
-        if (err) {
-          throw new ImageTagError(err)
-        }
+      await new Promise((res, rej) => {
+        image.tag({ repo: imageUniqueId }, (err: any, _data: any) => {
+          if (err) {
+            rej(new ImageTagError(err))
+          }
 
-        const image = docker.getImage(imageUniqueId)
-        image.push(
-          {
-            tag: 'latest',
-            authconfig: registryAuth.authconfig,
-          },
-          (err: any, stream: any) => {
-            if (err) {
-              throw new ImagePushError(err)
-            }
-            stream
-              .pipe(json.parse())
-              .pipe(parser)
-              .on('data', (d: any) => {
-                all.push(d)
-              })
-              .on('end', async function() {
-                const bar = ux.progress.init()
-                bar.start(100, 0)
+          const image = docker.getImage(imageUniqueId)
+          image.push(
+            {
+              tag: 'latest',
+              authconfig: registryAuth.authconfig,
+            },
+            (err: any, stream: any) => {
+              if (err) {
+                rej(new ImagePushError(err))
+              }
+              stream
+                .pipe(json.parse())
+                .pipe(parser)
+                .on('data', (d: any) => {
+                  all.push(d)
+                })
+                .on('end', async function() {
+                  const bar = ux.progress.init()
+                  bar.start(100, 0)
 
-                for (let i = 0; i < size; i++) {
-                  bar.update(100 - size / i)
-                  await ux.wait(5)
-                }
+                  for (let i = 0; i < size; i++) {
+                    bar.update(100 - size / i)
+                    await ux.wait(5)
+                  }
 
-                bar.update(100)
-                bar.stop()
-                console.log(
-                  `\n🙌 ${ux.colors.callOutCyan(
-                    imageUniqueId,
-                  )} has been published! \n`,
-                )
-              })
-          },
-        )
+                  bar.update(100)
+                  bar.stop()
+                  console.log(
+                    `\n🙌 ${ux.colors.callOutCyan(
+                      imageUniqueId,
+                    )} has been published! \n`,
+                  )
+                  res()
+                })
+            },
+          )
+        })
       })
     } catch (err) {
       debug('%O', err)

@@ -34,6 +34,7 @@ export interface OpRunInputs {
   parsedArgs: RunCommandArgs
   options: ContainerCreateOptions
   container: Docker.Container
+  version: string
 }
 export class OpService {
   constructor(
@@ -80,7 +81,12 @@ export class OpService {
     }
   }
 
-  async run(op: Op, parsedArgs: RunCommandArgs, config: Config): Promise<void> {
+  async run(
+    op: Op,
+    parsedArgs: RunCommandArgs,
+    config: Config,
+    version: string,
+  ): Promise<void> {
     try {
       const opServicePipeline = asyncPipe(
         this.updateOpFields,
@@ -98,6 +104,7 @@ export class OpService {
         op,
         config,
         parsedArgs,
+        version,
       })
     } catch (err) {
       debug('%O', err)
@@ -118,6 +125,7 @@ export class OpService {
     const {
       op,
       config,
+      version,
       parsedArgs: {
         args: { nameOrPath },
         flags: { build },
@@ -128,7 +136,7 @@ export class OpService {
       const localImage = await this.imageService.checkLocalImage(op.image)
       if (!localImage || build) {
         op.isPublished
-          ? await this.pullImageFromRegistry(op, config)
+          ? await this.pullImageFromRegistry(op, config, version)
           : await this.imageService.build(
               `${op.image}`,
               path.resolve(process.cwd(), nameOrPath),
@@ -141,13 +149,29 @@ export class OpService {
       throw new Error('Unable to find image for this op')
     }
   }
-  pullImageFromRegistry = async (op: Op, config: Config) => {
-    const teamName = op.isPublic ? 'ops' : config.team.name
-    const { authconfig } = await this.registryAuthService.get(
+  pullImageFromRegistry = async (op: Op, config: Config, version: string) => {
+    // create token
+    // TODO: Change this to use real team ID when we don't have public ops team
+    const teamName = op.teamID !== config.team.id ? 'ops' : config.team.name
+    const { authconfig, robotID } = await this.registryAuthService.create(
       config.tokens.accessToken,
-      teamName,
+      teamName, // TODO: Change this to use real team ID when we don't have public ops team
+      op.name,
+      version, // TODO: change it op.version once its added but for now setting it to platform version
+      true,
+      false,
     )
-    return this.imageService.pull(op, authconfig)
+    // pull image
+    await this.imageService.pull(op, authconfig)
+
+    // delete token
+    await this.registryAuthService.delete(
+      config.tokens.accessToken,
+      robotID,
+      config.team.name,
+      op.name,
+      version, // TODO: change it op.version once its added but for now setting it to platform version)
+    )
   }
 
   setOpImageUrl = (op: Op, { team }: Config) => {
