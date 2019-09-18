@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from 'child_process'
+import { spawn, ChildProcess, SpawnOptions } from 'child_process'
 import concat from 'concat-stream'
 import axios from 'axios'
 import Debug from 'debug'
@@ -8,7 +8,7 @@ import { EXISTING_USER_PASSWORD, EXISTING_USER_NAME } from './constants'
 const debug = Debug('cmd')
 const debugVerbose = Debug('cmd:verbose')
 
-const command = process.env.npm_config_prefix
+const opsBinary = process.env.npm_config_prefix
   ? `${process.env.npm_config_prefix}/bin/ops`
   : '/usr/local/bin/ops'
 
@@ -48,10 +48,12 @@ function run(
   args: string[] = [],
   inputs: string[] = [],
   timeout: number = 1500,
+  command: string = opsBinary,
+  options: SpawnOptions = {},
 ): Promise<string> {
   const env = setEnv(defaultEnv, process.env)
 
-  const childProcess = spawn(command, args, { env })
+  const childProcess = spawn(command, args, { env, ...options })
 
   sendInput(inputs, childProcess, timeout)
 
