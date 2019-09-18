@@ -48,9 +48,7 @@ describe('getOpsAndWorkflowsFromFileSystem', () => {
     }
 
     cmd = new Run([], config)
-    const testRes = await cmd.getOpsAndWorkflowsFromFileSystem(nameOrPath)(
-      inputs as RunInputs,
-    )
+    const testRes = await cmd.getOpsAndWorkflowsFromFileSystem(inputs)
     expect(testRes.opsAndWorkflows.length).toBe(2)
   })
 })
@@ -260,7 +258,7 @@ describe('getApiOps', () => {
   })
 
   test('should handle errors thrown from the api', async () => {
-    // MOCK FEATHERS
+    //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
     mockFeathersService.find = jest.fn().mockRejectedValue(new Error())
     const fakeToken = 'FAKE_TOKEN'

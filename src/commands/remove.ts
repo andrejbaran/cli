@@ -111,13 +111,13 @@ export default class Remove extends Command {
   }
 
   filterResultsByTeam = (inputs: RemoveInputs): RemoveInputs => {
-    let { apiResults } = inputs
+    let { apiResults, removeType } = inputs
     apiResults = apiResults.filter(opOrWorkflow => {
       return opOrWorkflow.teamID === this.team.id
     })
 
     if (!apiResults.length) {
-      throw new NoResultsFoundForDeletion(inputs.filter)
+      throw new NoResultsFoundForDeletion(removeType)
     }
     return { ...inputs, apiResults }
   }
