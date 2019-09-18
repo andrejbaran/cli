@@ -73,7 +73,7 @@ export default class Run extends Command {
     },
   ]
 
-  opsAndWorkflows: (Op | Workflow)[] = []
+  opsAndWorkflows
 
   customParse = (options: typeof Run, argv: string[]) => {
     const { args, flags } = require('@oclif/parser').parse(argv, {
@@ -89,18 +89,19 @@ export default class Run extends Command {
   }
 
   checkPathOpsYmlExists = (nameOrPath: string): boolean => {
-    const pathToOpsYml = path.join(path.resolve(nameOrPath), OP_FILE)
-    return fs.existsSync(pathToOpsYml)
+    return !!fs.existsSync(path.join(path.resolve(nameOrPath), OP_FILE))
   }
 
-  getOpsAndWorkflowsFromFileSystem = (relativePathToOpsYml: string) => async (
-    inputs: RunInputs,
-  ): Promise<RunInputs> => {
+  getOpsAndWorkflowsFromFileSystem = async (inputs): Promise<RunInputs> => {
     try {
       let opsAndWorkflows: (Op | Workflow)[] = []
-
+      const {
+        parsedArgs: {
+          args: { nameOrPath },
+        },
+      } = inputs
       const opsYml = await fs.readFile(
-        path.join(path.resolve(relativePathToOpsYml), OP_FILE),
+        path.join(path.resolve(nameOrPath), OP_FILE),
         'utf8',
       )
       let {
@@ -220,17 +221,17 @@ export default class Run extends Command {
       }
 
       switch (true) {
-        case Boolean(op.description):
+        case !!op.description:
           this.log(`\n${op.description}`)
-        case Boolean(op.help.usage):
+        case !!op.help.usage:
           this.log(`\n${bold('USAGE')}`)
           this.log(`  ${op.help.usage}`)
-        case Boolean(op.help.arguments):
+        case !!op.help.arguments:
           this.log(`\n${bold('ARGUMENTS')}`)
           Object.keys(op.help.arguments).forEach(a => {
             this.log(`  ${a} ${dim(op.help.arguments[a])}`)
           })
-        case Boolean(op.help.options):
+        case !!op.help.options:
           this.log(`\n${bold('OPTIONS')}`)
           Object.keys(op.help.options).forEach(o => {
             this.log(
@@ -289,7 +290,6 @@ export default class Run extends Command {
       parsedArgs: {
         args: { nameOrPath },
       },
-      opsAndWorkflows: previousOpsAndWorkflows = [],
     } = inputs
     try {
       const query: OpsFindQuery = {
@@ -309,10 +309,7 @@ export default class Run extends Command {
         const isPublic = op.teamID !== config.team.id ? true : false
         return { ...op, isPublished: true, isPublic }
       })
-      return {
-        ...inputs,
-        opsAndWorkflows: [...previousOpsAndWorkflows, ...opsAndWorkflows],
-      }
+      return { ...inputs, opsAndWorkflows }
     } catch (err) {
       this.debug('%O', err)
       throw new APIError(err)
@@ -389,9 +386,8 @@ export default class Run extends Command {
       } = parsedArgs
 
       if (this.checkPathOpsYmlExists(nameOrPath)) {
-        /* The nameOrPath argument is a directory containing an ops.yml */
         const runFsPipeline = asyncPipe(
-          this.getOpsAndWorkflowsFromFileSystem(nameOrPath),
+          this.getOpsAndWorkflowsFromFileSystem,
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
           this.sendAnalytics,
@@ -399,12 +395,7 @@ export default class Run extends Command {
         )
         await runFsPipeline({ parsedArgs, config })
       } else {
-        /*
-         * Either nameOrPath is not a directory, or it is a directory which does
-         * not contain an ops.yml. *
-         */
         const runApiPipeline = asyncPipe(
-          this.getOpsAndWorkflowsFromFileSystem(process.cwd()),
           this.getApiOps,
           this.getApiWorkflows,
           this.selectOpOrWorkflowToRun,
