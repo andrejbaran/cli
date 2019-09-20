@@ -72,10 +72,7 @@ USAGE
   $ ops account:signin
 
 OPTIONS
-  -h, --help               show CLI help
-  -i, --interactive        Interactive Mode
-  -p, --password=password  Password
-  -u, --user=user          Username or email
+  -h, --help  show CLI help
 ```
 
 _See code: [src/commands/account/signin.ts](https://github.com/cto.ai/ops/blob/v1.5.11/src/commands/account/signin.ts)_
