@@ -37,9 +37,21 @@ export default class AccountSignin extends Command {
 
   static flags = {
     help: flags.help({ char: 'h' }),
-    interactive: flags.boolean({ char: 'i', description: 'Interactive Mode' }),
-    user: flags.string({ char: 'u', description: 'Username or email' }),
-    password: flags.string({ char: 'p', description: 'Password' }),
+    interactive: flags.boolean({
+      char: 'i',
+      description: 'Interactive Mode',
+      hidden: true,
+    }),
+    user: flags.string({
+      char: 'u',
+      description: 'Username or email',
+      hidden: true,
+    }),
+    password: flags.string({
+      char: 'p',
+      description: 'Password',
+      hidden: true,
+    }),
   }
 
   logMessages = () => {
