@@ -213,6 +213,13 @@ abstract class CTOCommand extends Command {
         debug('%O', err)
         throw new APIError(err)
       })
+
+    if (!teams) {
+      throw new APIError(
+        'According to the API, this user does not belong to any teams.',
+      )
+    }
+
     const meResponse = {
       me,
       teams,
@@ -266,7 +273,7 @@ abstract class CTOCommand extends Command {
       this.readConfig,
     )
 
-    const config: Config = await signinFlowPipeline({ tokens, meResponse: {} })
+    const config: Config = await signinFlowPipeline({ tokens })
     return config
   }
 

@@ -2,9 +2,14 @@ export const DOWN = '\x1B\x5B\x42'
 export const UP = '\x1B\x5B\x41'
 export const ENTER = '\x0D'
 export const SPACE = '\x20'
+export const ESCAPE = '\x1B'
 
 export const NEW_COMMAND_NAME = 't_command_e2e_test'
 export const NEW_COMMAND_DESCRIPTION = 't_command_e2e_test description'
+
+export const PUBLIC_COMMAND_NAME = 'github'
+// any valid github personal access token will work here
+export const GITHUB_ACCESS_TOKEN = 'f3d14e5dc6217923101938c52f25a98bf5898d69'
 
 export const NEW_OP_NAME = 't_op_e2e_test'
 export const NEW_OP_DESCRIPTION = 't_op_e2e_test description'
