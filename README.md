@@ -349,14 +349,49 @@ Useful reference for writing tests:
  * https://github.com/oclif/config/blob/master/src/plugin.ts
 
 
-### Testing Tips
+# Testing
 
-Run a single unit test, or filter them by filename, like this:
+Isolate tests (run only specific tests in that file):
+
+    test.only('it should run only tests suffixed with .only', async () => {
+
+## Unit Tests (`test` directory)
+
+### How to run Unit Tests
+
+  1. `npm test` or `npm t`
+
+### Tips
+
+Run a single unit test, or filter them by filename:
 
     npx jest --testPathPattern=keycloak
 
-Run a single E2E test, or filter them by filename, like this:
+## E2E Tests (`test_e2e` directory)
+
+These are known as "cli-acceptance-tests" in Concourse: https://concourse.stg-platform.hc.ai/teams/main/pipelines/ci/jobs/cli-acceptance/
+
+### How to run E2E tests locally
+
+The default test server is staging, but you can override this by passing in your own `OPS_REGISTRY_HOST` and `OPS_API_HOST` values from your shell config. 
+
+Run tests against staging:
+
+  1. Run `npm run configdev` to point the ops binary at the development Typescript app (instead of the production Javascript bundle)
+  2. Ensure you have a `.env.staging` file (you can generate one by running scripts/make-env.sh)
+  3. Set your `NODE_ENV` to 'staging':  `export NODE_ENV=staging`
+  4. `npm run test:e2e`
+
+Run tests against Minikube:
+
+  1. Run `npm run configdev` to point the ops binary at the development Typescript app (instead of the production Javascript bundle)
+  2. Ensure you have a `.env.test` file (you can generate one by running scripts/make-env.sh)
+  3. Modify the vars in `.env.test` to match your minikube IP
+  4. Set your `NODE_ENV` to 'test':  `export NODE_ENV=test`
+  5. `npm run test:e2e`
+
+### Tips
+
+Run a single E2E test, or filter test files by filename:
 
     npm run test:e2e -- --testPathPattern=signin
-
-To run E2E tests locally, see notes in `test_e2e/utils/cmd.ts`.

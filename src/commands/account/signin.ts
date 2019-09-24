@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 30th April 2019 12:07:49 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Wednesday, 11th September 2019 4:07:44 pm
+ * @lastModifiedTime: Friday, 20th September 2019 1:48:16 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -80,7 +80,7 @@ export default class AccountSignin extends Command {
     return tokens
   }
 
-  signin = async (tokens: Tokens) => {
+  createConfigFile = async (tokens: Tokens) => {
     this.log('')
     this.ux.spinner.start(`${this.ux.colors.white('Authenticating')}`)
     return this.initConfig(tokens)
@@ -166,7 +166,7 @@ export default class AccountSignin extends Command {
   browserSigninPipeline = asyncPipe(
     this.logMessages,
     this.keycloakSignInFlow,
-    this.signin,
+    this.createConfigFile,
     this.showWelcomeMessage,
     this.sendAnalytics,
   )
@@ -178,7 +178,7 @@ export default class AccountSignin extends Command {
       this.askQuestions,
       this.determineUserCredentials(flags),
       this.getRefreshToken,
-      this.signin,
+      this.createConfigFile,
       this.showWelcomeMessage,
       this.sendAnalytics,
     )

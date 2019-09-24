@@ -7,7 +7,7 @@ import { OpService } from '~/services/Op'
 import { OPS_REGISTRY_HOST } from '~/constants/env'
 import { APIError } from '~/errors/CustomErrors'
 import { createMockOp, createMockWorkflow } from '../mocks'
-import { Services } from '~/types'
+import { Services, OpsYml } from '~/types'
 import { COMMAND_ENDPOINT } from '~/constants/opConfig'
 import { sleep } from '../utils'
 
@@ -28,7 +28,6 @@ afterEach(async () => {
 
 describe('checkPathOpsYmlExists', () => {
   test('should return true if path to ops.yml resolves', async () => {
-    const config = await Config.load()
     cmd = new Run([], config)
 
     expect(cmd.checkPathOpsYmlExists(nameOrPath)).toBeTruthy()
@@ -36,6 +35,15 @@ describe('checkPathOpsYmlExists', () => {
 })
 
 describe('getOpsAndWorkflowsFromFileSystem', () => {
+  test('should parse a yaml file', async () => {
+    cmd = new Run([], config)
+    const result = (await cmd.parseYamlFile(nameOrPath)) as OpsYml
+
+    expect(result.ops[0].name).toBe('hello-world')
+    expect(result.workflows[0].name).toBe('hello-world')
+    expect(result.version).toBe('1')
+  })
+
   test('should return ops and workflows from the parsed yaml', async () => {
     const inputs: Pick<RunInputs, 'parsedArgs'> = {
       parsedArgs: {
@@ -48,8 +56,36 @@ describe('getOpsAndWorkflowsFromFileSystem', () => {
     }
 
     cmd = new Run([], config)
-    const testRes = await cmd.getOpsAndWorkflowsFromFileSystem(inputs)
-    expect(testRes.opsAndWorkflows.length).toBe(2)
+    const result = await cmd.getOpsAndWorkflowsFromFileSystem(nameOrPath)(
+      inputs as RunInputs,
+    )
+
+    expect(result.opsAndWorkflows.length).toBe(2)
+  })
+
+  test('should filter out ops which do not match argument', async () => {
+    const mockWorkflowName = 'my_mock_workflow'
+    const mockWorkflow = createMockWorkflow({ name: mockWorkflowName })
+
+    const mockOpName = 'my_mock_op'
+    const mockOp = createMockOp({ name: mockOpName })
+
+    const inputs: Pick<RunInputs, 'parsedArgs' | 'opsAndWorkflows'> = {
+      parsedArgs: {
+        args: {
+          nameOrPath: mockOpName,
+        },
+        opParams: [''],
+        flags: { help: true },
+      },
+      opsAndWorkflows: [mockOp, mockWorkflow],
+    }
+
+    cmd = new Run([], config)
+    const result = cmd.filterLocalOps(inputs as RunInputs)
+
+    expect(result.opsAndWorkflows.length).toBe(1)
+    expect(result.opsAndWorkflows).toMatchObject([mockOp])
   })
 })
 
@@ -258,7 +294,7 @@ describe('getApiOps', () => {
   })
 
   test('should handle errors thrown from the api', async () => {
-    //MOCK FEATHERS
+    // MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
     mockFeathersService.find = jest.fn().mockRejectedValue(new Error())
     const fakeToken = 'FAKE_TOKEN'

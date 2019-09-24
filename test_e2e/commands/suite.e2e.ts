@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Friday, 24th May 2019 1:41:52 pm
  * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 13th September 2019 5:26:31 pm
+ * @lastModifiedTime: Monday, 23rd September 2019 10:02:48 am
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -32,7 +32,7 @@ afterAll(async () => {
   await sleep(500)
 })
 
-test('it should signin, init a command, build, publish, search, remove', async () => {
+test('it should init a command, build, publish, search, remove', async () => {
   await signin()
   await sleep(500)
 
@@ -88,7 +88,7 @@ test('it should signin, init a command, build, publish, search, remove', async (
   }
 })
 
-test('it should signin, init a workflow, publish, search, remove', async () => {
+test('it should init a workflow, publish, search, remove', async () => {
   await signin()
   await sleep(500)
 

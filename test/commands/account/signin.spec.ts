@@ -3,6 +3,7 @@ import AccountSignin from '~/commands/account/signin'
 import { KeycloakService } from '~/services/Keycloak'
 import { Config, Services } from '~/types'
 import { signinPrompts } from '~/commands/account/signin'
+import { sleep } from '../../utils'
 
 let cmd: AccountSignin
 let config: OclifConfig.IConfig
@@ -11,17 +12,22 @@ beforeEach(async () => {
   config = await OclifConfig.load()
 })
 
+afterEach(async () => {
+  // avoid jest open handle error
+  await sleep(500)
+})
+
 describe('ops account:signin', () => {
   test('logMessages should log messages', async () => {
     cmd = new AccountSignin([], config)
-    await expect(cmd.logMessages()).toBe(undefined)
+    expect(cmd.logMessages()).toBe(undefined)
   })
 
   test('showWelcomeMessage', async () => {
     cmd = new AccountSignin([], config)
 
     const inputConfig = { user: { username: 'test-username' } } as Config
-    await expect(cmd.showWelcomeMessage(inputConfig)).toStrictEqual(inputConfig)
+    expect(cmd.showWelcomeMessage(inputConfig)).toStrictEqual(inputConfig)
   })
 
   test('keycloakSignInFlow should call the keycloak service and expect tokens', async () => {

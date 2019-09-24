@@ -3,6 +3,8 @@ import Debug from 'debug'
 import Docker, { AuthConfig } from 'dockerode'
 import json from 'JSONStream'
 import through from 'through2'
+import * as path from 'path'
+import * as fs from 'fs-extra'
 
 import { DockerBuildImageError } from '~/errors/CustomErrors'
 import { ErrorService } from '~/services/Error'
@@ -119,8 +121,25 @@ export class ImageService {
       })
   }
 
+  checkIfDockerfileExists = (opPath: string): boolean => {
+    const pathToDockerfile = path.join(path.resolve(opPath), 'Dockerfile')
+    return fs.existsSync(pathToDockerfile)
+  }
+
   build = async (tag: string, opPath: string, op: Op) => {
     try {
+      const dockerfileExists = this.checkIfDockerfileExists(opPath)
+
+      if (!dockerfileExists) {
+        throw new Error(
+          `Unable to build an image for this op. If you are inside your op directory, please run ${ux.colors.green(
+            '$',
+          )} ${ux.colors.italic.dim('ops run .')} or ${ux.colors.green(
+            '$',
+          )} ${ux.colors.italic.dim('ops build .')} instead.\n`,
+        )
+      }
+
       const all: any[] = []
       const errors: any[] = []
       const log = this.log
