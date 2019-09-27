@@ -192,7 +192,7 @@ export class CouldNotGetLatestVersion extends ErrorTemplate {
 export class APIError extends ErrorTemplate {
   constructor(err) {
     super(
-      white(`❗️ Looks like an API error occured.\n   ${tryAgainOrContact}`),
+      white(`❗️ Looks like an API error occurred.\n   ${tryAgainOrContact}`),
       err,
       expectedSource,
     )
@@ -201,7 +201,7 @@ export class APIError extends ErrorTemplate {
 
 export class AnalyticsError extends ErrorTemplate {
   constructor(err) {
-    super('Analytics error occured', err, { exit: false })
+    super('Analytics error occurred', err, { exit: false })
   }
 }
 

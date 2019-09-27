@@ -244,7 +244,7 @@ describe('Custom Errors', () => {
     expect(err).toBeInstanceOf(APIError)
     expect(ErrorTemplate).toHaveBeenCalledTimes(1)
     expect(ErrorTemplate).toHaveBeenCalledWith(
-      white(`❗️ Looks like an API error occured.\n   ${tryAgainOrContact}`),
+      white(`❗️ Looks like an API error occurred.\n   ${tryAgainOrContact}`),
       newError,
       expectedSource,
     )
@@ -255,7 +255,7 @@ describe('Custom Errors', () => {
     expect(err).toBeInstanceOf(AnalyticsError)
     expect(ErrorTemplate).toHaveBeenCalledTimes(1)
     expect(ErrorTemplate).toHaveBeenCalledWith(
-      'Analytics error occured',
+      'Analytics error occurred',
       newError,
       { exit: false },
     )

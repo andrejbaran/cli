@@ -330,7 +330,7 @@ export default class Run extends Command {
         {
           query,
           headers: {
-            Authorization: config.tokens.accessToken,
+            Authorization: this.accessToken,
           },
         },
       )
@@ -367,7 +367,7 @@ export default class Run extends Command {
         {
           query,
           headers: {
-            Authorization: config.tokens.accessToken,
+            Authorization: this.accessToken,
           },
         },
       )

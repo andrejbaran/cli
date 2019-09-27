@@ -281,6 +281,7 @@ describe('getApiOps', () => {
     } as RunInputs
 
     cmd = new Run([], config, { api: mockFeathersService } as Services)
+    cmd.accessToken = fakeToken
     await cmd.getApiOps(inputs)
     expect(mockFeathersService.find).toHaveBeenCalledWith(COMMAND_ENDPOINT, {
       query: {
@@ -354,6 +355,7 @@ describe('getApiWorkflows', () => {
     } as RunInputs
 
     cmd = new Run([], config, { api: mockFeathersService } as Services)
+    cmd.accessToken = fakeToken
     await cmd.getApiWorkflows(inputs)
     expect(mockFeathersService.find).toHaveBeenCalledWith('workflows', {
       query: {

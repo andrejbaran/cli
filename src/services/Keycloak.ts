@@ -238,6 +238,7 @@ export class KeycloakService {
     refreshToken: string,
   ): Promise<Tokens> => {
     try {
+      debug('Starting to refresh access token')
       const decodedToken = jwt.decode(refreshToken)
       /*
        * the refresh token contains the client ID (azp). There are two possible
@@ -266,6 +267,8 @@ export class KeycloakService {
 
       if (!data.access_token || !data.refresh_token || !data.id_token)
         throw new SSOError('There are UAA tokens missing.')
+
+      debug('Successfully refreshed access token')
 
       return {
         accessToken: data.access_token,

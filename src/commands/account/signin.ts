@@ -115,7 +115,7 @@ export default class AccountSignin extends Command {
             username: config.user.username,
           },
         },
-        config.tokens.accessToken,
+        this.accessToken,
       )
     } catch (err) {
       this.debug('%O', err)
