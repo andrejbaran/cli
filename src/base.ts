@@ -113,13 +113,10 @@ abstract class CTOCommand extends Command {
     return clockTimestamp < refreshTokenExp
   }
 
-  checkValidAccessToken = async (tokens: Tokens): Promise<void> => {
+  checkAndRefreshAccessToken = async (tokens: Tokens): Promise<Config> => {
     debug('checking for valid access token')
     try {
-      if (!tokens) return
-      const { accessToken, refreshToken, idToken } = tokens
-      if (!accessToken || !refreshToken || !idToken) return
-
+      const { refreshToken } = tokens
       if (!this.isTokenValid(tokens)) throw new TokenExpiredError()
 
       /**
@@ -132,6 +129,10 @@ abstract class CTOCommand extends Command {
       )
       this.accessToken = newTokens.accessToken
       await this.writeConfig(oldConfig, { tokens: newTokens })
+
+      const config: Config = await this.readConfig()
+      this.state.config = config
+      return config
     } catch (error) {
       debug('%O', error)
       await this.clearConfig()
@@ -144,10 +145,15 @@ abstract class CTOCommand extends Command {
     const config = await this.readConfig()
     const { tokens } = config
 
-    if (tokens) {
-      await this.checkValidAccessToken(tokens)
-    }
-    if (!this.user || !this.team || !this.accessToken) {
+    if (
+      !this.user ||
+      !this.team ||
+      !this.accessToken ||
+      !tokens ||
+      !tokens.accessToken ||
+      !tokens.refreshToken ||
+      !tokens.idToken
+    ) {
       this.log('')
       this.log('✋ Sorry you need to be logged in to do that.')
       this.log(
@@ -173,7 +179,8 @@ abstract class CTOCommand extends Command {
 
       process.exit()
     }
-    return config
+
+    return this.checkAndRefreshAccessToken(tokens)
   }
 
   fetchUserInfo = async ({ tokens }: SigninPipeline) => {
