@@ -4,6 +4,8 @@ import { Op, RegistryAuth, User, Config } from '../types'
 import { FeathersClient } from './Feathers'
 import { Publish } from './Publish'
 import { OpService } from './../services/Op'
+import Debug from 'debug'
+const debug = Debug('ops:BuildStepsService')
 
 export class BuildSteps {
   public isGlueCode = async (step: string): Promise<boolean> => {
@@ -58,7 +60,7 @@ export class BuildSteps {
     const glueCodeClone: Op = JSON.parse(JSON.stringify(glueCodeOp))
     await opService.opsBuildLoop(
       [glueCodeClone],
-      path.resolve(__dirname, '../templates//workflowsteps/js'),
+      path.resolve(__dirname, '../templates/workflowsteps/js'),
       config,
     )
 
@@ -68,6 +70,7 @@ export class BuildSteps {
       teamID,
       accessToken,
       featherClient,
+      true,
     )
 
     await publishService.publishOpToRegistry(apiOp, registryAuth, teamName)

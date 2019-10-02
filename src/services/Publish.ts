@@ -22,11 +22,12 @@ export class Publish {
     teamID: string,
     accessToken: string,
     api: ApiService,
+    isGlueCode: boolean = false,
   ) => {
     try {
       const res = await api.create(
         'ops',
-        { ...op, version, teamID },
+        { ...op, version, teamID, isGlueCode },
         {
           headers: {
             Authorization: accessToken,
