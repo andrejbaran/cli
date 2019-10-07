@@ -2,7 +2,12 @@ import * as Config from '@oclif/config'
 import Remove, { RemoveInputs } from '~/commands/remove'
 
 import { COMMAND, WORKFLOW, getEndpointFromOpType } from '~/constants/opConfig'
-import { APIError, NoResultsFoundForDeletion } from '~/errors/CustomErrors'
+import {
+  APIError,
+  NoResultsFoundForDeletion,
+  CannotDeleteOps,
+} from '~/errors/CustomErrors'
+import { ErrorResponse } from '~/errors/ErrorTemplate'
 import { FeathersClient } from '~/services/Feathers'
 import { Op, Workflow, Services } from '~/types'
 import { createMockOp } from '../mocks'
@@ -187,9 +192,15 @@ describe('removeApiOpOrWorkflow', () => {
 
   test('should handle errors thrown from the api', async () => {
     const mockOpId = 'FAKE_OP_ID'
+    const removeError: ErrorResponse = {
+      data: null,
+      error: [{ code: 101, message: 'error_message', requestID: 'request_id' }],
+      message: 'error',
+      stack: 'error stack',
+    }
     //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.remove = jest.fn().mockRejectedValue(new Error())
+    mockFeathersService.remove = jest.fn().mockRejectedValue(removeError)
 
     const inputs = {
       opOrWorkflow: createMockOp({ id: mockOpId }),
@@ -201,6 +212,34 @@ describe('removeApiOpOrWorkflow', () => {
     cmd = new Remove([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
     await expect(cmd.removeApiOpOrWorkflow(inputs)).rejects.toThrow(APIError)
+  })
+
+  test(`should handle 'cannot delete ops' error from API`, async () => {
+    const mockOpId = 'FAKE_OP_ID'
+    const removeError: ErrorResponse = {
+      data: null,
+      error: [
+        { code: 5029, message: 'failed to delete op', requestID: 'request_id' },
+      ],
+      message: 'cannot delete op',
+      stack: 'error stack',
+    }
+    //MOCK FEATHERS
+    const mockFeathersService = new FeathersClient()
+    mockFeathersService.remove = jest.fn().mockRejectedValue(removeError)
+
+    const inputs = {
+      opOrWorkflow: createMockOp({ id: mockOpId }),
+      removeType: COMMAND,
+      confirmRemove: true,
+    } as RemoveInputs
+    const fakeToken = 'FAKETOKEN'
+    const config = await Config.load()
+    cmd = new Remove([], config, { api: mockFeathersService } as Services)
+    cmd.accessToken = fakeToken
+    await expect(cmd.removeApiOpOrWorkflow(inputs)).rejects.toThrow(
+      CannotDeleteOps,
+    )
   })
 
   test('should return if confirmRemove is false', async () => {

@@ -481,3 +481,15 @@ export class TokenExpiredError extends ErrorTemplate {
     )
   }
 }
+
+export class CannotDeleteOps extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(
+        `❗ Sorry, we cannot delete the op. \n\n Please verify that it is not being used in some other op.\n`,
+      ),
+      err,
+      expectedSource,
+    )
+  }
+}

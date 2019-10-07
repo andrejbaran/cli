@@ -2,7 +2,11 @@ import Command, { flags } from '../base'
 import { ux } from '@cto.ai/sdk'
 import { asyncPipe, titleCase } from '~/utils'
 import { OPS_REGISTRY_HOST } from '../constants/env'
-import { APIError, NoResultsFoundForDeletion } from '../errors/CustomErrors'
+import {
+  APIError,
+  NoResultsFoundForDeletion,
+  CannotDeleteOps,
+} from '../errors/CustomErrors'
 import { Op, Workflow, User } from '~/types'
 import {
   WORKFLOW,
@@ -180,6 +184,9 @@ export default class Remove extends Command {
       return inputs
     } catch (err) {
       this.debug('%O', err)
+      if (err.error[0].code === 5029) {
+        throw new CannotDeleteOps(err)
+      }
       throw new APIError(err)
     }
   }
