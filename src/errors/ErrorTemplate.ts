@@ -1,8 +1,8 @@
 /**
  * @author: Prachi Singh (prachi@hackcapital.com)
  * @date: Monday, 6th May 2019 11:11:49 am
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Tuesday, 11th June 2019 1:52:14 pm
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Thursday, 3rd October 2019 4:46:05 pm
  *
  * DESCRIPTION: Base class that the custom errors should be extending from
  * Error template that provides a modular, extensible and customizable errors.
@@ -59,7 +59,9 @@ export class ErrorTemplate extends Error {
 //this originates from the Go API
 export interface ErrorResponse {
   data: null
-  error: GoError
+  error: GoError[]
+  message: string
+  stack: string
 }
 
 export interface GoError {
