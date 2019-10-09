@@ -6,6 +6,7 @@ ops:
     env:
       - 'USER=world'
       - 'OPS_ACCESS_TOKEN'
+      - 'OPS_ENV_VAR=$HOST_ENV_VAR'
     src:
       - Dockerfile
       - index.js

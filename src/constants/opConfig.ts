@@ -30,7 +30,7 @@ export const HELP_COMMENTS = {
     run:
       'Command that is executed when op is started ("npm start", "./start_script.sh", etc.) (required)',
     env:
-      'Provide required environment variables for your op; to access, use the platform specific API, e.g. `process.env` for NodeJS',
+      'Provide required environment variables for your op; to access, use the platform specific API, e.g. `process.env` for NodeJS\n To use environment variables from the Host, use the $ prefix:',
     src:
       "Whitelist files and folders to be included in the published op's WORKDIR",
     mountCwd:
