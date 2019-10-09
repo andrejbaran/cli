@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Friday, 24th May 2019 1:41:52 pm
  * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Friday, 4th October 2019 1:13:18 pm
+ * @lastModifiedTime: Monday, 7th October 2019 1:33:48 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -148,25 +148,32 @@ test('it should not delete a command if it is being used in a remote workflow', 
   await sleep(500)
 
   console.log('ops init a command')
-  await run(
+  const initRes = await run(
     ['init'],
     [SPACE, ENTER, NEW_COMMAND_NAME, ENTER, NEW_COMMAND_DESCRIPTION, ENTER],
+  )
+  expect(initRes.toLowerCase()).toContain('success!')
+  expect(initRes.toLowerCase()).toContain(
+    `to test your ${COMMAND} run: $ ops run ${NEW_COMMAND_NAME}`,
   )
 
   await sleep(500)
 
   console.log(`ops build ${NEW_COMMAND_NAME}`)
-  await run(['build', NEW_COMMAND_NAME])
+  const buildRes = await run(['build', NEW_COMMAND_NAME])
+  expect(buildRes.toLowerCase()).toContain('successfully built')
 
   await sleep(500)
 
   console.log(`ops publish ${NEW_COMMAND_NAME}`)
-  await run(['publish', NEW_COMMAND_NAME], [ENTER])
+  const publishRes = await run(['publish', NEW_COMMAND_NAME], [ENTER])
+  expect(publishRes.toLowerCase()).toContain('preparing:')
+  expect(publishRes).toContain('has been published!')
 
   await sleep(500)
 
   console.log('ops init a workflow')
-  await run(
+  const initWfRes = await run(
     ['init'],
     [
       DOWN,
@@ -178,6 +185,9 @@ test('it should not delete a command if it is being used in a remote workflow', 
       ENTER,
     ],
   )
+  expect(initWfRes.toLowerCase()).toContain('success!')
+  expect(initWfRes).toContain(`🚀 To test your ${WORKFLOW} run:`)
+  expect(initWfRes).toContain(`ops run ${NEW_WORKFLOW_NAME}`)
 
   console.log('modify ops.yml')
   const destDir = `${path.resolve(process.cwd())}/${NEW_WORKFLOW_NAME}`
@@ -186,16 +196,15 @@ test('it should not delete a command if it is being used in a remote workflow', 
     // @ts-ignore
     .getIn(['workflows', 0])
     .setIn(['steps', 1], `ops run ${NEW_COMMAND_NAME}`)
-
   // @ts-ignore
   doc.getIn(['workflows', 0]).set('remote', true)
-
   fs.writeFileSync(`${destDir}/ops.yml`, doc.toString())
 
   await sleep(200)
 
   console.log(`ops publish ${NEW_WORKFLOW_NAME}`)
-  await run(['publish', NEW_WORKFLOW_NAME], [DOWN, ENTER])
+  const publishWfRes = await run(['publish', NEW_WORKFLOW_NAME], [DOWN, ENTER])
+  expect(publishWfRes).toContain(`${NEW_WORKFLOW_NAME} has been published!`)
 
   await sleep(500)
 
@@ -205,8 +214,7 @@ test('it should not delete a command if it is being used in a remote workflow', 
     ['remove', NEW_COMMAND_NAME],
     [DOWN, UP, ENTER, ENTER],
   )
-
-  expect(removeRes).toContain('Sorry, cannot delete the op.')
+  expect(removeRes).toContain('❗ Sorry, we cannot delete the op.')
   expect(removeRes).toContain(
     'Please verify that it is not being used in some other op.',
   )
