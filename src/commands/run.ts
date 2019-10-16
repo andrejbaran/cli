@@ -125,6 +125,16 @@ export default class Run extends Command {
     return { ops, workflows, version }
   }
 
+  logResolvedLocalMessage  = (inputs: RunInputs): RunInputs => {
+    const {
+      parsedArgs: {
+        args: { nameOrPath },
+      },
+    } = inputs
+    this.log(`❗️ ${this.ux.colors.callOutCyan(nameOrPath)} ${this.ux.colors.white('resolved to a local path and is running local Op.')} `)
+    return inputs
+  }
+
   /* get all the commands and workflows in an ops.yml that match the nameOrPath */
   getOpsAndWorkflowsFromFileSystem = (relativePathToOpsYml: string) => async (
     inputs: RunInputs,
@@ -430,6 +440,7 @@ export default class Run extends Command {
       if (this.checkPathOpsYmlExists(nameOrPath)) {
         /* The nameOrPath argument is a directory containing an ops.yml */
         const runFsPipeline = asyncPipe(
+          this.logResolvedLocalMessage,
           this.getOpsAndWorkflowsFromFileSystem(nameOrPath),
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
