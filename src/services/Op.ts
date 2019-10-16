@@ -51,13 +51,18 @@ export class OpService {
       tokens: { accessToken },
     } = config
     for (const op of ops) {
-      if (!isValidOpName(op)) {
+      if (!isValidOpName(op.name)) {
         throw new InvalidInputCharacter('Op Name')
       }
       console.log(
         `🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`,
       )
-      const opImageTag = getOpImageTag(teamName, op.name)
+      const opImageTag = getOpImageTag(
+        teamName,
+        op.name,
+        undefined,
+        op.isPublic,
+      )
       await this.imageService.build(
         getOpUrl(OPS_REGISTRY_HOST, opImageTag),
         opPath,
@@ -132,7 +137,7 @@ export class OpService {
       },
     } = inputs
     try {
-      op.image = this.setOpImageUrl(op, config)
+      op.image = this.setOpImageUrl(op)
       const localImage = await this.imageService.checkLocalImage(op.image)
       if (!localImage || build) {
         op.isPublished
@@ -174,10 +179,14 @@ export class OpService {
     )
   }
 
-  setOpImageUrl = (op: Op, { team }: Config) => {
+  setOpImageUrl = (op: Op) => {
     const opIdentifier = op.isPublished ? op.id : op.name
-    const projectIdentifier = op.isPublic ? 'ops' : team.name
-    const opImageTag = getOpImageTag(projectIdentifier, opIdentifier)
+    const opImageTag = getOpImageTag(
+      op.teamName,
+      opIdentifier,
+      undefined,
+      op.isPublic,
+    )
     return getOpUrl(OPS_REGISTRY_HOST, opImageTag)
   }
 

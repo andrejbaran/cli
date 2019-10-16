@@ -3,6 +3,7 @@ ops:
   - name: js
     description: js
     run: node /ops/index.js
+    public: false
     env:
       - USER=world
       - OPS_ACCESS_TOKEN

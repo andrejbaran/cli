@@ -6,10 +6,11 @@
  * @copyright (c) 2019 CTO.ai
  */
 
+export { parseYaml } from './yamlParser'
 export { asyncPipe, _trace } from './asyncPipe'
 export { validateEmail, validChars, validCharsTeamName } from './validate'
 export { onExit } from './onExit'
-export { getOpImageTag, getOpUrl } from './getOpUrl'
+export { getOpImageTag, getOpUrl, PUBLIC_OPS_PREFIX } from './getOpUrl'
 export { handleMandatory, handleUndefined } from './guards'
 export { terminalText } from './terminalText'
 export { titleCase, pluralize, appendSuffix } from './stringUtils'

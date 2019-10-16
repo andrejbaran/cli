@@ -1,12 +1,14 @@
-version: '1'
+version: "1"
 ops:
   - name: hello-world
     description: Your first hello-world op
+    public: false
+    sourceCodeURL: ""
     run: node /ops/index.js
     env:
-      - 'USER=world'
-      - 'OPS_ACCESS_TOKEN'
-      - 'OPS_ENV_VAR=$HOST_ENV_VAR'
+      - "USER=world"
+      - "OPS_ACCESS_TOKEN"
+      - "OPS_ENV_VAR=$HOST_ENV_VAR"
     src:
       - Dockerfile
       - index.js
@@ -19,23 +21,25 @@ ops:
     mountCwd: false
     mountHome: false
     bind:
-      - '/tmp:/tmp'
+      - "/tmp:/tmp"
     port:
       - 3000:3000
     help:
-      usage: 'Your first hello-world op'
+      usage: "Your first hello-world op"
       arguments:
-        username: 'Your username'
-        email: 'Your email'
+        username: "Your username"
+        email: "Your email"
       options:
-        build: 'Build flag'
-        clear: 'Clears'
+        build: "Build flag"
+        clear: "Clears"
 workflows:
   - name: hello-world
     description: Your first hello-world op
     remote: false
+    public: false
+    sourceCodeURL: ""
     steps:
       - node ./index.js
     env:
-      - 'USER=world'
-      - 'OPS_ACCESS_TOKEN'
+      - "USER=world"
+      - "OPS_ACCESS_TOKEN"

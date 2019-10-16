@@ -16,10 +16,10 @@ import { OP_FILE } from '~/constants/opConfig'
 import {
   FileNotFoundError,
   MissingRequiredArgument,
-  NoOpsFound,
+  NoLocalOpsFound,
 } from '~/errors/CustomErrors'
 import { Config, Container, Op, OpsYml } from '~/types'
-import { asyncPipe } from '~/utils'
+import { asyncPipe, parseYaml } from '~/utils'
 
 export interface BuildInputs {
   opPath: string
@@ -53,9 +53,12 @@ export default class Build extends Command {
         this.debug('%O', err)
         throw new FileNotFoundError(err, opPath, OP_FILE)
       })
-    const { ops }: OpsYml = manifest && yaml.parse(manifest)
+    if (!manifest) {
+      throw new NoLocalOpsFound()
+    }
+    const { ops }: OpsYml = parseYaml(manifest)
     if (!ops) {
-      throw new NoOpsFound()
+      throw new NoLocalOpsFound()
     }
     return { ...inputs, ops }
   }

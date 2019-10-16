@@ -1,10 +1,12 @@
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import { Op, RegistryAuth, User, Config } from '../types'
+import { Op, User, Config, Workflow } from '../types'
 import { FeathersClient } from './Feathers'
 import { Publish } from './Publish'
 import { OpService } from './../services/Op'
+import { RegistryAuthService } from './../services/RegistryAuth'
 import Debug from 'debug'
+import { CouldNotGetRegistryToken } from '~/errors/CustomErrors'
 const debug = Debug('ops:BuildStepsService')
 
 export class BuildSteps {
@@ -17,17 +19,19 @@ export class BuildSteps {
   }
 
   public buildAndPublishGlueCode = async (
-    step,
-    teamID,
-    teamName,
-    accessToken,
+    step: string,
+    teamID: string,
+    teamName: string,
+    accessToken: string,
     opPath: string,
     user: User,
     publishService: Publish,
     opService: OpService,
     featherClient: FeathersClient,
-    registryAuth: RegistryAuth,
+    registryAuthService: RegistryAuthService,
     config: Config,
+    isPublic: boolean,
+    version: string,
   ): Promise<string> => {
     const indexJs = path.resolve(opPath, 'index.js')
     fs.writeFileSync(
@@ -55,6 +59,7 @@ export class BuildSteps {
       network: 'host',
       run: '/bin/sdk-daemon node /ops/index.js',
       src: ['Dockerfile', 'index.js', 'package.json', '.dockerignore'],
+      isPublic: isPublic,
     }
 
     const glueCodeClone: Op = JSON.parse(JSON.stringify(glueCodeOp))
@@ -66,14 +71,34 @@ export class BuildSteps {
 
     const { data: apiOp } = await publishService.publishOpToAPI(
       glueCodeOp,
-      '1',
+      version,
       teamID,
       accessToken,
       featherClient,
       true,
     )
 
-    await publishService.publishOpToRegistry(apiOp, registryAuth, teamName)
+    const registryAuth = await registryAuthService
+      .create(
+        accessToken,
+        teamName,
+        glueCodeOp.name,
+        version,
+        false,
+        true, // pushAccess is true as its publish
+      )
+      .catch(err => {
+        throw new CouldNotGetRegistryToken(err)
+      })
+
+    await publishService.publishOpToRegistry(
+      apiOp,
+      registryAuth,
+      teamName,
+      accessToken,
+      registryAuthService,
+      version,
+    )
 
     return `ops run ${opName}`
   }

@@ -292,10 +292,20 @@ export class DockerPublishNoImageFound extends ErrorTemplate {
   }
 }
 
-export class NoOpsFound extends ErrorTemplate {
+export class NoLocalOpsFound extends ErrorTemplate {
   constructor() {
     super(
       white(`💩 We couldn't find any ops in the ops.yml!`),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class NoOpsFound extends ErrorTemplate {
+  constructor(opName) {
+    super(
+      white(`💩 We couldn't find any ops with the name ${opName}!`),
       undefined,
       expectedSource,
     )
@@ -489,6 +499,42 @@ export class CannotDeleteOps extends ErrorTemplate {
         `❗ Sorry, we cannot delete the op. \n\n Please verify that it is not being used in some other op.\n`,
       ),
       err,
+      expectedSource,
+    )
+  }
+}
+
+export class InvalidOpName extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `❗ Sorry, we cannot find that op. Please enter an op with the format:\n- ${ux.colors.bold(
+          '@teamName',
+        )}/${ux.colors.cyan('opName')}\n- ${ux.colors.cyan(
+          'opName',
+        )}: for ops you have in your team, or a folder in your current working directory`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class UnauthorizedtoAccessOp extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(`❗ Oops, seems like you do not have access to run this op!`),
+      err,
+      expectedSource,
+    )
+  }
+}
+
+export class IncompleteOpsYml extends ErrorTemplate {
+  constructor(message: string) {
+    super(
+      white(`❗ Sorry, we have difficulty parsing your ops.yml. ${message}`),
+      undefined,
       expectedSource,
     )
   }

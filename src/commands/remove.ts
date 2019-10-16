@@ -6,6 +6,7 @@ import {
   APIError,
   NoResultsFoundForDeletion,
   CannotDeleteOps,
+  NoOpsFound,
 } from '../errors/CustomErrors'
 import { Op, Workflow, User } from '~/types'
 import {
@@ -16,9 +17,9 @@ import {
 } from '~/constants/opConfig'
 
 export interface RemoveInputs {
-  filter: string
+  opName: string
   removeType: OpTypes
-  apiResults: (Op | Workflow)[]
+  apiOps: (Op | Workflow)[]
   opOrWorkflow: Op | Workflow
   confirmRemove: boolean
 }
@@ -28,7 +29,7 @@ export default class Remove extends Command {
 
   static args = [
     {
-      name: 'filter',
+      name: 'opName',
       description:
         'A part of the name or description of the op or workflow you want to remove.',
     },
@@ -38,99 +39,107 @@ export default class Remove extends Command {
     help: flags.help({ char: 'h' }),
   }
 
-  removeTypePrompt = async (
-    filter: string,
-  ): Promise<Pick<RemoveInputs, 'filter' | 'removeType'>> => {
-    const { removeType } = await this.ux.prompt<{ removeType: OpTypes }>({
-      type: 'list',
-      name: 'removeType',
-      message: `Start by selecting either private ${this.ux.colors.multiBlue(
-        titleCase(COMMAND),
-      )} or ${this.ux.colors.multiOrange(
-        titleCase(WORKFLOW),
-      )} to remove  ${this.ux.colors.reset.green('→')}`,
-      choices: [
-        {
-          name: `${this.ux.colors.multiBlue('\u2022')} ${titleCase(COMMAND)}`,
-          value: COMMAND,
-        },
-        {
-          name: `${this.ux.colors.multiOrange('\u2022')} ${titleCase(
-            WORKFLOW,
-          )}`,
-          value: WORKFLOW,
-        },
-      ],
-    })
-    return { filter, removeType }
-  }
+  // removeTypePrompt = async (
+  //   opName: string,
+  // ): Promise<Pick<RemoveInputs, 'opName' | 'removeType'>> => {
+  //   const { removeType } = await this.ux.prompt<{ removeType: OpTypes }>({
+  //     type: 'list',
+  //     name: 'removeType',
+  //     message: `Start by selecting either private ${this.ux.colors.multiBlue(
+  //       titleCase(COMMAND),
+  //     )} or ${this.ux.colors.multiOrange(
+  //       titleCase(WORKFLOW),
+  //     )} to remove  ${this.ux.colors.reset.green('→')}`,
+  //     choices: [
+  //       {
+  //         name: `${this.ux.colors.multiBlue('\u2022')} ${titleCase(COMMAND)}`,
+  //         value: COMMAND,
+  //       },
+  //       {
+  //         name: `${this.ux.colors.multiOrange('\u2022')} ${titleCase(
+  //           WORKFLOW,
+  //         )}`,
+  //         value: WORKFLOW,
+  //       },
+  //     ],
+  //   })
+  //   return { opName, removeType }
+  // }
 
-  promptFilter = async (inputs: RemoveInputs): Promise<RemoveInputs> => {
-    let { filter, removeType } = inputs
-    if (!filter) {
-      const answers = await ux.prompt<{ filter: string }>({
+  promptFilter = async (
+    opName: string,
+  ): Promise<Pick<RemoveInputs, 'opName'>> => {
+    if (!opName) {
+      const answers = await ux.prompt<{ opName: string }>({
         type: 'input',
-        name: 'filter',
-        message: `\n Please type in the name or description of the private ${removeType} you want to remove ${ux.colors.reset.green(
+        name: 'opName',
+        message: `\n Please type in the name of the private op you want to remove ${ux.colors.reset.green(
           '→',
         )}\n ${ux.colors.reset(
           ux.colors.secondary(
-            `Leave blank to list all private ${removeType} you can remove`,
+            `Leave blank to list all private ops you can remove`,
           ),
         )} \n\n 🗑  ${ux.colors.reset.white('Name or Description')}`,
       })
-      filter = answers.filter
+      opName = answers.opName
     }
-    return { ...inputs, filter }
+    return { opName }
   }
 
   getApiOpsOrWorkflows = async (
     inputs: RemoveInputs,
   ): Promise<RemoveInputs> => {
-    try {
-      const { filter, removeType } = inputs
-      const query =
-        removeType === COMMAND
-          ? { team_id: this.team.id }
-          : { teamId: this.team.id }
+    const { opName } = inputs
+    let apiOps: (Op | Workflow)[]
 
-      if (filter.length) Object.assign(query, { search: filter })
-      const {
-        data: apiResults,
-      }: { data: (Op | Workflow)[] } = await this.services.api.find(
-        getEndpointFromOpType(removeType),
-        {
-          query,
-          headers: {
-            Authorization: this.accessToken,
+    if (!opName) {
+      try {
+        ;({ data: apiOps } = await this.services.api.find(
+          `teams/${this.state.config.team.name}/ops`,
+          {
+            headers: {
+              Authorization: this.accessToken,
+            },
           },
-        },
-      )
-
-      return { ...inputs, apiResults }
-    } catch (err) {
-      this.debug('%O', err)
-      throw new APIError(err)
+        ))
+      } catch (err) {
+        this.debug('%O', err)
+        throw new APIError(err)
+      }
+    } else {
+      let apiOp: Op | Workflow
+      try {
+        ;({ data: apiOp } = await this.services.api.find(
+          `teams/${this.state.config.team.name}/ops/${opName}`,
+          {
+            headers: {
+              Authorization: this.accessToken,
+            },
+          },
+        ))
+      } catch (err) {
+        this.debug('%O', err)
+        throw new APIError(err)
+      }
+      if (!apiOp) {
+        throw new NoOpsFound(opName)
+      }
+      apiOps = [apiOp]
     }
-  }
 
-  filterResultsByTeam = (inputs: RemoveInputs): RemoveInputs => {
-    let { apiResults } = inputs
-    apiResults = apiResults.filter(opOrWorkflow => {
-      return opOrWorkflow.teamID === this.team.id
-    })
-
-    if (!apiResults.length) {
-      throw new NoResultsFoundForDeletion(inputs.filter)
-    }
-    return { ...inputs, apiResults }
+    return { ...inputs, apiOps }
   }
 
   selectOpOrWorkflow = async (inputs: RemoveInputs): Promise<RemoveInputs> => {
-    const { apiResults, removeType } = inputs
+    const { apiOps, removeType } = inputs
     let opOrWorkflow: Op | Workflow
-    if (apiResults.length === 1) {
-      opOrWorkflow = apiResults[0]
+
+    if (!apiOps || !apiOps.length) {
+      throw new NoResultsFoundForDeletion(inputs.opName)
+    }
+
+    if (apiOps.length === 1) {
+      opOrWorkflow = apiOps[0]
     } else {
       const { selected } = await ux.prompt<{
         selected: Op | Workflow
@@ -138,8 +147,8 @@ export default class Remove extends Command {
         type: 'list',
         name: 'selected',
         pageSize: 100,
-        message: `\n 🗑  Which private ${removeType} would you like to remove?`,
-        choices: apiResults.map(l => {
+        message: `\n 🗑  Which private op would you like to remove?`,
+        choices: apiOps.map(l => {
           return {
             name: `${ux.colors.callOutCyan(l.name)} ${ux.colors.white(
               l.description,
@@ -173,12 +182,12 @@ export default class Remove extends Command {
     try {
       if (!inputs.confirmRemove) return inputs
       const {
-        opOrWorkflow: { id },
-        removeType,
+        opOrWorkflow: { id, type },
+        // removeType,
       } = inputs
       this.log('\n 🗑  Removing from registry...')
 
-      await this.services.api.remove(getEndpointFromOpType(removeType), id, {
+      await this.services.api.remove(getEndpointFromOpType(type), id, {
         headers: { Authorization: this.accessToken },
       })
       return inputs
@@ -215,7 +224,7 @@ export default class Remove extends Command {
     const { email, username } = user
     const {
       opOrWorkflow: { id, name, description },
-      removeType,
+      // removeType,
     } = inputs
     this.services.analytics.track(
       {
@@ -224,7 +233,7 @@ export default class Remove extends Command {
         properties: {
           email,
           username,
-          type: removeType,
+          // type: removeType,
           id,
           name,
           description,
@@ -237,24 +246,23 @@ export default class Remove extends Command {
 
   async run() {
     const {
-      args: { filter },
+      args: { opName },
     } = this.parse(Remove)
 
     try {
       await this.isLoggedIn()
 
       const removePipeline = asyncPipe(
-        this.removeTypePrompt,
+        // this.removeTypePrompt,
         this.promptFilter,
         this.getApiOpsOrWorkflows,
-        this.filterResultsByTeam,
         this.selectOpOrWorkflow,
         this.confirmRemove,
         this.removeApiOpOrWorkflow,
         this.logMessage,
         this.sendAnalytics(this.user),
       )
-      await removePipeline(filter)
+      await removePipeline(opName)
     } catch (err) {
       this.debug('%O', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })

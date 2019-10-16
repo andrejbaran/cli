@@ -1,6 +1,7 @@
 import * as Config from '@oclif/config'
 import * as path from 'path'
 import Run, { RunInputs } from '~/commands/run'
+import { ErrorResponse } from '~/errors/ErrorTemplate'
 import { FeathersClient } from '~/services/Feathers'
 import { WorkflowService } from '~/services/Workflow'
 import { OpService } from '~/services/Op'
@@ -239,10 +240,6 @@ describe('executeOpOrWorkflowService', () => {
       opService: mockOpService,
     } as Services)
     cmd.executeOpOrWorkflowService(inputs)
-    mockOp.image = path.join(
-      OPS_REGISTRY_HOST,
-      `${config.team.name}/${mockOp.name}`,
-    )
     expect(mockOpService.run).toHaveBeenCalledWith(
       mockOp,
       inputs.parsedArgs,
@@ -253,16 +250,18 @@ describe('executeOpOrWorkflowService', () => {
 })
 
 describe('getApiOps', () => {
-  test('should successfully retrieve ops from the api', async () => {
+  test('should successfully call the API endpoint if given a team name and op name', async () => {
     //MOCK FEATHERS
     const mockOp = createMockOp({})
     const mockFeathersService = new FeathersClient()
     mockFeathersService.find = jest.fn().mockReturnValue({ data: [mockOp] })
     const fakeToken = 'FAKETOKEN'
-    const nameOrPath = 'FAKE_OP_NAME'
+    const fakeOpName = 'FAKE_OP_NAME'
+    const fakeOpTeamName = 'FAKE_OP_TEAM'
+    const nameOrPath = `@${fakeOpTeamName}/${fakeOpName}`
     config = {
       tokens: { accessToken: fakeToken },
-      team: { id: 'FAKE_TEAM_ID', name: 'FAKE_TEAM_NAME' },
+      team: { id: 'FAKE_TEAM_ID', name: fakeOpTeamName },
       user: {
         username: 'FAKE_USERNAME',
         email: 'FAKE_EMAIL',
@@ -278,27 +277,80 @@ describe('getApiOps', () => {
         flags: {},
       },
       config,
+      opName: fakeOpName,
+      teamName: fakeOpTeamName,
     } as RunInputs
 
     cmd = new Run([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
     await cmd.getApiOps(inputs)
-    expect(mockFeathersService.find).toHaveBeenCalledWith(COMMAND_ENDPOINT, {
-      query: {
-        search: nameOrPath,
-        team_id: config.team.id,
+    expect(mockFeathersService.find).toHaveBeenCalledWith(
+      `teams/${fakeOpTeamName}/ops/${fakeOpName}`,
+      {
+        headers: {
+          Authorization: fakeToken,
+        },
       },
-      headers: {
-        Authorization: fakeToken,
+    )
+  })
+
+  test('should successfully call the API endpoint if given an op name', async () => {
+    //MOCK FEATHERS
+    const mockOp = createMockOp({})
+    const mockFeathersService = new FeathersClient()
+    mockFeathersService.find = jest.fn().mockReturnValue({ data: [mockOp] })
+    const fakeToken = 'FAKETOKEN'
+    const fakeOpName = 'FAKE_OP_NAME'
+    const fakeOpTeamName = 'FAKE_OP_TEAM'
+    const nameOrPath = fakeOpName
+    config = {
+      tokens: { accessToken: fakeToken },
+      team: { id: 'FAKE_TEAM_ID', name: fakeOpTeamName },
+      user: {
+        username: 'FAKE_USERNAME',
+        email: 'FAKE_EMAIL',
+        _id: 'FAKE_ID',
       },
-    })
+    }
+    const inputs = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams: [''],
+        flags: {},
+      },
+      config,
+      opName: fakeOpName,
+      teamName: fakeOpTeamName,
+    } as RunInputs
+
+    cmd = new Run([], config, { api: mockFeathersService } as Services)
+    cmd.accessToken = fakeToken
+    await cmd.getApiOps(inputs)
+    expect(mockFeathersService.find).toHaveBeenCalledWith(
+      `teams/${fakeOpTeamName}/ops/${fakeOpName}`,
+      {
+        headers: {
+          Authorization: fakeToken,
+        },
+      },
+    )
   })
 
   test('should handle errors thrown from the api', async () => {
     // MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.find = jest.fn().mockRejectedValue(new Error())
+    const runError: ErrorResponse = {
+      data: null,
+      error: [{ code: 101, message: 'error_message', requestID: 'request_id' }],
+      message: 'error',
+      stack: 'error stack',
+    }
+    mockFeathersService.find = jest.fn().mockRejectedValue(runError)
     const fakeToken = 'FAKE_TOKEN'
+    const fakeOpName = 'FAKE_OP_NAME'
+    const nameOrPath = fakeOpName
     config = {
       tokens: { accessToken: fakeToken },
       team: { id: 'FAKE_TEAM_ID', name: 'FAKE_TEAM_NAME' },
@@ -317,83 +369,11 @@ describe('getApiOps', () => {
         flags: {},
       },
       config,
+      opName: fakeOpName,
+      teamName: '',
     } as RunInputs
 
     cmd = new Run([], config, { api: mockFeathersService } as Services)
     await expect(cmd.getApiOps(inputs)).rejects.toThrow(apiError)
-  })
-})
-
-describe('getApiWorkflows', () => {
-  test('should successfully retrieve workflows from the api', async () => {
-    const mockWorkflow = createMockWorkflow({})
-    const mockFeathersService = new FeathersClient()
-    mockFeathersService.find = jest
-      .fn()
-      .mockReturnValue({ data: [mockWorkflow] })
-    const fakeToken = 'FAKETOKEN'
-    const nameOrPath = 'FAKE_OP_NAME'
-    config = {
-      tokens: { accessToken: fakeToken },
-      team: { id: 'FAKE_TEAM_ID', name: 'FAKE_TEAM_NAME' },
-      user: {
-        username: 'FAKE_USERNAME',
-        email: 'FAKE_EMAIL',
-        _id: 'FAKE_ID',
-      },
-    }
-    const inputs = {
-      parsedArgs: {
-        args: {
-          nameOrPath,
-        },
-        opParams: [''],
-        flags: {},
-      },
-      opsAndWorkflows: [{}],
-      config,
-    } as RunInputs
-
-    cmd = new Run([], config, { api: mockFeathersService } as Services)
-    cmd.accessToken = fakeToken
-    await cmd.getApiWorkflows(inputs)
-    expect(mockFeathersService.find).toHaveBeenCalledWith('workflows', {
-      query: {
-        search: nameOrPath,
-        teamId: config.team.id,
-      },
-      headers: {
-        Authorization: fakeToken,
-      },
-    })
-  })
-
-  test('should handle errors thrown from the api', async () => {
-    //MOCK FEATHERS
-    const mockFeathersService = new FeathersClient()
-    mockFeathersService.find = jest.fn().mockRejectedValue(apiError)
-    const fakeToken = 'FAKE_TOKEN'
-    config = {
-      tokens: { accessToken: fakeToken },
-      team: { id: 'FAKE_TEAM_ID', name: 'FAKE_TEAM_NAME' },
-      user: {
-        username: 'FAKE_USERNAME',
-        email: 'FAKE_EMAIL',
-        _id: 'FAKE_ID',
-      },
-    }
-    const inputs = {
-      parsedArgs: {
-        args: {
-          nameOrPath,
-        },
-        opParams: [''],
-        flags: {},
-      },
-      config,
-    } as RunInputs
-
-    cmd = new Run([], config, { api: mockFeathersService } as Services)
-    await expect(cmd.getApiWorkflows(inputs)).rejects.toThrow(apiError)
   })
 })

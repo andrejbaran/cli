@@ -2,14 +2,10 @@ import * as Config from '@oclif/config'
 import Remove, { RemoveInputs } from '~/commands/remove'
 
 import { COMMAND, WORKFLOW, getEndpointFromOpType } from '~/constants/opConfig'
-import {
-  APIError,
-  NoResultsFoundForDeletion,
-  CannotDeleteOps,
-} from '~/errors/CustomErrors'
+import { APIError, CannotDeleteOps } from '~/errors/CustomErrors'
 import { ErrorResponse } from '~/errors/ErrorTemplate'
 import { FeathersClient } from '~/services/Feathers'
-import { Op, Workflow, Services } from '~/types'
+import { Op, Workflow, Services, Config as ConfigType } from '~/types'
 import { createMockOp } from '../mocks'
 import { sleep } from '../utils'
 
@@ -27,29 +23,34 @@ afterEach(async () => {
 
 describe('getApiOpsOrWorkflows', () => {
   test('should successfully retrieve ops from the api', async () => {
+    //MOCK OPS
+    const mockOp = {
+      id: '123123123',
+    } as Op
+    //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.find = jest.fn().mockReturnValue({ data: {} as Op })
+    mockFeathersService.find = jest.fn().mockReturnValue({ data: mockOp })
 
     const inputs = {
-      filter: 'fakeFilter',
+      opName: 'fakeOpName',
       removeType: COMMAND,
     } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
+    const fakeTeamName = 'FAKE_TEAM_NAME'
 
     cmd = new Remove([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
-    cmd.team = {
-      id: 'fakeTeamId',
-      name: 'fakeTeamName',
+    cmd.state = {
+      config: {
+        team: {
+          name: fakeTeamName,
+        },
+      } as ConfigType,
     }
     await cmd.getApiOpsOrWorkflows(inputs)
     expect(mockFeathersService.find).toHaveBeenCalledWith(
-      getEndpointFromOpType(inputs.removeType),
+      `teams/${cmd.state.config.team.name}/ops/${inputs.opName}`,
       {
-        query: {
-          search: inputs.filter,
-          team_id: cmd.team.id,
-        },
         headers: {
           Authorization: cmd.accessToken,
         },
@@ -57,30 +58,71 @@ describe('getApiOpsOrWorkflows', () => {
     )
   })
   test('should successfully retrieve workflows from the api', async () => {
+    //MOCK WORKFLOWS
+    const mockWf = {
+      id: '123123123',
+    } as Workflow
     //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.find = jest.fn().mockReturnValue({ data: <Workflow>{} })
+    mockFeathersService.find = jest.fn().mockReturnValue({ data: mockWf })
 
     const inputs = {
-      filter: 'fakeFilter',
+      opName: 'fakeOpName',
       removeType: WORKFLOW,
     } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
+    const fakeTeamName = 'FAKE_TEAM_NAME'
     const config = await Config.load()
+
     cmd = new Remove([], config, { api: mockFeathersService } as Services)
     cmd.accessToken = fakeToken
-    cmd.team = {
-      id: 'fakeTeamId',
-      name: 'fakeTeamName',
+    cmd.state = {
+      config: {
+        team: {
+          name: fakeTeamName,
+        },
+      } as ConfigType,
     }
     await cmd.getApiOpsOrWorkflows(inputs)
     expect(mockFeathersService.find).toHaveBeenCalledWith(
-      `${inputs.removeType}s`,
+      `teams/${cmd.state.config.team.name}/ops/${inputs.opName}`,
       {
-        query: {
-          search: inputs.filter,
-          teamId: cmd.team.id,
+        headers: {
+          Authorization: cmd.accessToken,
         },
+      },
+    )
+  })
+  test('call the `teams/:teamId/ops` endpoint if the opName is not given', async () => {
+    //MOCK WORKFLOWS
+    const mockWf = {
+      id: '123123123',
+    } as Workflow
+    //MOCK FEATHERS
+    const mockFeathersService = new FeathersClient()
+    mockFeathersService.find = jest.fn().mockReturnValue({ data: mockWf })
+
+    const inputs = {
+      opName: '',
+      removeType: WORKFLOW,
+    } as RemoveInputs
+    const fakeToken = 'FAKETOKEN'
+    const fakeTeamName = 'FAKE_TEAM_NAME'
+    const config = await Config.load()
+
+    cmd = new Remove([], config, { api: mockFeathersService } as Services)
+    cmd.accessToken = fakeToken
+    cmd.state = {
+      config: {
+        team: {
+          name: fakeTeamName,
+        },
+      } as ConfigType,
+    }
+    await cmd.getApiOpsOrWorkflows(inputs)
+    expect(mockFeathersService.find).toHaveBeenCalledWith(
+      `teams/${cmd.state.config.team.name}/ops`,
+      {
         headers: {
           Authorization: cmd.accessToken,
         },
@@ -94,7 +136,7 @@ describe('getApiOpsOrWorkflows', () => {
     mockFeathersService.find = jest.fn().mockRejectedValue(new Error())
 
     const inputs = {
-      filter: 'fakeFilter',
+      opName: 'fakeOpName',
       removeType: WORKFLOW,
     } as RemoveInputs
     const fakeToken = 'FAKETOKEN'
@@ -107,58 +149,6 @@ describe('getApiOpsOrWorkflows', () => {
     }
 
     await expect(cmd.getApiOpsOrWorkflows(inputs)).rejects.toThrow(APIError)
-  })
-})
-
-describe('filterResultsByTeam', () => {
-  test('should return opsOrWorkflows that belong to the active team', async () => {
-    const teamId = 'FAKE_TEAM_ID'
-    const teamOps = [
-      createMockOp({ teamID: teamId }),
-      createMockOp({ teamID: teamId }),
-    ]
-    const otherOps = [
-      createMockOp({ teamID: '' }),
-      createMockOp({ teamID: '' }),
-      createMockOp({ teamID: '' }),
-    ]
-    const apiResults: (Op | Workflow)[] = [...otherOps, ...teamOps]
-    const inputs = {
-      removeType: COMMAND,
-      apiResults,
-    } as RemoveInputs
-    const config = await Config.load()
-    cmd = new Remove([], config)
-    cmd.team = {
-      id: teamId,
-      name: '',
-    }
-    const { apiResults: returnApiResults } = await cmd.filterResultsByTeam(
-      inputs,
-    )
-    expect(returnApiResults.length).toBe(teamOps.length)
-  })
-  test('should error when no opsOrWorkflows belong to the active team', async () => {
-    const teamId = 'FAKE_TEAM_ID'
-    const apiResults: (Op | Workflow)[] = [
-      createMockOp({ teamID: '' }),
-      createMockOp({ teamID: '' }),
-      createMockOp({ teamID: '' }),
-    ]
-    const inputs = {
-      removeType: COMMAND,
-      apiResults,
-    } as RemoveInputs
-    const config = await Config.load()
-    cmd = new Remove([], config)
-    cmd.team = {
-      id: teamId,
-      name: '',
-    }
-    const test = () => {
-      cmd.filterResultsByTeam(inputs)
-    }
-    expect(test).toThrow(NoResultsFoundForDeletion)
   })
 })
 
