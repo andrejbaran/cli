@@ -16,7 +16,7 @@ import {
   FileNotFoundError,
   InvalidInputCharacter,
   InvalidStepsFound,
-  NoOpsFound,
+  NoLocalOpsFound,
   NoWorkflowsFound,
   DockerPublishNoImageFound,
   CouldNotGetRegistryToken,
@@ -32,6 +32,7 @@ import {
 import { asyncPipe } from '../utils/asyncPipe'
 import getDocker from '../utils/get-docker'
 import { isValidOpName } from '../utils/validate'
+import { getOpImageTag, parseYaml } from '~/utils'
 
 export interface PublishInputs {
   opPath: string
@@ -102,9 +103,10 @@ export default class Publish extends Command {
         throw new FileNotFoundError(err, opPath, OP_FILE)
       })
 
-    const { ops, version, workflows }: OpsYml = manifest && yaml.parse(manifest)
+    if (!manifest) throw new NoLocalOpsFound()
+    const { ops, version, workflows }: OpsYml = parseYaml(manifest)
     if (!ops && (opsAndWorkflows === COMMAND || opsAndWorkflows === 'Both')) {
-      throw new NoOpsFound()
+      throw new NoLocalOpsFound()
     }
     if (
       !workflows &&
@@ -178,7 +180,10 @@ export default class Publish extends Command {
     return answers.workflows
   }
 
-  getRegistryAuth = async (name, version): Promise<RegistryAuth> => {
+  getRegistryAuth = async (
+    name: string,
+    version: string,
+  ): Promise<RegistryAuth> => {
     try {
       const registryAuth = await this.services.registryAuthService.create(
         this.accessToken,
@@ -211,12 +216,19 @@ export default class Publish extends Command {
 
   public opsPublishLoop = async ({ ops, version }: PublishInputs) => {
     for (const op of ops) {
-      if (!isValidOpName(op)) {
+      if (!isValidOpName(op.name)) {
         throw new InvalidInputCharacter('Op Name')
       }
 
+      // TODO: Change 'latest' to the user's intended version once it is in place
+      const opName = getOpImageTag(
+        this.team.name,
+        op.name,
+        'latest',
+        op.isPublic,
+      )
       const localImage = await this.services.imageService.checkLocalImage(
-        `${OPS_REGISTRY_HOST}/${this.team.name}/${op.name}:latest`,
+        `${OPS_REGISTRY_HOST}/${opName}`,
       )
 
       if (!localImage) {
@@ -241,15 +253,9 @@ export default class Publish extends Command {
         apiOp,
         registryAuth,
         this.team.name,
-      )
-
-      // delete registry token
-      await this.services.registryAuthService.delete(
         this.accessToken,
-        registryAuth.robotID,
-        this.team.name,
-        op.name,
-        version, // TODO: Change to op.version
+        this.services.registryAuthService,
+        version,
       )
 
       this.sendAnalytics('op', apiOp)
@@ -261,10 +267,6 @@ export default class Publish extends Command {
     version,
   }: PublishInputs) => {
     for (const workflow of workflows) {
-      // TODO: Setting version as 'platform version' for now
-      // but it has to be changed to workflow.version when versioning is added
-      const registryAuth = await this.getRegistryAuth(workflow.name, version)
-
       if (workflow.remote) {
         const newSteps: string[] = []
         for (const step of workflow.steps) {
@@ -286,8 +288,10 @@ export default class Publish extends Command {
               this.services.publishService,
               this.services.opService,
               this.services.api,
-              registryAuth,
+              this.services.registryAuthService,
               this.state.config,
+              workflow.isPublic,
+              version,
             )
 
             newSteps.push(newStep)
@@ -304,21 +308,16 @@ export default class Publish extends Command {
         workflow.steps = newSteps
       }
 
-      // delete registry token
-      await this.services.registryAuthService.delete(
-        this.accessToken,
-        registryAuth.robotID,
-        this.team.name,
-        workflow.name,
-        version, // TODO: Change to workflow.version when versioning is added
-      )
-
       try {
         const {
           data: apiWorkflow,
         }: { data: Op } = await this.services.api.create(
           WORKFLOW_ENDPOINT,
-          { ...workflow, version, teamID: this.team.id },
+          {
+            ...workflow,
+            version,
+            teamID: this.team.id,
+          },
           {
             headers: {
               Authorization: this.accessToken,

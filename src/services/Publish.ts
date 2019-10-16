@@ -11,6 +11,7 @@ import {
 } from '../errors/CustomErrors'
 import { ApiService, Op, RegistryAuth } from '../types'
 import getDocker from '../utils/get-docker'
+import { RegistryAuthService } from './RegistryAuth'
 
 const debug = Debug('ops:ImageService')
 
@@ -27,7 +28,7 @@ export class Publish {
     try {
       const res = await api.create(
         'ops',
-        { ...op, version, teamID, isGlueCode },
+        { ...op, version, teamID, isGlueCode, isPublic: op.isPublic },
         {
           headers: {
             Authorization: accessToken,
@@ -44,6 +45,9 @@ export class Publish {
     apiOp: Op,
     registryAuth: RegistryAuth,
     teamName: string,
+    accessToken: string,
+    registryAuthService: RegistryAuthService,
+    version: string,
   ) => {
     const imageUniqueId = `${
       registryAuth.projectFullName
@@ -150,6 +154,13 @@ export class Publish {
                     `\n🙌 ${ux.colors.callOutCyan(
                       imageUniqueId,
                     )} has been published! \n`,
+                  )
+                  await registryAuthService.delete(
+                    accessToken,
+                    registryAuth.robotID,
+                    teamName,
+                    apiOp.name,
+                    version,
                   )
                   res()
                 })

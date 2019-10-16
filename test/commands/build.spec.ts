@@ -3,7 +3,7 @@ import * as path from 'path'
 import Build, { BuildInputs } from '~/commands/build'
 import { OpService } from '~/services/Op'
 
-import { MissingRequiredArgument, NoOpsFound } from '~/errors/CustomErrors'
+import { MissingRequiredArgument, NoLocalOpsFound } from '~/errors/CustomErrors'
 import { createMockOp } from '../mocks'
 import { Services } from '~/types'
 

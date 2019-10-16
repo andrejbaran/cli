@@ -6,6 +6,8 @@
  * @copyright (c) 2019 CTO.ai
  */
 
+export const PUBLIC_OPS_PREFIX = 'public.'
+
 export const getOpUrl = (registryHost: string, opImageTag: string) => {
   const host = registryHost.replace(/https:\/\//, '')
 
@@ -16,6 +18,9 @@ export const getOpImageTag = (
   teamName: string,
   opIdentifier: string,
   tag: string = 'latest',
+  isPublic: boolean = false,
 ) => {
-  return `${teamName}/${opIdentifier}:${tag}`
+  return `${
+    isPublic ? PUBLIC_OPS_PREFIX : ''
+  }${teamName}/${opIdentifier}:${tag}`
 }

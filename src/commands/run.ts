@@ -20,15 +20,24 @@ import {
   OpsYml,
 } from '~/types'
 
-import { APIError, MissingRequiredArgument } from '~/errors/CustomErrors'
+import {
+  APIError,
+  MissingRequiredArgument,
+  InvalidOpName,
+  NoOpsFound,
+  UnauthorizedtoAccessOp,
+} from '~/errors/CustomErrors'
 
 import {
   OP_FILE,
   WORKFLOW_ENDPOINT,
   COMMAND_ENDPOINT,
+  WORKFLOW_TYPE,
 } from '~/constants/opConfig'
 import { OPS_REGISTRY_HOST } from '~/constants/env'
-import { asyncPipe, _trace } from '~/utils'
+import { asyncPipe, _trace, parseYaml } from '~/utils'
+import { isValidTeamName, isValidOpName } from '~/utils/validate'
+import { OpsGetResponse } from '~/types/OpsGetResponse'
 
 const { multiBlue, multiOrange, green, dim, reset, bold } = ux.colors
 
@@ -43,6 +52,8 @@ export interface RunCommandArgs {
 
 export interface RunInputs {
   parsedArgs: RunCommandArgs
+  teamName: string
+  opName: string
   config: Config
   opsAndWorkflows: (Op | Workflow)[]
   opOrWorkflow: Op | Workflow
@@ -108,10 +119,24 @@ export default class Run extends Command {
       path.join(path.resolve(relativePathToOpsYml), OP_FILE),
       'utf8',
     )
-    const { ops = [], workflows = [], version = '1' } = (await yaml.parse(
+    const { ops = [], workflows = [], version = '1' } = (await parseYaml(
       opsYml,
     )) as OpsYml
     return { ops, workflows, version }
+  }
+
+  /* get all the commands and workflows in an ops.yml that match the nameOrPath */
+  getOpsAndWorkflowsFromFileSystem = (relativePathToOpsYml: string) => async (
+    inputs: RunInputs,
+  ): Promise<RunInputs> => {
+    const yamlContents = await this.parseYamlFile(relativePathToOpsYml)
+
+    if (!yamlContents) {
+      return { ...inputs }
+    }
+    const { ops, workflows, version } = yamlContents
+
+    return { ...inputs, opsAndWorkflows: [...ops, ...workflows], version }
   }
 
   filterLocalOps = (inputs: RunInputs): RunInputs => {
@@ -137,23 +162,56 @@ export default class Run extends Command {
     }
   }
 
-  /* get all the commands and workflows in an ops.yml that match the nameOrPath */
-  getOpsAndWorkflowsFromFileSystem = (relativePathToOpsYml: string) => async (
-    inputs: RunInputs,
-  ): Promise<RunInputs> => {
-    const yamlContents = await this.parseYamlFile(relativePathToOpsYml)
-
-    if (!yamlContents) {
-      return { ...inputs }
+  formatOpOrWorkflowEmoji = (opOrWorkflow: Workflow | Op): string => {
+    if (opOrWorkflow.teamID == this.team.id) {
+      return '🔑 '
+    } else if (!opOrWorkflow.isPublished) {
+      return '🖥  '
+    } else {
+      return '🌎 '
     }
-    const { ops, workflows, version } = yamlContents
+  }
 
-    return { ...inputs, opsAndWorkflows: [...ops, ...workflows], version }
+  formatOpOrWorkflowName = (opOrWorkflow: Op | Workflow) => {
+    const name = reset.white(opOrWorkflow.name)
+    if ('steps' in opOrWorkflow) {
+      return `${reset(multiOrange('\u2022'))} ${this.formatOpOrWorkflowEmoji(
+        opOrWorkflow,
+      )} ${name}`
+    } else {
+      return `${reset(multiBlue('\u2022'))} ${this.formatOpOrWorkflowEmoji(
+        opOrWorkflow,
+      )} ${name}`
+    }
+  }
+
+  fuzzyFilterParams = () => {
+    const list = this.opsAndWorkflows.map(opOrWorkflow => {
+      const name = this.formatOpOrWorkflowName(opOrWorkflow)
+      return {
+        name: `${name} - ${opOrWorkflow.description}`,
+        value: opOrWorkflow,
+      }
+    })
+    const options = { extract: el => el.name }
+    return { list, options }
+  }
+
+  autocompleteSearch = async (_: Answers, input = '') => {
+    try {
+      const { list, options } = this.fuzzyFilterParams()
+      const fuzzyResult: Fuzzy[] = fuzzy.filter(input, list, options)
+      return fuzzyResult.map(result => result.original)
+    } catch (err) {
+      this.debug('%O', err)
+      throw err
+    }
   }
 
   selectOpOrWorkflowToRun = async (inputs: RunInputs): Promise<RunInputs> => {
     try {
       const { opsAndWorkflows } = inputs
+      if (!opsAndWorkflows || !opsAndWorkflows.length) throw new InvalidOpName()
       if (opsAndWorkflows.length === 1) {
         return { ...inputs, opOrWorkflow: opsAndWorkflows[0] }
       }
@@ -178,70 +236,6 @@ export default class Run extends Command {
     }
   }
 
-  autocompleteSearch = async (_: Answers, input = '') => {
-    try {
-      const { list, options } = this.fuzzyFilterParams()
-      const fuzzyResult: Fuzzy[] = fuzzy.filter(input, list, options)
-      return fuzzyResult.map(result => result.original)
-    } catch (err) {
-      this.debug('%O', err)
-      throw err
-    }
-  }
-  fuzzyFilterParams = () => {
-    const list = this.opsAndWorkflows.map(opOrWorkflow => {
-      const name = this.formatOpOrWorkflowName(opOrWorkflow)
-      return {
-        name: `${name} - ${opOrWorkflow.description}`,
-        value: opOrWorkflow,
-      }
-    })
-    const options = { extract: el => el.name }
-    return { list, options }
-  }
-
-  formatOpOrWorkflowName = (opOrWorkflow: Op | Workflow) => {
-    const name = reset.white(opOrWorkflow.name)
-    if ('steps' in opOrWorkflow) {
-      return `${reset(multiOrange('\u2022'))} ${this.formatOpOrWorkflowEmoji(
-        opOrWorkflow,
-      )} ${name}`
-    } else {
-      return `${reset(multiBlue('\u2022'))} ${this.formatOpOrWorkflowEmoji(
-        opOrWorkflow,
-      )} ${name}`
-    }
-  }
-
-  formatOpOrWorkflowEmoji = (opOrWorkflow: Workflow | Op): string => {
-    if (opOrWorkflow.teamID == this.team.id) {
-      return '🔑 '
-    } else if (!opOrWorkflow.isPublished) {
-      return '🖥  '
-    } else {
-      return '🌎 '
-    }
-  }
-
-  checkForHelpMessage = (inputs: RunInputs): RunInputs | void => {
-    try {
-      const {
-        parsedArgs: {
-          flags: { help },
-        },
-        opOrWorkflow,
-      } = inputs
-      // TODO add support for workflows help
-      if (help && 'run' in opOrWorkflow) {
-        this.printCustomHelp(opOrWorkflow)
-        process.exit()
-      }
-      return inputs
-    } catch (err) {
-      this.debug('%O', err)
-      throw err
-    }
-  }
   printCustomHelp = (op: Op) => {
     try {
       if (!op.help) {
@@ -273,6 +267,26 @@ export default class Run extends Command {
     }
   }
 
+  checkForHelpMessage = (inputs: RunInputs): RunInputs | void => {
+    try {
+      const {
+        parsedArgs: {
+          flags: { help },
+        },
+        opOrWorkflow,
+      } = inputs
+      // TODO add support for workflows help
+      if (help && 'run' in opOrWorkflow) {
+        this.printCustomHelp(opOrWorkflow)
+        process.exit()
+      }
+      return inputs
+    } catch (err) {
+      this.debug('%O', err)
+      throw err
+    }
+  }
+
   executeOpOrWorkflowService = async (
     inputs: RunInputs,
   ): Promise<RunInputs> => {
@@ -282,20 +296,17 @@ export default class Run extends Command {
         config,
         parsedArgs,
         parsedArgs: { opParams },
+        teamName,
         version,
       } = inputs
-      if ('steps' in opOrWorkflow) {
+      if (opOrWorkflow.type === WORKFLOW_TYPE) {
         await this.services.workflowService.run(opOrWorkflow, opParams, config)
       } else {
         if (!opOrWorkflow.isPublished) {
-          const image = path.join(
-            OPS_REGISTRY_HOST,
-            `${config.team.name}/${opOrWorkflow.name}`,
-          )
           opOrWorkflow = {
             ...opOrWorkflow,
             isPublished: false,
-            image,
+            teamName: opOrWorkflow.teamName || teamName,
           }
         }
         await this.services.opService.run(
@@ -312,74 +323,73 @@ export default class Run extends Command {
     }
   }
 
-  getApiOps = async (inputs: RunInputs): Promise<RunInputs> => {
+  /**
+   * Extracts the Op Team and Name from the input argument
+   * @cto.ai/github -> { teamName: cto.ai, opname: github }
+   * cto.ai/github -> { teamName: cto.ai, opname: github }
+   * github -> { teamName: '', opname: github }
+   * cto.ai/extra/blah -> InvalidOpName
+   * null -> InvalidOpName
+   */
+  parseTeamAndOpName = (inputs: RunInputs) => {
     const {
-      config,
       parsedArgs: {
         args: { nameOrPath },
       },
-      opsAndWorkflows: previousOpsAndWorkflows = [],
+      config: {
+        team: { name: configTeamName },
+      },
     } = inputs
-    try {
-      const query: OpsFindQuery = {
-        search: nameOrPath,
-        team_id: config.team.id,
-      }
-      const { data: apiOps }: OpsFindResponse = await this.services.api.find(
-        COMMAND_ENDPOINT,
-        {
-          query,
-          headers: {
-            Authorization: this.accessToken,
-          },
-        },
-      )
-      const opsAndWorkflows = apiOps.map(op => {
-        const isPublic = op.teamID !== config.team.id ? true : false
-        return { ...op, isPublished: true, isPublic }
-      })
-      return {
-        ...inputs,
-        opsAndWorkflows: [...previousOpsAndWorkflows, ...opsAndWorkflows],
-      }
-    } catch (err) {
-      this.debug('%O', err)
-      throw new APIError(err)
+
+    const splits = nameOrPath.split('/')
+    if (splits.length === 0 || splits.length > 2) throw new InvalidOpName()
+    if (splits.length === 1) {
+      let [opName] = splits
+      opName = isValidOpName(splits[0]) ? splits[0] : ''
+      return { ...inputs, teamName: configTeamName, opName }
     }
+    let [teamName, opName] = splits
+    teamName = teamName.startsWith('@')
+      ? teamName.substring(1, teamName.length)
+      : teamName
+    teamName = isValidTeamName(teamName) ? teamName : ''
+    opName = isValidOpName(opName) ? opName : ''
+    return { ...inputs, teamName, opName }
   }
-  getApiWorkflows = async (inputs: RunInputs): Promise<RunInputs> => {
+
+  getApiOps = async (inputs: RunInputs): Promise<RunInputs> => {
     let {
       config,
-      parsedArgs: {
-        args: { nameOrPath },
-      },
-      opsAndWorkflows,
+      teamName,
+      opName,
+      opsAndWorkflows: previousOpsAndWorkflows = [],
     } = inputs
+    let apiOp
     try {
-      const query: WorkflowsFindQuery = {
-        search: nameOrPath,
-        teamId: config.team.id,
-      }
-      let {
-        data: apiWorkflows,
-      }: WorkflowsFindResponse = await this.services.api.find(
-        WORKFLOW_ENDPOINT,
+      if (!opName) return { ...inputs }
+      teamName = teamName ? teamName : config.team.name
+      ;({ data: apiOp } = await this.services.api.find(
+        `teams/${teamName}/ops/${opName}`,
         {
-          query,
           headers: {
             Authorization: this.accessToken,
           },
         },
-      )
-      apiWorkflows = apiWorkflows.map(workflow => {
-        const isPublic = workflow.teamID !== config.team.id ? true : false
-        return { ...workflow, isPublished: true, isPublic }
-      })
-      opsAndWorkflows = opsAndWorkflows.concat(apiWorkflows)
-      return { ...inputs, opsAndWorkflows }
+      ))
     } catch (err) {
-      this.debug('error: %O', err)
+      this.debug('%O', err)
+      if (err.error[0].code === 4011) {
+        throw new UnauthorizedtoAccessOp(err)
+      }
       throw new APIError(err)
+    }
+    if (!apiOp) {
+      throw new NoOpsFound(opName)
+    }
+    apiOp.isPublished = true
+    return {
+      ...inputs,
+      opsAndWorkflows: [...previousOpsAndWorkflows, apiOp],
     }
   }
 
@@ -435,8 +445,8 @@ export default class Run extends Command {
         const runApiPipeline = asyncPipe(
           this.getOpsAndWorkflowsFromFileSystem(process.cwd()),
           this.filterLocalOps,
+          this.parseTeamAndOpName,
           this.getApiOps,
-          this.getApiWorkflows,
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
           this.sendAnalytics,

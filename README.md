@@ -42,8 +42,9 @@ USAGE
 * [`ops cleanup [OPNAME]`](#ops-cleanup-opname)
 * [`ops help [COMMAND]`](#ops-help-command)
 * [`ops init`](#ops-init)
+* [`ops list`](#ops-list)
 * [`ops publish PATH`](#ops-publish-path)
-* [`ops remove [FILTER]`](#ops-remove-filter)
+* [`ops remove [OPNAME]`](#ops-remove-opname)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
 * [`ops team:create`](#ops-teamcreate)
@@ -185,6 +186,20 @@ OPTIONS
 
 _See code: [src/commands/init.ts](https://github.com/cto.ai/ops/blob/v1.5.14/src/commands/init.ts)_
 
+## `ops list`
+
+Lists the ops you have in your team
+
+```
+USAGE
+  $ ops list
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+_See code: [src/commands/list.ts](https://github.com/cto.ai/ops/blob/v1.5.14/src/commands/list.ts)_
+
 ## `ops publish PATH`
 
 Publish an op to a team.
@@ -202,16 +217,16 @@ OPTIONS
 
 _See code: [src/commands/publish.ts](https://github.com/cto.ai/ops/blob/v1.5.14/src/commands/publish.ts)_
 
-## `ops remove [FILTER]`
+## `ops remove [OPNAME]`
 
 Remove an op from a team.
 
 ```
 USAGE
-  $ ops remove [FILTER]
+  $ ops remove [OPNAME]
 
 ARGUMENTS
-  FILTER  A part of the name or description of the op or workflow you want to remove.
+  OPNAME  A part of the name or description of the op or workflow you want to remove.
 
 OPTIONS
   -h, --help  show CLI help

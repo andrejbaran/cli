@@ -1,4 +1,5 @@
 import { Op, Workflow, Invite, Team, Config, User, Tokens } from '~/types'
+import { COMMAND_TYPE, WORKFLOW_TYPE } from '~/constants/opConfig'
 
 export const createMockOp = (inputs: Partial<Op>): Op => {
   return Object.assign(
@@ -26,6 +27,7 @@ export const createMockOp = (inputs: Partial<Op>): Op => {
       id: '',
       createdAt: '',
       updatedAt: '',
+      type: COMMAND_TYPE,
     },
     inputs,
   )
@@ -53,6 +55,7 @@ export const createMockWorkflow = (inputs: Partial<Workflow>): Workflow => {
       id: '',
       createdAt: '',
       updatedAt: '',
+      type: WORKFLOW_TYPE,
     },
     inputs,
   )

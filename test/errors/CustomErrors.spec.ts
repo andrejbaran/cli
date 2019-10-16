@@ -27,7 +27,7 @@ import {
   InvalidInputCharacter,
   MissingRequiredArgument,
   NoResultsFoundForDeletion,
-  NoOpsFound,
+  NoLocalOpsFound,
   NoWorkflowsFound,
   NoStepsFound,
   InvalidStepsFound,
@@ -342,9 +342,9 @@ describe('Custom Errors', () => {
     )
   })
 
-  it('NoOpsFound', () => {
-    const err = new NoOpsFound()
-    expect(err).toBeInstanceOf(NoOpsFound)
+  it('NoLocalOpsFound', () => {
+    const err = new NoLocalOpsFound()
+    expect(err).toBeInstanceOf(NoLocalOpsFound)
     expect(ErrorTemplate).toHaveBeenCalledTimes(1)
     expect(ErrorTemplate).toHaveBeenCalledWith(
       white(`💩 We couldn't find any ops in the ops.yml!`),
