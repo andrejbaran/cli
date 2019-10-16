@@ -138,7 +138,8 @@ export class OpService {
       },
     } = inputs
     try {
-      op.image = this.setOpImageUrl(op)
+      op.image = this.setOpImageUrl(op, config)
+      debug('%O', op)
       const localImage = await this.imageService.checkLocalImage(op.image)
       if (!localImage || build) {
         op.isPublished
@@ -183,10 +184,11 @@ export class OpService {
     )
   }
 
-  setOpImageUrl = (op: Op) => {
+  setOpImageUrl = (op: Op, config: Config) => {
     const opIdentifier = op.isPublished ? op.id : op.name
+    const teamName = op.teamName ? op.teamName : config.team.name
     const opImageTag = getOpImageTag(
-      op.teamName,
+      teamName,
       opIdentifier,
       undefined,
       op.isPublic,
