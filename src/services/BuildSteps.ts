@@ -100,7 +100,7 @@ export class BuildSteps {
       version,
     )
 
-    return `ops run ${opName}`
+    return `ops run @${teamName}/${opName}`
   }
 
   public isOpRun(step: string): boolean {
