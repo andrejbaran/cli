@@ -17,6 +17,7 @@ import {
   CouldNotMakeDir,
   InvalidInputCharacter,
   YamlPortError,
+  UserUnauthorized
 } from '~/errors/CustomErrors'
 import { AnalyticsService } from '~/services/Analytics'
 import { ContainerService } from '~/services/Container'
@@ -42,7 +43,7 @@ export class OpService {
     protected imageService = new ImageService(),
     protected containerService = new ContainerService(),
     protected analytics = new AnalyticsService(OPS_SEGMENT_KEY),
-  ) {}
+  ) { }
 
   public opsBuildLoop = async (ops: Op[], opPath: string, config: Config) => {
     const {
@@ -143,13 +144,16 @@ export class OpService {
         op.isPublished
           ? await this.pullImageFromRegistry(op, config, version)
           : await this.imageService.build(
-              `${op.image}`,
-              path.resolve(process.cwd(), nameOrPath),
-              op,
-            )
+            `${op.image}`,
+            path.resolve(process.cwd(), nameOrPath),
+            op,
+          )
       }
       return inputs
     } catch (err) {
+      if (err instanceof UserUnauthorized) {
+        throw err
+      }
       debug('%O', err)
       throw new Error('Unable to find image for this op')
     }
