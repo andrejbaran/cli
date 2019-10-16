@@ -125,13 +125,17 @@ export default class Run extends Command {
     return { ops, workflows, version }
   }
 
-  logResolvedLocalMessage  = (inputs: RunInputs): RunInputs => {
+  logResolvedLocalMessage = (inputs: RunInputs): RunInputs => {
     const {
       parsedArgs: {
         args: { nameOrPath },
       },
     } = inputs
-    this.log(`❗️ ${this.ux.colors.callOutCyan(nameOrPath)} ${this.ux.colors.white('resolved to a local path and is running local Op.')} `)
+    this.log(
+      `❗️ ${this.ux.colors.callOutCyan(nameOrPath)} ${this.ux.colors.white(
+        'resolved to a local path and is running local Op.',
+      )} `,
+    )
     return inputs
   }
 
