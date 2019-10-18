@@ -160,12 +160,9 @@ export class OpService {
     }
   }
   pullImageFromRegistry = async (op: Op, config: Config, version: string) => {
-    // create token
-    // TODO: Change this to use real team ID when we don't have public ops team
-    const teamName = op.teamID !== config.team.id ? 'ops' : config.team.name
     const { authconfig, robotID } = await this.registryAuthService.create(
       config.tokens.accessToken,
-      teamName, // TODO: Change this to use real team ID when we don't have public ops team
+      op.teamName,
       op.name,
       version, // TODO: change it op.version once its added but for now setting it to platform version
       true,
