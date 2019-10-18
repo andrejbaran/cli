@@ -1,9 +1,11 @@
 import fuzzy from 'fuzzy'
 import Command, { flags } from '../base'
-import { Op, Workflow, Answers, Fuzzy } from '~/types'
+import * as fs from 'fs-extra'
+import * as path from 'path'
+import { Op, Workflow, Answers, Fuzzy, OpsYml } from '~/types'
 import { APIError } from '~/errors/CustomErrors'
-import { WORKFLOW_TYPE } from '../constants/opConfig'
-import { asyncPipe } from '~/utils'
+import { WORKFLOW_TYPE, OP_FILE } from '../constants/opConfig'
+import { asyncPipe, parseYaml } from '~/utils'
 
 interface ListInputs {
   opResults: (Op | Workflow)[]
@@ -19,7 +21,7 @@ export default class List extends Command {
 
   opResults: (Op | Workflow)[] = []
 
-  getOps = async (inputs: ListInputs): Promise<ListInputs> => {
+  getApiOps = async (inputs: ListInputs): Promise<ListInputs> => {
     try {
       const { data: opResults } = await this.services.api.find(
         `teams/${this.state.config.team.name}/ops`,
@@ -30,10 +32,33 @@ export default class List extends Command {
         },
       )
       this.opResults = opResults
+
       return { ...inputs, opResults }
     } catch (err) {
       this.debug('%0', err)
       throw new APIError(err)
+    }
+  }
+
+  getLocalOps = async (inputs: ListInputs): Promise<ListInputs> => {
+    const localWorkflows = []
+    try {
+      const manifest = await fs.readFile(
+        path.join(process.cwd(), OP_FILE),
+        'utf8',
+      )
+      if (!manifest) return inputs
+
+      const { workflows = [], ops = [] }: OpsYml = parseYaml(manifest)
+
+      workflows.forEach(workflow => (workflow.local = true))
+      const localCommands = ops.map(ops => ({ ...ops, local: true }))
+      return {
+        ...inputs,
+        opResults: [...inputs.opResults, ...localWorkflows, ...localCommands],
+      }
+    } catch {
+      return { ...inputs }
     }
   }
 
@@ -50,12 +75,21 @@ export default class List extends Command {
   }
 
   promptOps = async (inputs: ListInputs): Promise<ListInputs> => {
+    if (inputs.opResults.length == 0) {
+      this.log(
+        this.ux.colors.whiteBright(
+          '❗ Sorry you have no ops yet! If you want help with creating one, please go to: https://cto.ai/docs/getting-started',
+        ),
+      )
+      process.exit()
+    }
+
     const { selectedOp } = await this.ux.prompt<{ selectedOp: Op | Workflow }>({
       type: 'autocomplete',
       name: 'selectedOp',
       pageSize: 5,
       message: `\nSelect a ${this.ux.colors.multiBlue(
-        '\u2022Op',
+        '\u2022Command',
       )} or ${this.ux.colors.multiOrange(
         '\u2022Workflow',
       )} to run ${this.ux.colors.reset.green('→')}\n${this.ux.colors.reset.dim(
@@ -104,10 +138,10 @@ export default class List extends Command {
   }
 
   _formatOpOrWorkflowEmoji = (opOrWorkflow: Workflow | Op): string => {
-    if (opOrWorkflow.isPublic == false) {
-      return '🔑 '
-    } else if ('local' in opOrWorkflow) {
+    if (opOrWorkflow.local) {
       return '🖥  '
+    } else if (opOrWorkflow.isPublic == false) {
+      return '🔑 '
     } else {
       return '🌎 '
     }
@@ -115,12 +149,20 @@ export default class List extends Command {
 
   showRunMessage = (inputs: ListInputs): ListInputs => {
     const {
-      selectedOp: { name },
+      selectedOp: { name, local },
     } = inputs
+    let runCmd = 'ops run .'
+    if (!local) {
+      runCmd = `ops run ${name}`
+    }
     this.log(
       `\n💻 Run ${this.ux.colors.green('$')} ${this.ux.colors.italic.dim(
-        'ops run ' + name,
-      )} to test your op. \n`,
+        runCmd,
+      )} to test your op. ${
+        local
+          ? "(This points to the relative path where the 'ops.yml' file lives)"
+          : ''
+      }\n`,
     )
     return inputs
   }
@@ -130,7 +172,8 @@ export default class List extends Command {
       await this.isLoggedIn()
 
       const listPipeline = asyncPipe(
-        this.getOps,
+        this.getApiOps,
+        this.getLocalOps,
         this.filterOutGlueCodes,
         this.promptOps,
         this.showRunMessage,

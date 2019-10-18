@@ -2,6 +2,8 @@ version: "1"
 ops:
   - name: unnecessary_op
     description: this is a dummy op in the ops.yml meant to ensure the CLI is prompting for choices
+    public: false
+    sourceCodeURL: ""
     run: node /ops/index.js
     env:
       - 'USER=world'
@@ -21,6 +23,8 @@ workflows:
   - name: echo_message_workflow
     description: sample workflow that echoes a message
     remote: false
+    public: false
+    sourceCodeURL: ""
     steps:
       - echo hello 1
       - echo hello 2

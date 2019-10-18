@@ -28,7 +28,6 @@ export interface Workflow extends BaseFields {
   type: WORKFLOW_TYPE
   remote: boolean
   steps: string[]
-  local?: boolean
 }
 
 interface BaseFields {
@@ -53,4 +52,5 @@ interface BaseFields {
   id: string
   createdAt: string
   updatedAt: string
+  local?: boolean
 }

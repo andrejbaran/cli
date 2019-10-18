@@ -7,6 +7,7 @@ export const ESCAPE = '\x1B'
 export const NEW_COMMAND_NAME = 't_command_e2e_test'
 export const NEW_COMMAND_DESCRIPTION = 't_command_e2e_test description'
 
+export const PUBLIC_TEAM_NAME = 'cto.ai'
 export const PUBLIC_COMMAND_NAME = 'github'
 // any valid github personal access token will work here
 export const GITHUB_ACCESS_TOKEN = 'f3d14e5dc6217923101938c52f25a98bf5898d69'

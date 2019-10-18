@@ -31,7 +31,7 @@ export default class Remove extends Command {
     {
       name: 'opName',
       description:
-        'A part of the name or description of the op or workflow you want to remove.',
+        'A part of the name or description of the command or workflow you want to remove.',
     },
   ]
 

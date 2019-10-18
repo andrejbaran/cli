@@ -33,6 +33,7 @@ import {
   WORKFLOW_ENDPOINT,
   COMMAND_ENDPOINT,
   WORKFLOW_TYPE,
+  COMMAND_TYPE,
 } from '~/constants/opConfig'
 import { OPS_REGISTRY_HOST } from '~/constants/env'
 import { asyncPipe, _trace, parseYaml } from '~/utils'
@@ -82,7 +83,7 @@ export default class Run extends Command {
   static args = [
     {
       name: 'nameOrPath',
-      description: 'Name or path of the op or workflow you want to run.',
+      description: 'Name or path of the command or workflow you want to run.',
     },
   ]
 
@@ -146,11 +147,27 @@ export default class Run extends Command {
     const yamlContents = await this.parseYamlFile(relativePathToOpsYml)
 
     if (!yamlContents) {
-      return { ...inputs }
+      return { ...inputs, opsAndWorkflows: [] }
     }
     const { ops, workflows, version } = yamlContents
 
     return { ...inputs, opsAndWorkflows: [...ops, ...workflows], version }
+  }
+
+  addMissingApiFieldsToLocalOps = async (
+    inputs: RunInputs,
+  ): Promise<RunInputs> => {
+    const { opsAndWorkflows, config } = inputs
+    const updatedOpsAndWorkflows = opsAndWorkflows.map((opOrWorkflow):
+      | Op
+      | Workflow => {
+      let newOpOrWorkflow = { ...opOrWorkflow }
+      newOpOrWorkflow.teamName = config.team.name
+      newOpOrWorkflow.type =
+        'steps' in newOpOrWorkflow ? WORKFLOW_TYPE : COMMAND_TYPE
+      return newOpOrWorkflow
+    })
+    return { ...inputs, opsAndWorkflows: updatedOpsAndWorkflows }
   }
 
   filterLocalOps = (inputs: RunInputs): RunInputs => {
@@ -177,18 +194,21 @@ export default class Run extends Command {
   }
 
   formatOpOrWorkflowEmoji = (opOrWorkflow: Workflow | Op): string => {
-    if (opOrWorkflow.teamID == this.team.id) {
-      return '🔑 '
-    } else if (!opOrWorkflow.isPublished) {
+    if (!opOrWorkflow.isPublished) {
       return '🖥  '
-    } else {
+    } else if (opOrWorkflow.isPublic) {
       return '🌎 '
+    } else {
+      return '🔑 '
     }
   }
 
   formatOpOrWorkflowName = (opOrWorkflow: Op | Workflow) => {
     const name = reset.white(opOrWorkflow.name)
-    if ('steps' in opOrWorkflow) {
+    if (
+      (!opOrWorkflow.isPublished && 'steps' in opOrWorkflow) ||
+      (opOrWorkflow.isPublished && opOrWorkflow.type === WORKFLOW_TYPE)
+    ) {
       return `${reset(multiOrange('\u2022'))} ${this.formatOpOrWorkflowEmoji(
         opOrWorkflow,
       )} ${name}`
@@ -235,7 +255,7 @@ export default class Run extends Command {
           type: 'autocomplete',
           name: 'opOrWorkflow',
           pageSize: 5,
-          message: `\nSelect a ${multiBlue('\u2022Op')} or ${multiOrange(
+          message: `\nSelect a ${multiBlue('\u2022Command')} or ${multiOrange(
             '\u2022Workflow',
           )} to run ${reset(green('→'))}\n${reset(
             dim('🌎 = Public 🔑 = Private 🖥  = Local  🔍 Search:'),
@@ -446,6 +466,7 @@ export default class Run extends Command {
         const runFsPipeline = asyncPipe(
           this.logResolvedLocalMessage,
           this.getOpsAndWorkflowsFromFileSystem(nameOrPath),
+          this.addMissingApiFieldsToLocalOps,
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
           this.sendAnalytics,
@@ -459,6 +480,7 @@ export default class Run extends Command {
          */
         const runApiPipeline = asyncPipe(
           this.getOpsAndWorkflowsFromFileSystem(process.cwd()),
+          this.addMissingApiFieldsToLocalOps,
           this.filterLocalOps,
           this.parseTeamAndOpName,
           this.getApiOps,
