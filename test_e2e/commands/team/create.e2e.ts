@@ -1,8 +1,8 @@
 /**
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 11th June 2019 6:30:38 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Thursday, 12th September 2019 11:21:56 am
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Friday, 18th October 2019 4:31:33 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -40,6 +40,7 @@ test('it should create a new team by prompting for a team name', async () => {
 test('it should create a new team when name flag set', async () => {
   console.log('it should create a new team when name flag set')
   await signin()
+  await sleep(500)
   const result = await run(['team:create', '-n', getValidTeamName()])
   expect(result).toContain('team has been created')
 })
@@ -49,6 +50,7 @@ test('it should fail to create a new team when prompted with an invalid name', a
     'it should fail to create a new team when prompted with an invalid name',
   )
   await signin()
+  await sleep(500)
   const result = await run(['team:create'], [INVALID_TEAM_NAME, ENTER])
   expect(result).toContain('Invalid team name')
 })
@@ -58,6 +60,7 @@ test('it should fail to create a new team when flag is set to invalid name', asy
     'it should fail to create a new team when flag is set to invalid name',
   )
   await signin()
+  await sleep(500)
   const result = await run(['team:create', '-n', INVALID_TEAM_NAME])
   expect(result).toContain('invalid team name')
 })

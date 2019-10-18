@@ -1,8 +1,8 @@
 /**
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 11th June 2019 6:30:38 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 20th September 2019 6:16:52 pm
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Friday, 18th October 2019 3:13:31 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -19,6 +19,7 @@ import {
   NEW_WORKFLOW_NAME,
   NEW_WORKFLOW_DESCRIPTION,
   EXISTING_USER_NAME,
+  PUBLIC_TEAM_NAME,
   PUBLIC_COMMAND_NAME,
   GITHUB_ACCESS_TOKEN,
 } from '../utils/constants'
@@ -105,7 +106,7 @@ test('it should run a local workflow by passing path as argument', async () => {
   )
 
   console.log(`ops run ${pathToExistingWorkflow}`)
-  const result = await run(['run', pathToExistingWorkflow], ['echo', ENTER])
+  const result = await run(['run', pathToExistingWorkflow], [DOWN, ENTER])
   expect(result).toContain('Running echo hello 1')
   expect(result).toContain('Running echo hello 2')
   expect(result).toContain('Running echo hello 3')
@@ -138,25 +139,11 @@ test('it should init a local workflow then run it unpublished', async () => {
   await sleep(500)
 
   console.log(`ops run ${NEW_WORKFLOW_NAME}`)
-  /*
-   * by setting cwd here, we are simulating cd'ing into the directory: `cd
-   * t_workflow_e2e_test && ops run t_workflow_e2e_test`
-   */
-  const result = await run(
-    ['run', NEW_WORKFLOW_NAME],
-    [ENTER],
-    undefined,
-    undefined,
-    {
-      cwd: NEW_WORKFLOW_NAME,
-    },
+  const result = await run(['run', NEW_WORKFLOW_NAME], [ENTER])
+
+  expect(result).toContain(
+    `Workflow ${NEW_WORKFLOW_NAME} completed successfully.`,
   )
-  /*
-   * Note: the test output will say "workflow failed". That is expected due to us
-   * exiting early.
-   */
-  expect(result).toContain('Welcome to the CTO.ai CLI SDK Demo')
-  expect(result).toContain(`Hi, ${EXISTING_USER_NAME}!`)
 
   await sleep(500)
 
@@ -172,32 +159,10 @@ test('it should run a public command by exact match', async () => {
   await signin()
   await sleep(500)
 
-  console.log(`ops run ${PUBLIC_COMMAND_NAME}`)
+  console.log(`ops run @${PUBLIC_TEAM_NAME}/${PUBLIC_COMMAND_NAME}`)
 
   const result = await run(
-    ['run', PUBLIC_COMMAND_NAME],
-    [ENTER, GITHUB_ACCESS_TOKEN, ENTER],
-    2000,
-  )
-
-  expect(result).toContain(`Running ${PUBLIC_COMMAND_NAME}`)
-
-  await sleep(500)
-})
-
-test('it should run a public command by fuzzy match', async () => {
-  await signin()
-  await sleep(500)
-
-  const fuzzyName = PUBLIC_COMMAND_NAME.substring(
-    0,
-    PUBLIC_COMMAND_NAME.length - 1,
-  )
-
-  console.log(`ops run ${fuzzyName}`)
-
-  const result = await run(
-    ['run', fuzzyName],
+    ['run', `@${PUBLIC_TEAM_NAME}/${PUBLIC_COMMAND_NAME}`],
     [ENTER, GITHUB_ACCESS_TOKEN, ENTER],
     2000,
   )

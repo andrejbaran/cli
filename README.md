@@ -226,7 +226,7 @@ USAGE
   $ ops remove [OPNAME]
 
 ARGUMENTS
-  OPNAME  A part of the name or description of the op or workflow you want to remove.
+  OPNAME  A part of the name or description of the command or workflow you want to remove.
 
 OPTIONS
   -h, --help  show CLI help
@@ -243,7 +243,7 @@ USAGE
   $ ops run [NAMEORPATH]
 
 ARGUMENTS
-  NAMEORPATH  Name or path of the op or workflow you want to run.
+  NAMEORPATH  Name or path of the command or workflow you want to run.
 
 OPTIONS
   -b, --build  Builds the op before running. Must provide a path to the op.

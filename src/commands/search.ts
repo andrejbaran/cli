@@ -143,7 +143,7 @@ export default class Search extends Command {
       name: 'selectedOpOrWorkflow',
       pageSize: 5,
       message: `\nSelect a public ${this.ux.colors.multiBlue(
-        '\u2022Op',
+        '\u2022Command',
       )} or ${this.ux.colors.multiOrange(
         '\u2022Workflow',
       )} to run ${this.ux.colors.reset.green('→')}\n${this.ux.colors.reset.dim(

@@ -30,7 +30,9 @@ const checkOpNecessaryFields = (opContents: Op | Workflow) => {
     !opContents.isPublic === undefined ||
     typeof opContents.isPublic !== 'boolean'
   ) {
-    throw new IncompleteOpsYml('Public field must be a boolean')
+    throw new IncompleteOpsYml(
+      'Your ops.yml file is missing the public field, please add `public:false` to publish your op as private',
+    )
   }
   return true
 }

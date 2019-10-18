@@ -2,14 +2,14 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Friday, 24th May 2019 1:41:52 pm
  * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Monday, 7th October 2019 1:33:48 pm
+ * @lastModifiedTime: Friday, 18th October 2019 4:05:56 pm
  * @copyright (c) 2019 CTO.ai
  */
 
 import fs from 'fs-extra'
 import * as yaml from 'yaml'
 import * as path from 'path'
-import { run, signin, sleep } from '../utils/cmd'
+import { run, signin, sleep, cleanup } from '../utils/cmd'
 import {
   ENTER,
   NEW_COMMAND_DESCRIPTION,
@@ -31,10 +31,11 @@ beforeEach(async () => {
 
 afterAll(async () => {
   // avoid jest open handle error
+  await cleanup()
   await sleep(500)
 })
 
-test('it should init a command, build, publish, search, remove', async () => {
+test('it should init a command, build, publish, list, remove', async () => {
   await signin()
   await sleep(500)
 
@@ -62,12 +63,13 @@ test('it should init a command, build, publish, search, remove', async () => {
   expect(publishRes).toContain('has been published!')
   await sleep(500)
 
-  console.log('ops search')
-  // search only private ops
-  const searchRes = await run(['search'], [SPACE, DOWN, DOWN, SPACE, ENTER])
+  console.log('ops list')
+  // Going 'two downs' because there are two ops in sample ops directory already published by the existing_user team
+  // The command with name NEW_COMMAND_NAME is the third op in the list
+  const listRes = await run(['list'], [DOWN, DOWN, ENTER])
   await sleep(500)
 
-  expect(searchRes).toContain(NEW_COMMAND_NAME)
+  expect(listRes).toContain(NEW_COMMAND_NAME)
   await sleep(500)
 
   console.log(`ops remove ${NEW_COMMAND_NAME}`)
@@ -90,7 +92,7 @@ test('it should init a command, build, publish, search, remove', async () => {
   }
 })
 
-test('it should init a workflow, publish, search, remove', async () => {
+test('it should init a workflow, publish, list, remove', async () => {
   await signin()
   await sleep(500)
 
@@ -118,10 +120,9 @@ test('it should init a workflow, publish, search, remove', async () => {
   expect(publishRes).toContain(`${NEW_WORKFLOW_NAME} has been published!`)
   await sleep(500)
 
-  console.log('ops search')
-  // search only private ops
-  const searchRes = await run(['search'], [SPACE, DOWN, DOWN, SPACE, ENTER])
-  expect(searchRes).toContain(NEW_WORKFLOW_NAME)
+  console.log('ops list')
+  const listRes = await run(['list'], [ENTER])
+  expect(listRes).toContain(NEW_WORKFLOW_NAME)
   await sleep(500)
 
   console.log(`ops remove ${NEW_WORKFLOW_NAME}`)
@@ -219,6 +220,11 @@ test('it should not delete a command if it is being used in a remote workflow', 
     'Please verify that it is not being used in some other op.',
   )
 
+  // remove command and workflow created above
+  await run(['remove', NEW_WORKFLOW_NAME], [DOWN, UP, ENTER, ENTER])
+  await run(['remove', NEW_COMMAND_NAME], [DOWN, UP, ENTER, ENTER])
+
+  // cleanup directories
   const pathToOp = `./${NEW_COMMAND_NAME}`
 
   if (fs.existsSync(pathToOp)) {
