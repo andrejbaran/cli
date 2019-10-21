@@ -11,11 +11,31 @@
     href="https://keycloak-redirects-assets.s3.amazonaws.com/img/favicon.png"
   />
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <script type="text/javascript">
+    function copyCommand(idName) {
+      // Have to create a new text area to be able to run select on a node element for the copy to work.
+      var copyText = document.getElementById(idName);
+      var textArea = document.createElement("textarea");
+      textArea.value = copyText.textContent;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("Copy");
+      textArea.remove();
+    }
+  </script>
   <style>
     html, body {
       height: 100%;
       margin: 0;
       font-family: "Avenir Next";
+    }
+
+    .cto-logo {
+      position: absolute;
+      left: 2.36%;
+      right: 88.38%;
+      top: 1.38%;
+      bottom: 96.54%;
     }
 
     .main-bg {
@@ -30,8 +50,11 @@
     }
 
     .main-container {
-      width: 545px;
-      height: 100%;
+      position: absolute;
+      width: 759px;
+      height: 1124px;
+      left: 30%;
+      top: 158px;
       display: flex;
       align-items: center;
       margin-left: auto;
@@ -45,7 +68,7 @@
     }
 
     .p-box {
-      padding: 5.5rem 3rem;
+      padding: 80px 3rem;
     }
 
     .cmd {
@@ -57,26 +80,146 @@
     /* Utilities */
 
     .text-gray {
-      color: #888888
+      color: #888888;
+      clear: both;
+    }
+
+    .text-gray-small {
+      color: #888888;
+      font-size: 14px;
     }
 
     .font-semibold {
-      font-weight: 600
+      font-weight: 600;
+    }
+
+    /* Dividing lines. */
+    .hline {
+      display: block;
+      width: 580px;
+      height: 1px;
+      border: 0;
+      border-top: 1px solid #ccc;
+      padding: 0;
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+
+    .list-headers {
+      font-weight: 600;
+      font-family: Avenir Next;
+      font-size: 20px;
+      line-height: 150.26%;
+      display: flex;
+      align-items: center;
+      color: #121F4E;
+    }
+
+    .instructions {
+      padding-left: 40px;
+      padding-top: 20px;
+      clear: both;
+    }
+
+    /* Code box with clipboard. */
+    .wrapbox {
+      clear: both;
+    }
+
+    .code-box {
+      width: 394px;
+      height: 62px;
+      background: #F7F7F7;
+      border-radius: 7px;
+      float: left;
+      overflow: hidden;
+    }
+
+    .clip {
+      position: relative;
+      float: left;
+      top: 17px;
+      left: 10px;
+      overflow: hidden;
+    }
+
+    .dollar {
+      font-family: SFMono;
+      font-size: 14px;
+      line-height: 28px;
+      color: #BC6F39;
+    }
+
+    .code-shift-left {
+      position: relative;
+      line-height: 28px;
+      right: 90px;
+      top: 17px;
+    }
+
+    .book-button {
+      width: 272px;
+      height: 45px;
+      background: #3FCF8E;
+      box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.25);
+      border-radius: 6px;
+    }
+
+    .book-text {
+      font-family: Avenir Next;
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 150%;
+      text-align: center;
+      color: #FFFFFF;
     }
   </style>
 </head>
 <body class="main-bg">
+  <a href="https://cto.ai">
+    <img class="cto-logo" src="https://keycloak-redirects-assets.s3.amazonaws.com/img/cto-blue-logo.svg" alt="CTO.AI">
+  </a>
   <div class="main-container">
     <div class="box p-box text-center">
         <h2>🎉 🎊 </h2>
-        <h2>Account created successfully</h2>
-        <div class="text-gray">
-          <p>Now <span class="font-semibold text-dark">open your terminal</span> to continue using the Ops Platform</p>
-          <div class="pt-2">
-            <p>Need help getting started? <br><br> Check out the <a href="https://cto.ai/docs/">documentation</a> for more information about creating and running Ops. You can also <b>watch the video below</b>...</p>
+        <h2>Your account has been created.<br>Now install the CLI to get started with Ops.</h2>
+        <hr class="hline">
+        <div class="instructions text-left">
+          <h4 class="list-headers">1 - Check dependencies</h4>
+          <p class="text-gray">You'll need <a href="https://docs.docker.com/install/">Docker</a> and the latest version of <a href="https://nodejs.org/en/download/">NodeJS</a></p>
+        </div>
+        <div class="instructions text-left">
+          <h4 class="list-headers">2 - Install The Ops CLI</h4>
+          <p class="text-gray">Open the terminal app and install The Ops CLI using this command:</p>
+          <div class="wrapbox">
+            <pre class="code-box">
+              <code class="language-shell code-shift-left"><span class="dollar">$</span> <span id="install">npm install -g @cto.ai/ops</span></code>
+            </pre>
+            <img class="clip" src="https://keycloak-redirects-assets.s3.amazonaws.com/img/Clipboard.png" alt="Clipboard" onclick="copyCommand('install')" onmouseover="" style="cursor: pointer;">
           </div>
         </div>
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/EszEDDtAw3U" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+        <div class="instructions text-left">
+          <h4 class="list-headers">3 - Sign In</h4>
+          <p class="text-gray">Once installed, you must sign in to your account. Use the command:</p>
+          <div class="wrapbox">
+            <pre class="code-box">
+              <code class="language-shell code-shift-left"><span class="dollar">$</span> <span id="signin">ops account:signin</span></code>
+            </pre>
+            <img class="clip" src="https://keycloak-redirects-assets.s3.amazonaws.com/img/Clipboard.png" alt="Clipboard" onclick="copyCommand('signin')" onmouseover="" style="cursor: pointer;">
+          </div>
+          <p class="text-gray">After signing in you're all set to start making and running Ops.</p>
+        </div>
+        <hr class="hline">
+        <div class="instructions text-left">
+          <h4 class="list-headers">Book a 15 minute overview</h4>
+          <p class="text-gray">Interested in how the Ops Platform could benefit your entire team?<br>Let's schedule 15 minutes to talk.</p>
+          <a class="book-button book-text btn-success btn-lg btn btn-primary" href="https://meetings.hubspot.com/karim-cto-ai/platform-demo">Schedule a demo</a>
+        </div>
+        <hr class="hline">
+        <div class="instructions text-left">
+          <p class="text-gray-small">For detailed information on how to use the the Ops Platform, view the <a href="https://cto.ai/docs/overview">Overview</a> page.</p>
+          <p class="text-gray-small">To learn how to create your own Ops, check out our <a href="https://cto.ai/docs/getting-started">Getting Started</a> guide.</p>
+        </div>
     </div>
   </div>
 </body>
