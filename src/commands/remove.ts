@@ -164,14 +164,15 @@ export default class Remove extends Command {
 
   confirmRemove = async (inputs: RemoveInputs): Promise<RemoveInputs> => {
     const {
-      opOrWorkflow: { name },
+      opOrWorkflow: { name, teamName },
     } = inputs
     const { confirmRemove } = await ux.prompt<{
       confirmRemove: boolean
     }>({
       type: 'confirm',
       name: 'confirmRemove',
-      message: `Are you sure you want to remove ${name}?`,
+      suffix: false,
+      message: `Are you sure you want to remove @${teamName}/${name}?`,
     })
     return { ...inputs, confirmRemove }
   }
