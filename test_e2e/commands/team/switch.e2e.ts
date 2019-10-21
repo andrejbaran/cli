@@ -1,8 +1,8 @@
 /**
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 11th June 2019 6:30:38 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Monday, 19th August 2019 11:10:53 am
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Monday, 21st October 2019 10:06:37 am
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -23,6 +23,7 @@ afterAll(async () => {
 test('it should signin, team:switch', async () => {
   console.log('it should signin, team:switch')
   await signin()
+  await sleep(500)
 
   const teamSwitchRes = await run(['team:switch'])
 
