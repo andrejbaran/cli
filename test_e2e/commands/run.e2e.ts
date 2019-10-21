@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 11th June 2019 6:30:38 pm
  * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Friday, 18th October 2019 3:13:31 pm
+ * @lastModifiedTime: Monday, 21st October 2019 10:07:14 am
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -39,6 +39,7 @@ test('it should run a published op by passing name as argument', async () => {
   console.log('it should run a published op by passing name as argument')
 
   await signin()
+  await sleep(500)
 
   console.log(`ops run ${EXISTING_OP_NAME}`)
   const result = await run(['run', EXISTING_OP_NAME])
@@ -58,6 +59,7 @@ test('it should run a published op by passing name as argument', async () => {
 test('it should run a published workflow by passing name as argument', async () => {
   console.log('it should run a published workflow by passing name as argument')
   await signin()
+  await sleep(500)
 
   console.log(`ops run ${EXISTING_WORKFLOW_NAME}`)
   const result = await run(['run', EXISTING_WORKFLOW_NAME])
@@ -73,6 +75,7 @@ test('it should run a local op by passing path as argument', async () => {
   console.log('it should run a local op by passing path as argument')
 
   await signin()
+  await sleep(500)
 
   const pathToExistingOp = path.join(
     __dirname,
@@ -97,6 +100,7 @@ test('it should run a local op by passing path as argument', async () => {
 test('it should run a local workflow by passing path as argument', async () => {
   console.log('it should run a local workflow by passing path as argument')
   await signin()
+  await sleep(500)
 
   console.log(`ops run ${EXISTING_WORKFLOW_NAME}`)
   const pathToExistingWorkflow = path.join(

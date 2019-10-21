@@ -1,8 +1,8 @@
 /**
  * @author: JP Lew (jp@cto.ai)
  * @date: Tuesday, 11th June 2019 6:30:38 pm
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Wednesday, 11th September 2019 4:28:56 pm
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Monday, 21st October 2019 10:06:32 am
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -27,6 +27,7 @@ afterAll(async () => {
 test('it should signin, whoami', async () => {
   console.log('it should signin, whoami')
   await signin()
+  await sleep(500)
 
   console.log(`ops whoami`)
 
