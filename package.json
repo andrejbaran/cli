@@ -8,7 +8,7 @@
   },
   "bugs": "https://github.com/cto.ai/ops/issues",
   "dependencies": {
-    "@cto.ai/sdk": "^1.4.5",
+    "@cto.ai/sdk": "^1.5.3",
     "@feathersjs/feathers": "^3.3.1",
     "@feathersjs/rest-client": "^1.4.7",
     "@hapi/hapi": "^18.3.1",
@@ -33,7 +33,7 @@
     "yaml": "^1.5.0"
   },
   "devDependencies": {
-    "@cto.ai/inquirer": "^6.3.6",
+    "@cto.ai/inquirer": "^6.4.4",
     "@oclif/dev-cli": "^1.21.3",
     "@oclif/test": "^1.2.4",
     "@oclif/tslint": "^3.1.1",
