@@ -124,6 +124,18 @@ export class CouldNotCreateWorkflow extends ErrorTemplate {
   }
 }
 
+export class InvalidWorkflowStep extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(
+        '😅 Uh-oh, one of the steps in your workflow is referencing an invalid op.\n Please make sure all steps are referencing ops you have access to.',
+      ),
+      err,
+      expectedSource,
+    )
+  }
+}
+
 export class CouldNotInitializeOp extends ErrorTemplate {
   constructor(err) {
     super(
