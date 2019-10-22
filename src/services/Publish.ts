@@ -13,7 +13,7 @@ import { ApiService, Op, RegistryAuth } from '../types'
 import getDocker from '../utils/get-docker'
 import { RegistryAuthService } from './RegistryAuth'
 
-const debug = Debug('ops:ImageService')
+const debug = Debug('ops:PublishService')
 
 export class Publish {
   constructor() {}
@@ -73,7 +73,7 @@ export class Publish {
       )
 
       const all: any[] = []
-      let size = 0
+      const errors: any[] = []
 
       const seenChunks: { [k: string]: true } = {}
 
@@ -84,7 +84,10 @@ export class Publish {
         cb: any,
       ) {
         this.push(chunk.status)
-        if (chunk.aux) {
+        if (chunk.errorDetail) {
+          debug(chunk.errorDetail)
+          errors.push(chunk.errorDetail.message)
+        } else if (chunk.aux) {
           console.log(`\n🚀 ${ux.colors.white('Publishing...')}\n`)
           console.log(
             `${ux.colors.green('>')} Tag: ${ux.colors.multiBlue(
@@ -101,7 +104,6 @@ export class Publish {
               chunk.aux.Digest,
             )}\n`,
           )
-          size = chunk.aux.Size
         } else if (chunk.id) {
           const chunkString = `${chunk.status}: ${ux.colors.white(chunk.id)}`
           if (!seenChunks[chunkString]) {
@@ -116,61 +118,49 @@ export class Publish {
       parser.pipe = function(dest: any) {
         return _pipe(dest)
       }
-
-      await new Promise((res, rej) => {
-        image.tag({ repo: imageUniqueId }, (err: any, _data: any) => {
-          if (err) {
-            rej(new ImageTagError(err))
-          }
-
-          const image = docker.getImage(imageUniqueId)
-          image.push(
-            {
-              tag: 'latest',
-              authconfig: registryAuth.authconfig,
-            },
-            (err: any, stream: any) => {
-              if (err) {
-                rej(new ImagePushError(err))
-              }
-              stream
-                .pipe(json.parse())
-                .pipe(parser)
-                .on('data', (d: any) => {
-                  all.push(d)
-                })
-                .on('end', async function() {
-                  const bar = ux.progress.init()
-                  bar.start(100, 0)
-
-                  for (let i = 0; i < size; i++) {
-                    bar.update(100 - size / i)
-                    await ux.wait(5)
-                  }
-
-                  bar.update(100)
-                  bar.stop()
-                  console.log(
-                    `\n🙌 ${ux.colors.callOutCyan(
-                      imageUniqueId,
-                    )} has been published! \n`,
-                  )
-                  await registryAuthService.delete(
-                    accessToken,
-                    registryAuth.robotID,
-                    teamName,
-                    apiOp.name,
-                    version,
-                  )
-                  res()
-                })
-            },
-          )
+      await new Promise(async function(resolve, reject) {
+        await image.tag({ repo: imageUniqueId }).catch(err => {
+          return reject(new ImageTagError(err))
         })
+        const taggedImage = docker.getImage(imageUniqueId)
+        const stream = await taggedImage
+          .push({
+            tag: 'latest',
+            authconfig: registryAuth.authconfig,
+          })
+          .catch(err => {
+            return reject(new ImageTagError(err))
+          })
+        if (stream) {
+          stream
+            .pipe(json.parse())
+            .pipe(parser)
+            .on('data', (d: any) => {
+              all.push(d)
+            })
+            .on('end', async () => {
+              if (errors.length) {
+                return reject(new ImagePushError(errors[0]))
+              }
+
+              console.log(
+                `\n🙌 ${ux.colors.callOutCyan(
+                  imageUniqueId,
+                )} has been published! \n`,
+              )
+              await registryAuthService.delete(
+                accessToken,
+                registryAuth.robotID,
+                teamName,
+                apiOp.name,
+                version,
+              )
+              resolve()
+            })
+        }
       })
     } catch (err) {
-      debug('%O', err)
-      process.exit(1)
+      throw err
     }
   }
 }

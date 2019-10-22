@@ -17,8 +17,8 @@ import {
   CouldNotMakeDir,
   InvalidInputCharacter,
   YamlPortError,
-  UserUnauthorized,
 } from '~/errors/CustomErrors'
+import { ErrorTemplate } from '~/errors/ErrorTemplate'
 import { AnalyticsService } from '~/services/Analytics'
 import { ContainerService } from '~/services/Container'
 import { ImageService } from '~/services/Image'
@@ -139,7 +139,6 @@ export class OpService {
     } = inputs
     try {
       op.image = this.setOpImageUrl(op, config)
-      debug('%O', op)
       const localImage = await this.imageService.checkLocalImage(op.image)
       if (!localImage || build) {
         op.isPublished
@@ -152,7 +151,7 @@ export class OpService {
       }
       return inputs
     } catch (err) {
-      if (err instanceof UserUnauthorized) {
+      if (err instanceof ErrorTemplate) {
         throw err
       }
       debug('%O', err)

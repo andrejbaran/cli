@@ -411,13 +411,37 @@ export class SignUpError extends ErrorTemplate {
 
 export class ImageTagError extends ErrorTemplate {
   constructor(err) {
-    super('❗️ Could not tag image.', err)
+    super(
+      white(
+        `❗️ Oops, seems like there was a problem tagging the image.\n    ${tryAgainOrContact}`,
+      ),
+      err,
+      expectedSource,
+    )
   }
 }
 
 export class ImagePushError extends ErrorTemplate {
   constructor(err) {
-    super('❗️ Could not push image.', err)
+    super(
+      white(
+        `❗ Oops, seems like there was a problem pushing that image to the registry!\n    ${tryAgainOrContact}`,
+      ),
+      err,
+      expectedSource,
+    )
+  }
+}
+
+export class ImagePullError extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(
+        `❗ Oops, seems like there was a problem pulling that image from the registry!\n    ${tryAgainOrContact}`,
+      ),
+      err,
+      expectedSource,
+    )
   }
 }
 
