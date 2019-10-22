@@ -6,7 +6,7 @@ import through from 'through2'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 
-import { DockerBuildImageError } from '~/errors/CustomErrors'
+import { DockerBuildImageError, ImagePullError } from '~/errors/CustomErrors'
 import { ErrorService } from '~/services/Error'
 import { Op } from '~/types'
 import getDocker from '~/utils/get-docker'
@@ -35,13 +35,16 @@ export class ImageService {
   }
 
   pull = async (op: Op, authconfig: AuthConfig): Promise<void> => {
-    this.log(`🔋 Pulling ${ux.colors.dim(op.name)} from registry...\n`)
     const docker = await getDocker(console, 'ImageServicePull')
-    const stream = await docker.pull(op.image || '', { authconfig })
-
+    const stream = await docker
+      .pull(op.image || '', { authconfig })
+      .catch(err => {
+        throw new ImagePullError(err)
+      })
     if (!stream) {
       throw new Error('No stream')
     }
+    this.log(`🔋 Pulling ${ux.colors.dim(op.name)} from registry...\n`)
 
     const parser = await this.setParser(op, this.getProgressBarText)
     await new Promise(this.updateStatusBar(stream, parser))

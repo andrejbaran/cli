@@ -467,8 +467,11 @@ describe('Custom Errors', () => {
     expect(err).toBeInstanceOf(ImageTagError)
     expect(ErrorTemplate).toHaveBeenCalledTimes(1)
     expect(ErrorTemplate).toHaveBeenCalledWith(
-      '❗️ Could not tag image.',
+      white(
+        `❗️ Oops, seems like there was a problem tagging the image.\n    ${tryAgainOrContact}`,
+      ),
       newError,
+      expectedSource,
     )
   })
 
@@ -477,8 +480,11 @@ describe('Custom Errors', () => {
     expect(err).toBeInstanceOf(ImagePushError)
     expect(ErrorTemplate).toHaveBeenCalledTimes(1)
     expect(ErrorTemplate).toHaveBeenCalledWith(
-      '❗️ Could not push image.',
+      white(
+        `❗ Oops, seems like there was a problem pushing that image to the registry!\n    ${tryAgainOrContact}`,
+      ),
       newError,
+      expectedSource,
     )
   })
 
