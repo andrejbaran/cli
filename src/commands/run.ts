@@ -172,7 +172,6 @@ export default class Run extends Command {
 
   filterLocalOps = (inputs: RunInputs): RunInputs => {
     const { opsAndWorkflows } = inputs
-
     if (!opsAndWorkflows) {
       return { ...inputs }
     }
@@ -417,8 +416,11 @@ export default class Run extends Command {
       }
       throw new APIError(err)
     }
-    if (!apiOp) {
+    if (!apiOp && !previousOpsAndWorkflows.length) {
       throw new NoOpsFound(opName)
+    }
+    if (!apiOp) {
+      return { ...inputs }
     }
     apiOp.isPublished = true
     return {
