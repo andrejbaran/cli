@@ -41,7 +41,6 @@ export default class List extends Command {
   }
 
   getLocalOps = async (inputs: ListInputs): Promise<ListInputs> => {
-    const localWorkflows = []
     try {
       const manifest = await fs.readFile(
         path.join(process.cwd(), OP_FILE),
@@ -51,7 +50,10 @@ export default class List extends Command {
 
       const { workflows = [], ops = [] }: OpsYml = parseYaml(manifest)
 
-      workflows.forEach(workflow => (workflow.local = true))
+      const localWorkflows = workflows.map(workflow => ({
+        ...workflow,
+        local: true,
+      }))
       const localCommands = ops.map(ops => ({ ...ops, local: true }))
       return {
         ...inputs,
