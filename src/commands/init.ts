@@ -359,9 +359,7 @@ export default class Init extends Command {
     this.log(
       `\n🚀 To test your ${WORKFLOW} run: ${ux.colors.green(
         '$',
-      )} ${ux.colors.callOutCyan(
-        `cd ${name} && npm install && ops run ${workflowName}`,
-      )}`,
+      )} ${ux.colors.callOutCyan(`cd ${name} && npm install && ops run .`)}`,
     )
   }
 
