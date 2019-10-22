@@ -9,15 +9,6 @@ ops:
       - "USER=world"
       - "OPS_ACCESS_TOKEN"
       - "OPS_ENV_VAR=$HOST_ENV_VAR"
-    src:
-      - Dockerfile
-      - index.js
-      - demo.js
-      - constants
-      - prompts
-      - utils
-      - package.json
-      - .dockerignore
     mountCwd: false
     mountHome: false
     bind:
