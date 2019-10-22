@@ -20,6 +20,7 @@ import {
   NoWorkflowsFound,
   DockerPublishNoImageFound,
   CouldNotGetRegistryToken,
+  InvalidWorkflowStep,
 } from '../errors/CustomErrors'
 import {
   Container,
@@ -333,6 +334,18 @@ export default class Publish extends Command {
         // this.sendAnalytics('workflow', apiWorkflow)
       } catch (err) {
         this.debug('%O', err)
+        // 5023 is: Team not found
+        // 5027 is: Op not found
+        // 5409 is: You do not have membership to this opp
+        const InvalidWorkflowStepCodes = [5023, 5027, 5409]
+        if (
+          err &&
+          err.error &&
+          err.error[0] &&
+          InvalidWorkflowStepCodes.includes(err.error[0].code)
+        ) {
+          throw new InvalidWorkflowStep(err)
+        }
         throw new CouldNotCreateWorkflow(err.message)
       }
     }
