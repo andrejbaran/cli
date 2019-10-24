@@ -5,7 +5,7 @@ import * as OClifConfig from '@oclif/config'
 import _inquirer from '@cto.ai/inquirer'
 import jwt from 'jsonwebtoken'
 import axios from 'axios'
-
+import { defaultServicesList } from '~/services'
 import {
   asyncPipe,
   _trace,
@@ -25,20 +25,9 @@ import {
   Services,
 } from './types'
 
-import { OPS_SEGMENT_KEY, INTERCOM_EMAIL } from './constants/env'
+import { INTERCOM_EMAIL } from './constants/env'
 
-import { FeathersClient } from './services/Feathers'
-import { AnalyticsService } from './services/Analytics'
 import { APIError, TokenExpiredError } from './errors/CustomErrors'
-
-import { Publish } from './services/Publish'
-import { BuildSteps } from './services/BuildSteps'
-import { ImageService } from './services/Image'
-
-import { WorkflowService } from './services/Workflow'
-import { OpService } from './services/Op'
-import { KeycloakService } from './services/Keycloak'
-import { RegistryAuthService } from './services/RegistryAuth'
 
 const debug = Debug('ops:BaseCommand')
 
@@ -55,34 +44,10 @@ abstract class CTOCommand extends Command {
   constructor(
     argv: string[],
     config: OClifConfig.IConfig,
-    services: Services = {
-      api: new FeathersClient(),
-      publishService: new Publish(),
-      buildStepService: new BuildSteps(),
-      imageService: new ImageService(),
-      analytics: new AnalyticsService(OPS_SEGMENT_KEY),
-      workflowService: new WorkflowService(),
-      opService: new OpService(),
-      keycloakService: new KeycloakService(),
-      registryAuthService: new RegistryAuthService(),
-    },
+    services: Services = defaultServicesList,
   ) {
     super(argv, config)
-    this.services = services
-    this.services.api = services.api || new FeathersClient()
-    this.services.publishService = services.publishService || new Publish()
-    this.services.buildStepService =
-      services.buildStepService || new BuildSteps()
-    this.services.imageService = services.imageService || new ImageService()
-    this.services.analytics =
-      services.analytics || new AnalyticsService(OPS_SEGMENT_KEY)
-    this.services.workflowService =
-      services.workflowService || new WorkflowService()
-    this.services.opService = services.opService || new OpService()
-    this.services.keycloakService =
-      services.keycloakService || new KeycloakService()
-    this.services.registryAuthService =
-      services.registryAuthService || new RegistryAuthService()
+    this.services = Object.assign(defaultServicesList, services)
   }
 
   async init() {
