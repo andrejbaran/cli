@@ -256,6 +256,7 @@ export default class Publish extends Command {
         this.team.name,
         this.accessToken,
         this.services.registryAuthService,
+        this.services.api,
         version,
       )
 

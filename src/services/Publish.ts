@@ -11,12 +11,13 @@ import {
 } from '../errors/CustomErrors'
 import { ApiService, Op, RegistryAuth } from '../types'
 import getDocker from '../utils/get-docker'
+import { getEndpointFromOpType } from '~/constants/opConfig'
 import { RegistryAuthService } from './RegistryAuth'
+import { FeathersClient } from './Feathers'
 
 const debug = Debug('ops:PublishService')
 
 export class Publish {
-  constructor() {}
   public publishOpToAPI = async (
     op: Op,
     version: string,
@@ -47,6 +48,7 @@ export class Publish {
     teamName: string,
     accessToken: string,
     registryAuthService: RegistryAuthService,
+    api: FeathersClient,
     version: string,
   ) => {
     const imageUniqueId = `${
@@ -160,6 +162,16 @@ export class Publish {
         }
       })
     } catch (err) {
+      // this api service call will always return an error because it tries to
+      // remove the record from the api database and the harbor registry but
+      // no record in the harbor registry will exist
+      await api
+        .remove(getEndpointFromOpType(apiOp.type), apiOp.id, {
+          headers: { Authorization: accessToken },
+        })
+        .catch(error => {
+          debug('%O', error)
+        })
       throw err
     }
   }

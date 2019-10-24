@@ -97,6 +97,7 @@ export class BuildSteps {
       teamName,
       accessToken,
       registryAuthService,
+      featherClient,
       version,
     )
 
