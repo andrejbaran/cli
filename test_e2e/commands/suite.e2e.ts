@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Friday, 24th May 2019 1:41:52 pm
  * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Friday, 18th October 2019 4:05:56 pm
+ * @lastModifiedTime: Friday, 25th October 2019 10:44:44 am
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -61,7 +61,7 @@ test('it should init a command, build, publish, list, remove', async () => {
   const publishRes = await run(['publish', NEW_COMMAND_NAME], [ENTER])
   expect(publishRes.toLowerCase()).toContain('preparing:')
   expect(publishRes).toContain('has been published!')
-  await sleep(500)
+  await sleep(1000)
 
   console.log('ops list')
   // Going 'two downs' because there are two ops in sample ops directory already published by the existing_user team
@@ -118,7 +118,7 @@ test('it should init a workflow, publish, list, remove', async () => {
   console.log(`ops publish ${NEW_WORKFLOW_NAME}`)
   const publishRes = await run(['publish', NEW_WORKFLOW_NAME], [DOWN, ENTER])
   expect(publishRes).toContain(`${NEW_WORKFLOW_NAME} has been published!`)
-  await sleep(500)
+  await sleep(1000)
 
   console.log('ops list')
   const listRes = await run(['list'], [ENTER])
