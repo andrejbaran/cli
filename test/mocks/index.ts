@@ -1,4 +1,13 @@
-import { Op, Workflow, Invite, Team, Config, User, Tokens } from '~/types'
+import {
+  Op,
+  Workflow,
+  Invite,
+  Team,
+  Config,
+  User,
+  Tokens,
+  State,
+} from '~/types'
 import { COMMAND_TYPE, WORKFLOW_TYPE } from '~/constants/opConfig'
 
 export const createMockOp = (inputs: Partial<Op>): Op => {
@@ -111,6 +120,15 @@ export const createMockInvite = (inputs: Partial<Invite>): Invite => {
       inviteCode: '',
       email: '',
       sentStatus: '',
+    },
+    inputs,
+  )
+}
+
+export const createMockState = (inputs: Partial<State>): State => {
+  return Object.assign(
+    {
+      config: createMockConfig({}),
     },
     inputs,
   )

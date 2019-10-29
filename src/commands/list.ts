@@ -2,15 +2,10 @@ import fuzzy from 'fuzzy'
 import Command, { flags } from '../base'
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import { Op, Workflow, Answers, Fuzzy, OpsYml } from '~/types'
+import { Op, Workflow, Answers, Fuzzy, OpsYml, ListInputs } from '~/types'
 import { APIError } from '~/errors/CustomErrors'
 import { WORKFLOW_TYPE, OP_FILE } from '../constants/opConfig'
 import { asyncPipe, parseYaml } from '~/utils'
-
-interface ListInputs {
-  opResults: (Op | Workflow)[]
-  selectedOp: Op | Workflow
-}
 
 export default class List extends Command {
   static description = 'Lists the ops you have in your team'
@@ -64,16 +59,12 @@ export default class List extends Command {
     }
   }
 
-  filterOutGlueCodes = (inputs: ListInputs) => {
-    try {
-      const opResults = inputs.opResults.filter(
-        input => input.type !== 'glue_code',
-      )
-      this.opResults = opResults
-      return { ...inputs, opResults }
-    } catch (err) {
-      this.debug('%0', err)
-    }
+  filterOutGlueCodes = (inputs: ListInputs): ListInputs => {
+    const opResults = inputs.opResults.filter(
+      input => input.type !== 'glue_code',
+    )
+    this.opResults = opResults
+    return { ...inputs, opResults }
   }
 
   promptOps = async (inputs: ListInputs): Promise<ListInputs> => {
