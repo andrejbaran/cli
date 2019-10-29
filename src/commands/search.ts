@@ -3,7 +3,15 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
 import Command, { flags } from '../base'
-import { Answers, Op, Fuzzy, Workflow, OpsYml, OpsFindResponse } from '../types'
+import {
+  Answers,
+  Op,
+  Fuzzy,
+  Workflow,
+  OpsYml,
+  SearchInputs,
+  OpsFindResponse,
+} from '../types'
 import { asyncPipe } from '../utils/asyncPipe'
 import { AnalyticsError, APIError } from '../errors/CustomErrors'
 import {
@@ -14,13 +22,6 @@ import {
   GLUECODE_TYPE,
 } from '../constants/opConfig'
 import { pluralize, parseYaml } from '~/utils'
-
-interface SearchInputs {
-  filter: string
-  apiOps: Op[]
-  localWorkflows: Workflow[]
-  selectedOpOrWorkflow: Op | Workflow
-}
 
 export default class Search extends Command {
   static description = 'Search for ops in your workspaces.'
@@ -60,10 +61,10 @@ export default class Search extends Command {
           },
         },
       )
-
       let { data: apiOps } = findResponse
+
       apiOps = apiOps.filter(op => op.type !== GLUECODE_TYPE)
-      return { apiOps, ...inputs }
+      return { ...inputs, apiOps }
     } catch (err) {
       this.debug('error: %O', err)
       throw new APIError(err)
