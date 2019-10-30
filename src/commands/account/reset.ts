@@ -14,9 +14,9 @@ export default class AccountReset extends Command {
         await this.services.analytics.track(
           {
             userId: this.user.email,
+            cliEvent: 'Ops CLI Reset',
             event: 'Ops CLI Reset',
             properties: {
-              email: this.user.email,
               username: this.user.username,
             },
           },

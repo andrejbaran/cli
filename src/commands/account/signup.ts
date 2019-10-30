@@ -74,6 +74,7 @@ export default class AccountSignup extends Command {
       this.services.analytics.track(
         {
           userId: config.user.email,
+          cliEvent: 'Ops CLI Signup',
           event: 'Ops CLI Signup',
           properties: {
             email: config.user.email,

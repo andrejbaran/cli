@@ -47,6 +47,7 @@ export default class Whoami extends Command {
       {
         userId: this.user.email,
         teamId: this.team.id,
+        cliEvent: 'Ops CLI Whoami',
         event: 'Ops CLI Whoami',
         properties: {},
       },

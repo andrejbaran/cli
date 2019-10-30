@@ -160,6 +160,19 @@ export default class List extends Command {
     return inputs
   }
 
+  sendAnalytics = () => {
+    this.services.analytics.track(
+      {
+        userId: this.user.email,
+        teamId: this.team.id,
+        cliEvent: 'Ops CLI List',
+        event: 'Ops CLI List',
+        properties: {},
+      },
+      this.accessToken,
+    )
+  }
+
   async run() {
     try {
       await this.isLoggedIn()
@@ -169,6 +182,7 @@ export default class List extends Command {
         this.getLocalOps,
         this.filterOutGlueCodes,
         this.promptOps,
+        this.sendAnalytics,
         this.showRunMessage,
       )
 

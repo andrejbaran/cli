@@ -118,6 +118,7 @@ export default class TeamSwitch extends Command {
     this.services.analytics.track(
       {
         userId: email,
+        cliEvent: 'Ops CLI Team:Switch',
         event: 'Ops CLI Team:Switch',
         properties: {
           email,

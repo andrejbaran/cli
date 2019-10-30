@@ -86,6 +86,7 @@ export default class TeamCreate extends Command {
     } = inputs
     this.services.analytics.track(
       {
+        cliEvent: 'Ops Team Create',
         event: 'Ops Team Create',
         userId,
         teamId,

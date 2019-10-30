@@ -27,6 +27,7 @@ interface AnalyticsTrack {
   teamId?: string | number
   anonymousId?: string | number
   event: string
+  cliEvent?: string
   properties?: any
   timestamp?: Date
   context?: any

@@ -32,6 +32,7 @@ export default class AccountSupport extends Command {
       {
         userId: this.user.email,
         teamId: this.team.id,
+        cliEvent: 'Ops CLI Support',
         event: 'Ops CLI Support',
         properties: {},
       },

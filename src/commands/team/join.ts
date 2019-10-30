@@ -90,6 +90,7 @@ export default class TeamJoin extends Command {
       {
         userId: email,
         teamId,
+        cliEvent: 'Ops CLI team:join',
         event: 'Ops CLI team:join',
         properties: {
           email,

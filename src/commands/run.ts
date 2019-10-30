@@ -437,15 +437,14 @@ export default class Run extends Command {
     this.services.analytics.track(
       {
         userId: this.user.email,
+        teamId: this.team.id,
+        cliEvent: 'Ops CLI Run',
         event: 'Ops CLI Run',
         properties: {
-          email: this.user.email,
           username: this.user.username,
           id,
           name,
-          description,
           argments: opParams.length,
-          image: `${OPS_REGISTRY_HOST}/${name}`,
         },
       },
       this.accessToken,
