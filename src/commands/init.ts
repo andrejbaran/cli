@@ -1,4 +1,3 @@
-import { ux } from '@cto.ai/sdk'
 import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
@@ -34,58 +33,58 @@ export default class Init extends Command {
     [appendSuffix(COMMAND, 'Name')]: {
       type: 'input',
       name: appendSuffix(COMMAND, 'Name'),
-      message: `\n Provide a name for your new command ${ux.colors.reset.green(
+      message: `\n Provide a name for your new command ${this.ux.colors.reset.green(
         '→',
-      )}\n${ux.colors.reset(
-        ux.colors.secondary('Names must be lowercase'),
-      )}\n\n🏷  ${ux.colors.white('Name:')}`,
-      afterMessage: ux.colors.reset.green('✓'),
-      afterMessageAppend: ux.colors.reset(' added!'),
+      )}\n${this.ux.colors.reset(
+        this.ux.colors.secondary('Names must be lowercase'),
+      )}\n\n🏷  ${this.ux.colors.white('Name:')}`,
+      afterMessage: this.ux.colors.reset.green('✓'),
+      afterMessageAppend: this.ux.colors.reset(' added!'),
       validate: this._validateName,
-      transformer: input => ux.colors.cyan(input.toLocaleLowerCase()),
+      transformer: input => this.ux.colors.cyan(input.toLocaleLowerCase()),
       filter: input => input.toLowerCase(),
     },
     [appendSuffix(COMMAND, 'Description')]: {
       type: 'input',
       name: appendSuffix(COMMAND, 'Description'),
-      message: `\nProvide a description ${ux.colors.reset.green(
+      message: `\nProvide a description ${this.ux.colors.reset.green(
         '→',
-      )}  \n📝 ${ux.colors.white('Description:')}`,
-      afterMessage: ux.colors.reset.green('✓'),
-      afterMessageAppend: ux.colors.reset(' added!'),
+      )}  \n📝 ${this.ux.colors.white('Description:')}`,
+      afterMessage: this.ux.colors.reset.green('✓'),
+      afterMessageAppend: this.ux.colors.reset(' added!'),
       validate: this._validateDescription,
     },
     [appendSuffix(WORKFLOW, 'Name')]: {
       type: 'input',
       name: appendSuffix(WORKFLOW, 'Name'),
-      message: `\n Provide a name for your new workflow ${ux.colors.reset.green(
+      message: `\n Provide a name for your new workflow ${this.ux.colors.reset.green(
         '→',
-      )}\n${ux.colors.reset(
-        ux.colors.secondary('Names must be lowercase'),
-      )}\n\n🏷  ${ux.colors.white('Name:')}`,
-      afterMessage: ux.colors.reset.green('✓'),
-      afterMessageAppend: ux.colors.reset(' added!'),
+      )}\n${this.ux.colors.reset(
+        this.ux.colors.secondary('Names must be lowercase'),
+      )}\n\n🏷  ${this.ux.colors.white('Name:')}`,
+      afterMessage: this.ux.colors.reset.green('✓'),
+      afterMessageAppend: this.ux.colors.reset(' added!'),
       validate: this._validateName,
-      transformer: input => ux.colors.cyan(input.toLocaleLowerCase()),
+      transformer: input => this.ux.colors.cyan(input.toLocaleLowerCase()),
       filter: input => input.toLowerCase(),
     },
     [appendSuffix(WORKFLOW, 'Description')]: {
       type: 'input',
       name: appendSuffix(WORKFLOW, 'Description'),
-      message: `\nProvide a description ${ux.colors.reset.green(
+      message: `\nProvide a description ${this.ux.colors.reset.green(
         '→',
-      )}\n\n📝 ${ux.colors.white('Description:')}`,
-      afterMessage: ux.colors.reset.green('✓'),
-      afterMessageAppend: ux.colors.reset(' added!'),
+      )}\n\n📝 ${this.ux.colors.white('Description:')}`,
+      afterMessage: this.ux.colors.reset.green('✓'),
+      afterMessageAppend: this.ux.colors.reset(' added!'),
       validate: this._validateDescription,
     },
   }
 
   determineTemplate = async (prompts: Container<Question>) => {
-    const { templates } = await ux.prompt<Partial<InitParams>>({
+    const { templates } = await this.ux.prompt<Partial<InitParams>>({
       type: 'checkbox',
       name: 'templates',
-      message: `\n What type of op would you like to create ${ux.colors.reset.green(
+      message: `\n What type of op would you like to create ${this.ux.colors.reset.green(
         '→',
       )}`,
       choices: [
@@ -102,7 +101,7 @@ export default class Init extends Command {
           value: WORKFLOW,
         },
       ],
-      afterMessage: `${ux.colors.reset.green('✓')}`,
+      afterMessage: `${this.ux.colors.reset.green('✓')}`,
       validate: input => input.length != 0,
     })
     return { prompts, templates }
@@ -134,7 +133,7 @@ export default class Init extends Command {
     questions: Question[]
     templates: OpTypes[]
   }) => {
-    const answers = await ux.prompt<Partial<InitParams>>(questions)
+    const answers = await this.ux.prompt<Partial<InitParams>>(questions)
     return { answers, templates }
   }
 
@@ -320,11 +319,11 @@ export default class Init extends Command {
     fs.readdirSync(`${destDir}`).forEach((file: any) => {
       let callout = ''
       if (file.indexOf('index.js') > -1) {
-        callout = `${ux.colors.green('←')} ${ux.colors.white(
+        callout = `${this.ux.colors.green('←')} ${this.ux.colors.white(
           'Start developing here!',
         )}`
       }
-      let msg = ux.colors.italic(
+      let msg = this.ux.colors.italic(
         `${path.relative(
           this.destDir,
           process.cwd(),
@@ -347,9 +346,9 @@ export default class Init extends Command {
   logCommandMessage = (initParams: InitParams) => {
     const { commandName } = initParams
     this.log(
-      `\n🚀 To test your ${COMMAND} run: ${ux.colors.green(
+      `\n🚀 To test your ${COMMAND} run: ${this.ux.colors.green(
         '$',
-      )} ${ux.colors.callOutCyan(`ops run ${commandName}`)}`,
+      )} ${this.ux.colors.callOutCyan(`ops run ${commandName}`)}`,
     )
   }
 
@@ -357,9 +356,11 @@ export default class Init extends Command {
     const { workflowName } = initParams
     const { name } = this.getNameAndDescription(initParams)
     this.log(
-      `\n🚀 To test your ${WORKFLOW} run: ${ux.colors.green(
+      `\n🚀 To test your ${WORKFLOW} run: ${this.ux.colors.green(
         '$',
-      )} ${ux.colors.callOutCyan(`cd ${name} && npm install && ops run .`)}`,
+      )} ${this.ux.colors.callOutCyan(
+        `cd ${name} && npm install && ops run .`,
+      )}`,
     )
   }
 
@@ -410,7 +411,7 @@ export default class Init extends Command {
     }
   }
 
-  private getNameAndDescription = (initParams: Partial<InitParams>) => {
+  getNameAndDescription = (initParams: Partial<InitParams>) => {
     return {
       name: initParams.commandName || initParams.workflowName,
       description:
@@ -418,7 +419,7 @@ export default class Init extends Command {
     }
   }
 
-  private _validateName(input: string) {
+  _validateName(input: string) {
     if (input === '') return 'You need name your op before you can continue'
     if (!input.match('^[a-z0-9_-]*$')) {
       return 'Sorry, please name the Op using only numbers, letters, -, or _'
@@ -426,7 +427,7 @@ export default class Init extends Command {
     return true
   }
 
-  private _validateDescription(input: string) {
+  _validateDescription(input: string) {
     if (input === '')
       return 'You need to provide a description of your op before continuing'
     return true
