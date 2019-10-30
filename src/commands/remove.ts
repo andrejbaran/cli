@@ -221,13 +221,13 @@ export default class Remove extends Command {
     return inputs
   }
 
-  sendAnalytics = (user: User) => (inputs: RemoveInputs) => {
+  sendAnalytics = (user: User) => async (inputs: RemoveInputs) => {
     const { email, username } = user
     const {
       opOrWorkflow: { id, name, description },
       // removeType,
     } = inputs
-    this.services.analytics.track(
+    await this.services.analytics.track(
       {
         userId: email,
         teamId: this.team.id,
@@ -242,6 +242,7 @@ export default class Remove extends Command {
       },
       this.accessToken,
     )
+    return inputs
   }
 
   async run() {

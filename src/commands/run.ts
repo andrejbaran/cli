@@ -429,12 +429,12 @@ export default class Run extends Command {
     }
   }
 
-  sendAnalytics = (inputs: RunInputs): RunInputs => {
+  sendAnalytics = async (inputs: RunInputs): Promise<RunInputs> => {
     const {
       opOrWorkflow: { id, name, description },
       parsedArgs: { opParams },
     } = inputs
-    this.services.analytics.track(
+    await this.services.analytics.track(
       {
         userId: this.user.email,
         teamId: this.team.id,

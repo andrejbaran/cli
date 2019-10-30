@@ -378,7 +378,7 @@ export default class Init extends Command {
     return this.log(getSuccessMessage(opType))
   }
 
-  sendAnalytics = ({
+  sendAnalytics = async ({
     initPaths,
     initParams,
   }: {
@@ -388,8 +388,8 @@ export default class Init extends Command {
     try {
       const { destDir } = initPaths
       const { templates } = initParams
-      const { name, description } = this.getNameAndDescription(initParams)
-      this.services.analytics.track(
+      const { name } = this.getNameAndDescription(initParams)
+      await this.services.analytics.track(
         {
           userId: this.user.email,
           teamId: this.team.id,
@@ -404,6 +404,10 @@ export default class Init extends Command {
         },
         this.accessToken,
       )
+      return {
+        initPaths,
+        initParams,
+      }
     } catch (err) {
       this.debug('%O', err)
       throw new AnalyticsError(err)
