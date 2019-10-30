@@ -172,7 +172,7 @@ export default class Search extends Command {
     return inputs
   }
 
-  sendAnalytics = (filter: string) => (inputs: SearchInputs) => {
+  sendAnalytics = (filter: string) => async (inputs: SearchInputs) => {
     const {
       selectedOpOrWorkflow,
       selectedOpOrWorkflow: { id: opId, teamID },
@@ -181,7 +181,7 @@ export default class Search extends Command {
     const remote =
       'remote' in selectedOpOrWorkflow ? selectedOpOrWorkflow.remote : false
     try {
-      this.services.analytics.track(
+      await this.services.analytics.track(
         {
           userId: this.user.email,
           teamId: this.team.id,

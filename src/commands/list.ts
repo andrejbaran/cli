@@ -160,8 +160,8 @@ export default class List extends Command {
     return inputs
   }
 
-  sendAnalytics = () => {
-    this.services.analytics.track(
+  sendAnalytics = async (inputs: ListInputs) => {
+    await this.services.analytics.track(
       {
         userId: this.user.email,
         teamId: this.team.id,
@@ -171,6 +171,7 @@ export default class List extends Command {
       },
       this.accessToken,
     )
+    return inputs
   }
 
   async run() {

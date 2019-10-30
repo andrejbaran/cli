@@ -356,7 +356,7 @@ export default class Publish extends Command {
     publishType: string,
     opOrWorkflow: Op | Workflow,
   ) => {
-    this.services.analytics.track({
+    await this.services.analytics.track({
       userId: this.user.email,
       teamId: this.team.id,
       cliEvent: 'Ops CLI Publish',
