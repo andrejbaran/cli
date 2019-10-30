@@ -3,6 +3,7 @@ export const UP = '\x1B\x5B\x41'
 export const ENTER = '\x0D'
 export const SPACE = '\x20'
 export const ESCAPE = '\x1B'
+export const Y = '\x79'
 
 export const NEW_COMMAND_NAME = 't_command_e2e_test'
 export const NEW_COMMAND_DESCRIPTION = 't_command_e2e_test description'

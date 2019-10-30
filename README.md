@@ -410,4 +410,4 @@ Run tests against Minikube:
 
 Run a single E2E test, or filter test files by filename:
 
-    npm run test:e2e -- --testPathPattern=signin
+    npm run test:e2e --testPathPattern=signin

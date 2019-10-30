@@ -138,7 +138,9 @@ test('it should init a local workflow then run it unpublished', async () => {
   )
   expect(initRes.toLowerCase()).toContain('success!')
   expect(initRes).toContain(`🚀 To test your ${WORKFLOW} run:`)
-  expect(initRes).toContain(`ops run ${NEW_WORKFLOW_NAME}`)
+  expect(initRes).toContain(
+    `cd ${NEW_WORKFLOW_NAME} && npm install && ops run .`,
+  )
 
   await sleep(500)
 

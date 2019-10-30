@@ -117,6 +117,7 @@
     "configdev": "scripts/configdev.sh",
     "initenv": "scripts/make-env.sh",
     "postinstall": "node ./postInstall.js",
+    "preversion": "scripts/preversion.sh",
     "postversion": "git push",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "prettier --check 'src/**/*.ts' --check 'test/**/*.ts'",

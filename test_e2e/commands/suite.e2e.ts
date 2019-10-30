@@ -19,6 +19,7 @@ import {
   NEW_WORKFLOW_NAME,
   NEW_WORKFLOW_DESCRIPTION,
   UP,
+  Y,
 } from '../utils/constants'
 import { COMMAND, WORKFLOW } from '~/constants/opConfig'
 
@@ -76,7 +77,7 @@ test('it should init a command, build, publish, list, remove', async () => {
   // ENTER, ENTER doesn't work for some reason
   const removeRes = await run(
     ['remove', NEW_COMMAND_NAME],
-    [DOWN, UP, ENTER, ENTER],
+    [DOWN, UP, Y, ENTER, ENTER],
   )
 
   const regexPattern = `${NEW_COMMAND_NAME}:[a-z0-9-]+ has been removed from the registry!`
@@ -111,7 +112,9 @@ test('it should init a workflow, publish, list, remove', async () => {
   )
   expect(initRes.toLowerCase()).toContain('success!')
   expect(initRes).toContain(`🚀 To test your ${WORKFLOW} run:`)
-  expect(initRes).toContain(`ops run ${NEW_WORKFLOW_NAME}`)
+  expect(initRes).toContain(
+    `cd ${NEW_WORKFLOW_NAME} && npm install && ops run .`,
+  )
 
   await sleep(500)
 
@@ -128,7 +131,7 @@ test('it should init a workflow, publish, list, remove', async () => {
   console.log(`ops remove ${NEW_WORKFLOW_NAME}`)
   const removeRes = await run(
     ['remove', NEW_WORKFLOW_NAME],
-    [DOWN, ENTER, ENTER],
+    [DOWN, Y, ENTER, ENTER],
   )
 
   const regexPattern = `${NEW_WORKFLOW_NAME}:[a-z0-9-]+ has been removed from the registry!`
@@ -188,7 +191,9 @@ test('it should not delete a command if it is being used in a remote workflow', 
   )
   expect(initWfRes.toLowerCase()).toContain('success!')
   expect(initWfRes).toContain(`🚀 To test your ${WORKFLOW} run:`)
-  expect(initWfRes).toContain(`ops run ${NEW_WORKFLOW_NAME}`)
+  expect(initWfRes).toContain(
+    `cd ${NEW_WORKFLOW_NAME} && npm install && ops run .`,
+  )
 
   console.log('modify ops.yml')
   const destDir = `${path.resolve(process.cwd())}/${NEW_WORKFLOW_NAME}`
@@ -213,7 +218,7 @@ test('it should not delete a command if it is being used in a remote workflow', 
 
   const removeRes = await run(
     ['remove', NEW_COMMAND_NAME],
-    [DOWN, UP, ENTER, ENTER],
+    [DOWN, UP, Y, ENTER, ENTER],
   )
   expect(removeRes).toContain('❗ Sorry, we cannot delete the op.')
   expect(removeRes).toContain(
@@ -221,8 +226,8 @@ test('it should not delete a command if it is being used in a remote workflow', 
   )
 
   // remove command and workflow created above
-  await run(['remove', NEW_WORKFLOW_NAME], [DOWN, UP, ENTER, ENTER])
-  await run(['remove', NEW_COMMAND_NAME], [DOWN, UP, ENTER, ENTER])
+  await run(['remove', NEW_WORKFLOW_NAME], [DOWN, UP, Y, ENTER, ENTER])
+  await run(['remove', NEW_COMMAND_NAME], [DOWN, UP, Y, ENTER, ENTER])
 
   // cleanup directories
   const pathToOp = `./${NEW_COMMAND_NAME}`
