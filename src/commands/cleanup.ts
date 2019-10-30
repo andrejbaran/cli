@@ -104,6 +104,7 @@ export class Cleanup extends Command {
         {
           userId: this.user.email,
           teamId: this.team.id,
+          cliEvent: 'Ops CLI Cleanup',
           event: 'Ops CLI Cleanup',
           properties: {
             email: this.user.email,

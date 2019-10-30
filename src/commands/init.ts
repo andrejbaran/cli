@@ -378,7 +378,7 @@ export default class Init extends Command {
     return this.log(getSuccessMessage(opType))
   }
 
-  sendAnalytics = async ({
+  sendAnalytics = ({
     initPaths,
     initParams,
   }: {
@@ -393,13 +393,12 @@ export default class Init extends Command {
         {
           userId: this.user.email,
           teamId: this.team.id,
+          cliEvent: 'Ops CLI Init',
           event: 'Ops CLI Init',
           properties: {
-            email: this.user.email,
             username: this.user.username,
             path: destDir,
             name,
-            description,
             templates,
           },
         },
@@ -445,8 +444,8 @@ export default class Init extends Command {
         this.copyTemplateFiles,
         this.customizePackageJson,
         this.customizeYaml,
-        this.logMessages,
         this.sendAnalytics,
+        this.logMessages,
       )
 
       await initPipeline(this.initPrompts)

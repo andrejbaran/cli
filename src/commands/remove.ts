@@ -230,15 +230,14 @@ export default class Remove extends Command {
     this.services.analytics.track(
       {
         userId: email,
+        teamId: this.team.id,
+        cliEvent: 'Ops CLI Remove',
         event: 'Ops CLI Remove',
         properties: {
-          email,
           username,
           // type: removeType,
           id,
           name,
-          description,
-          image: `${OPS_REGISTRY_HOST}/${name}`,
         },
       },
       this.accessToken,
@@ -260,8 +259,8 @@ export default class Remove extends Command {
         this.selectOpOrWorkflow,
         this.confirmRemove,
         this.removeApiOpOrWorkflow,
-        this.logMessage,
         this.sendAnalytics(this.user),
+        this.logMessage,
       )
       await removePipeline(opName)
     } catch (err) {

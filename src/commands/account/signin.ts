@@ -109,6 +109,8 @@ export default class AccountSignin extends Command {
       this.services.analytics.track(
         {
           userId: config.user.email,
+          teamId: this.team.id,
+          cliEvent: 'Ops CLI Signin',
           event: 'Ops CLI Signin',
           properties: {
             email: config.user.email,

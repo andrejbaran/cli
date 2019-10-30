@@ -46,6 +46,7 @@ export default class Update extends Command {
         {
           userId: this.user.email,
           teamId: this.team.id,
+          cliEvent: 'Ops CLI Update',
           event: 'Ops CLI Update',
           properties: {
             oldVersion: this.config.version,

@@ -55,6 +55,7 @@ export default class AccountSignout extends Command {
       {
         userId: this.user.email,
         teamId: this.team.id,
+        cliEvent: 'Ops CLI Signout',
         event: 'Ops CLI Signout',
         properties: {
           email: this.user.email,
