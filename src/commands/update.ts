@@ -17,17 +17,18 @@ export default class Update extends Command {
     this.parse(Update)
     try {
       const latestVersion = await getLatestVersion()
-      await this._logUpdateMessage(latestVersion)
-      await this._askQuestion()
-      await this._updateVersion()
-      this._trackAnalytics(latestVersion)
+
+      await this.logUpdateMessage(latestVersion)
+      await this.askQuestion()
+      await this.updateVersion()
+      await this.trackAnalytics(latestVersion)
     } catch (err) {
       this.debug('%O', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 
-  private _logUpdateMessage(latestVersion: string | undefined) {
+  async logUpdateMessage(latestVersion: string | undefined) {
     this.log(
       `${ux.colors.white(
         `\n📦 ${ux.colors.actionBlue(
@@ -39,9 +40,9 @@ export default class Update extends Command {
     )
   }
 
-  private _trackAnalytics(newVersion: string | undefined) {
+  async trackAnalytics(newVersion: string | undefined) {
     if (this.user) {
-      this.services.analytics.track(
+      await this.services.analytics.track(
         {
           userId: this.user.email,
           teamId: this.team.id,
@@ -56,7 +57,7 @@ export default class Update extends Command {
     }
   }
 
-  private async _askQuestion() {
+  async askQuestion() {
     const { install } = await ux.prompt<{ install: boolean }>({
       type: 'confirm',
       name: 'install',
@@ -73,7 +74,7 @@ export default class Update extends Command {
     }
   }
 
-  private async _updateVersion() {
+  async updateVersion() {
     try {
       ux.spinner.start('Updating version')
       await exec('npm install -g @cto.ai/ops')
