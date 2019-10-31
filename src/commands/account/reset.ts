@@ -18,6 +18,7 @@ export default class AccountReset extends Command {
             event: 'Ops CLI Reset',
             properties: {
               username: this.user.username,
+              email: this.user.email,
             },
           },
           this.accessToken,

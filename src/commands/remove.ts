@@ -234,6 +234,7 @@ export default class Remove extends Command {
         cliEvent: 'Ops CLI Remove',
         event: 'Ops CLI Remove',
         properties: {
+          email,
           username,
           // type: removeType,
           id,

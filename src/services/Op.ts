@@ -78,6 +78,8 @@ export class OpService {
           properties: {
             username: user.username,
             name: op.name,
+            description: op.description,
+            email: user.email,
           },
         },
         accessToken,
