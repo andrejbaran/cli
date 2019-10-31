@@ -7,7 +7,7 @@ import getLatestVersion from '../utils/get-latest-version'
 import { PermissionsError } from '../errors/CustomErrors'
 
 export default class Update extends Command {
-  static description = 'Update the ops CLI.'
+  static description = 'Update the Ops CLI.'
 
   static flags = {
     help: flags.help({ char: 'h' }),

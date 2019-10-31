@@ -33,7 +33,7 @@ export const signinPrompts: Container<Question> = {
 }
 
 export default class AccountSignin extends Command {
-  static description = 'Logs in to your account.'
+  static description = 'Log in to your account.'
 
   static flags = {
     help: flags.help({ char: 'h' }),

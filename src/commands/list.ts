@@ -8,7 +8,7 @@ import { WORKFLOW_TYPE, OP_FILE } from '../constants/opConfig'
 import { asyncPipe, parseYaml } from '~/utils'
 
 export default class List extends Command {
-  static description = 'Lists the ops you have in your team'
+  static description = 'Lists the Ops you have in your team.'
 
   static flags = {
     help: flags.help({ char: 'h' }),

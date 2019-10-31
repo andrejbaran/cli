@@ -45,7 +45,7 @@ export interface PublishInputs {
 }
 
 export default class Publish extends Command {
-  public static description = 'Publish an op to a team.'
+  public static description = 'Publish an Op to your team.'
 
   public static flags = {
     help: flags.help({ char: 'h' }),
