@@ -188,6 +188,7 @@ export default class Search extends Command {
           cliEvent: 'Ops CLI Search',
           event: 'Ops CLI Search',
           properties: {
+            email: this.user.email,
             username: this.user.username,
             selectedOp: opId,
             teamOp,

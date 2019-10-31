@@ -441,6 +441,7 @@ export default class Run extends Command {
         cliEvent: 'Ops CLI Run',
         event: 'Ops CLI Run',
         properties: {
+          email: this.user.email,
           username: this.user.username,
           id,
           name,
