@@ -174,7 +174,7 @@ export class OpService {
     await this.registryAuthService.delete(
       config.tokens.accessToken,
       robotID,
-      config.team.name,
+      op.teamName,
       op.name,
       version, // TODO: change it op.version once its added but for now setting it to platform version)
     )
