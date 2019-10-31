@@ -43,7 +43,7 @@ export default class Whoami extends Command {
       )
     }
     this.log('\n')
-    await this.services.analytics.track(
+    this.services.analytics.track(
       {
         userId: this.user.email,
         teamId: this.team.id,

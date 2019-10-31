@@ -227,7 +227,7 @@ export default class Remove extends Command {
       opOrWorkflow: { id, name, description },
       // removeType,
     } = inputs
-    await this.services.analytics.track(
+    this.services.analytics.track(
       {
         userId: email,
         teamId: this.team.id,

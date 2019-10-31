@@ -28,7 +28,7 @@ export default class AccountSupport extends Command {
     this.log("🖖 We'll get back to you as soon as we possibly can.")
     this.log('')
 
-    await this.services.analytics.track(
+    this.services.analytics.track(
       {
         userId: this.user.email,
         teamId: this.team.id,
