@@ -25,7 +25,7 @@ export interface RemoveInputs {
 }
 
 export default class Remove extends Command {
-  static description = 'Remove an op from a team.'
+  static description = 'Remove an Op from your team.'
 
   static args = [
     {

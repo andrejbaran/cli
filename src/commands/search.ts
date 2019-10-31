@@ -30,7 +30,7 @@ export default class Search extends Command {
     {
       name: 'filter',
       description:
-        'Filters op results which include filter text in op name or description.',
+        'Filters Op results which include filter text in Op name or description.',
     },
   ]
   static flags = {

@@ -20,7 +20,7 @@ import {
 import { titleCase, appendSuffix } from '~/utils'
 
 export default class Init extends Command {
-  static description = 'Easily create a new op.'
+  static description = 'Easily create a new Op.'
   static flags = {
     help: flags.help({ char: 'h' }),
   }

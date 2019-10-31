@@ -62,7 +62,7 @@ export interface RunInputs {
 }
 
 export default class Run extends Command {
-  static description = 'Run an op from the registry.'
+  static description = 'Run an Op from your team or the registry.'
 
   static flags = {
     help: flags.boolean({
