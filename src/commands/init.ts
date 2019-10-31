@@ -389,7 +389,7 @@ export default class Init extends Command {
       const { destDir } = initPaths
       const { templates } = initParams
       const { name } = this.getNameAndDescription(initParams)
-      await this.services.analytics.track(
+      this.services.analytics.track(
         {
           userId: this.user.email,
           teamId: this.team.id,

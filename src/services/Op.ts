@@ -70,7 +70,7 @@ export class OpService {
         op,
       )
 
-      await this.analytics.track(
+      this.analytics.track(
         {
           userId: user.email,
           cliEvent: 'Ops CLI Build',
