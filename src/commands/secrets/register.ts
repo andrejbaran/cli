@@ -41,7 +41,7 @@ export default class SecretsRegister extends Command {
       throw new InvalidTeamNameFormat(err)
     }
   }
-//🔗
+
   promptForSecretsProviderCredentials = async (
     inputs: RegisterInputs,
   ): Promise<RegisterInputs> => {
@@ -56,12 +56,12 @@ export default class SecretsRegister extends Command {
     })
 
     const { token } = await ux.prompt<{ token: string }>({
-      type: 'input',
+      type: 'password',
       name: 'token',
       message: `\n🔐 Register secret storage access token ${reset.green(
         '→',
       )}  \n${white('Enter access token:')} `,
-      afterMessage: `${reset.green('✓')} TOKEN    `,
+      afterMessage: `${reset.green('✓')} TOKEN ${reset.grey('********')}    \n🙌 Secrets registration complete!`,
       validate: this.validateRegisterInput.bind(this),
     })
 
