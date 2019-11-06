@@ -1,10 +1,14 @@
 import { ux } from '@cto.ai/sdk'
 import Command, { flags } from '~/base'
-import {Config, Team, User} from '~/types'
-import {asyncPipe, validCharsTeamName} from '~/utils'
-import {ConfigError, APIError, InvalidTeamNameFormat} from '~/errors/CustomErrors'
-import {CreateInputs} from "~/commands/team/create";
-import {RemoveInputs} from "~/commands/remove";
+import { Config, Team, User } from '~/types'
+import { asyncPipe, validCharsTeamName } from '~/utils'
+import {
+  ConfigError,
+  APIError,
+  InvalidTeamNameFormat,
+} from '~/errors/CustomErrors'
+import { CreateInputs } from '~/commands/team/create'
+import { RemoveInputs } from '~/commands/remove'
 
 const { white, reset } = ux.colors
 interface displayTeam extends Team {
@@ -48,9 +52,15 @@ export default class SecretsRegister extends Command {
     const { url } = await ux.prompt<{ url: string }>({
       type: 'input',
       name: 'url',
-      message: `\n🔐 Register your secret storage to share secrets and passwords with team ${reset.blueBright(`${inputs.activeTeam.name}`)}    \n${reset.grey('Enter your secret storage')} ${reset.blue('url')} ${reset.grey('and')} ${reset.blue('access token')} ${reset.grey('. Change the team to with which \nthe secret storage will be registered by running')} ${reset.blue('ops team:switch')}${reset.grey('.')} \n${white('Link your secret storage to your team')} ${reset.green(
-        '→',
-      )}`,
+      message: `\n🔐 Register your secret storage to share secrets and passwords with team ${reset.blueBright(
+        `${inputs.activeTeam.name}`,
+      )}    \n${reset.grey('Enter your secret storage')} ${reset.blue(
+        'url',
+      )} ${reset.grey('and')} ${reset.blue('access token')} ${reset.grey(
+        '. Change the team to with which \nthe secret storage will be registered by running',
+      )} ${reset.blue('ops team:switch')}${reset.grey('.')} \n${white(
+        'Link your secret storage to your team',
+      )} ${reset.green('→')}`,
       afterMessage: `${reset.green('✓')} URL    `,
       validate: this.validateRegisterInput.bind(this),
     })
@@ -61,7 +71,9 @@ export default class SecretsRegister extends Command {
       message: `\n🔐 Register secret storage access token ${reset.green(
         '→',
       )}  \n${white('Enter access token:')} `,
-      afterMessage: `${reset.green('✓')} TOKEN ${reset.grey('********')}    \n🙌 Secrets registration complete!`,
+      afterMessage: `${reset.green('✓')} TOKEN ${reset.grey(
+        '********',
+      )}    \n🙌 Secrets registration complete!`,
       validate: this.validateRegisterInput.bind(this),
     })
 
@@ -76,17 +88,19 @@ export default class SecretsRegister extends Command {
     inputs: RegisterInputs,
   ): Promise<RegisterInputs> => {
     try {
-      const { data: response } = await this.services.api.create(`teams/${inputs.activeTeam.name}/secrets/register`,
+      const { data: response } = await this.services.api.create(
+        `teams/${inputs.activeTeam.name}/secrets/register`,
         {
           write_privilege: true,
-          token:          inputs.token,
-          url:            inputs.url,
+          token: inputs.token,
+          url: inputs.url,
         },
         {
           headers: {
             Authorization: this.accessToken,
           },
-      });
+        },
+      )
 
       return inputs
     } catch (err) {
@@ -123,7 +137,7 @@ export default class SecretsRegister extends Command {
         this.getActiveTeam,
         this.promptForSecretsProviderCredentials,
         this.registerSecretsProvider,
-        this.sendAnalytics(this.user)
+        this.sendAnalytics(this.user),
       )
       await switchPipeline()
     } catch (err) {
