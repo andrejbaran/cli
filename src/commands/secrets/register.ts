@@ -3,15 +3,11 @@ import Command from '~/base'
 import { Team, State } from '~/types'
 import { asyncPipe } from '~/utils'
 import {
-  ConfigError,
   InvalidTeamNameFormat,
   RegisterSecretsProvider,
 } from '~/errors/CustomErrors'
 
 const { white, reset } = ux.colors
-interface displayTeam extends Team {
-  displayName: string
-}
 
 export interface RegisterInputs {
   activeTeam: Team
@@ -21,17 +17,6 @@ export interface RegisterInputs {
 
 export default class SecretsRegister extends Command {
   static description = 'Register a secrets provider for a team'
-
-  getActiveTeam = async (): Promise<Pick<RegisterInputs, 'activeTeam'>> => {
-    try {
-      const { team: activeTeam } = await this.readConfig()
-      if (!activeTeam) throw new Error()
-      return { activeTeam }
-    } catch (err) {
-      this.debug('%O', err)
-      throw new ConfigError(err)
-    }
-  }
 
   validateRegisterInput = async (input: string): Promise<boolean | string> => {
     try {
@@ -45,14 +30,14 @@ export default class SecretsRegister extends Command {
   }
 
   promptForSecretsProviderCredentials = async (
-    inputs: RegisterInputs,
+    team: Team,
   ): Promise<RegisterInputs> => {
     const { url, token } = await ux.prompt<{ url: string; token: string }>([
       {
         type: 'input',
         name: 'url',
         message: `\n🔐 Register your secret storage to share secrets and passwords with team ${reset.blueBright(
-          `${inputs.activeTeam.name}`,
+          `${team.name}`,
         )}    \n${reset.grey('Enter your secret storage')} ${reset.blue(
           'url',
         )} ${reset.grey('and')} ${reset.blue('access token')} ${reset.grey(
@@ -76,12 +61,12 @@ export default class SecretsRegister extends Command {
       },
     ])
 
-    return { ...inputs, url, token }
+    return { activeTeam: team, url, token }
   }
 
   registerSecretsProvider = async (inputs: RegisterInputs) => {
     try {
-      const { data: response } = await this.services.api.create(
+      await this.services.api.create(
         `teams/${inputs.activeTeam.name}/secrets/register`,
         {
           write_privilege: true,
@@ -126,12 +111,11 @@ export default class SecretsRegister extends Command {
       await this.isLoggedIn()
 
       const switchPipeline = asyncPipe(
-        this.getActiveTeam,
         this.promptForSecretsProviderCredentials,
         this.registerSecretsProvider,
         this.sendAnalytics(this.state),
       )
-      await switchPipeline()
+      await switchPipeline(this.state.config.team)
     } catch (err) {
       this.debug('%O', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })
