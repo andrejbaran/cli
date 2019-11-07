@@ -14,6 +14,7 @@ import getDocker from '../utils/get-docker'
 import { getEndpointFromOpType } from '~/constants/opConfig'
 import { RegistryAuthService } from './RegistryAuth'
 import { FeathersClient } from './Feathers'
+import { OPS_API_HOST } from '~/constants/env'
 
 const debug = Debug('ops:PublishService')
 
@@ -153,9 +154,9 @@ export class Publish {
 
               console.log(
                 `🖥  Visit your Op page here: ${ux.url(
-                  `https://cto.ai/registry/${teamName}/${apiOp.name}`,
-                  `<https://cto.ai/registry/${teamName}/${apiOp.name}>`,
-                )}`,
+                  `${OPS_API_HOST}registry/${teamName}/${apiOp.name}`,
+                  `<${OPS_API_HOST}registry/${teamName}/${apiOp.name}>`,
+                )}\n`,
               )
 
               await registryAuthService.delete(

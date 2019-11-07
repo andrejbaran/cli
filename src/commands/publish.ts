@@ -4,7 +4,7 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
 import Command, { flags } from '../base'
-import { OPS_REGISTRY_HOST } from '../constants/env'
+import { OPS_REGISTRY_HOST, OPS_API_HOST } from '../constants/env'
 import {
   COMMAND,
   OP_FILE,
@@ -333,9 +333,9 @@ export default class Publish extends Command {
 
         this.log(
           `🖥  Visit your Op page here: ${ux.url(
-            `https://cto.ai/registry/${this.team.name}/${apiWorkflow.name}`,
-            `<https://cto.ai/registry/${this.team.name}/${apiWorkflow.name}>`,
-          )}`,
+            `${OPS_API_HOST}registry/${this.team.name}/${apiWorkflow.name}`,
+            `<${OPS_API_HOST}${this.team.name}/${apiWorkflow.name}>`,
+          )}\n`,
         )
         // this.sendAnalytics('workflow', apiWorkflow)
       } catch (err) {
