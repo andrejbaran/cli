@@ -22,7 +22,7 @@ export interface RegisterInputs {
 }
 
 export default class SecretsRegister extends Command {
-  static description = 'Shows the list of your teams.'
+  static description = 'Register a secrets provider for a team'
 
   getActiveTeam = async (): Promise<Pick<RegisterInputs, 'activeTeam'>> => {
     try {
