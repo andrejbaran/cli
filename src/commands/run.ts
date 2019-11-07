@@ -445,6 +445,7 @@ export default class Run extends Command {
           username: this.user.username,
           id,
           name,
+          description,
           argments: opParams.length,
         },
       },

@@ -14,6 +14,7 @@ import getDocker from '../utils/get-docker'
 import { getEndpointFromOpType } from '~/constants/opConfig'
 import { RegistryAuthService } from './RegistryAuth'
 import { FeathersClient } from './Feathers'
+import { OPS_API_HOST } from '~/constants/env'
 
 const debug = Debug('ops:PublishService')
 
@@ -148,8 +149,16 @@ export class Publish {
               console.log(
                 `\n🙌 ${ux.colors.callOutCyan(
                   imageUniqueId,
-                )} has been published! \n`,
+                )} has been published!`,
               )
+
+              console.log(
+                `🖥  Visit your Op page here: ${ux.url(
+                  `${OPS_API_HOST}registry/${teamName}/${apiOp.name}`,
+                  `<${OPS_API_HOST}registry/${teamName}/${apiOp.name}>`,
+                )}\n`,
+              )
+
               await registryAuthService.delete(
                 accessToken,
                 registryAuth.robotID,
