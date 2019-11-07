@@ -1,14 +1,12 @@
 import { ux } from '@cto.ai/sdk'
-import Command, { flags } from '~/base'
-import { Config, Team, User } from '~/types'
-import { asyncPipe, validCharsTeamName } from '~/utils'
+import Command from '~/base'
+import { Team, State } from '~/types'
+import { asyncPipe } from '~/utils'
 import {
   ConfigError,
-  APIError,
   InvalidTeamNameFormat,
+  RegisterSecretsProvider,
 } from '~/errors/CustomErrors'
-import { CreateInputs } from '~/commands/team/create'
-import { RemoveInputs } from '~/commands/remove'
 
 const { white, reset } = ux.colors
 interface displayTeam extends Team {
@@ -49,44 +47,39 @@ export default class SecretsRegister extends Command {
   promptForSecretsProviderCredentials = async (
     inputs: RegisterInputs,
   ): Promise<RegisterInputs> => {
-    const { url } = await ux.prompt<{ url: string }>({
-      type: 'input',
-      name: 'url',
-      message: `\n🔐 Register your secret storage to share secrets and passwords with team ${reset.blueBright(
-        `${inputs.activeTeam.name}`,
-      )}    \n${reset.grey('Enter your secret storage')} ${reset.blue(
-        'url',
-      )} ${reset.grey('and')} ${reset.blue('access token')} ${reset.grey(
-        '. Change the team to with which \nthe secret storage will be registered by running',
-      )} ${reset.blue('ops team:switch')}${reset.grey('.')} \n${white(
-        'Link your secret storage to your team',
-      )} ${reset.green('→')}`,
-      afterMessage: `${reset.green('✓')} URL    `,
-      validate: this.validateRegisterInput.bind(this),
-    })
+    const { url, token } = await ux.prompt<{ url: string; token: string }>([
+      {
+        type: 'input',
+        name: 'url',
+        message: `\n🔐 Register your secret storage to share secrets and passwords with team ${reset.blueBright(
+          `${inputs.activeTeam.name}`,
+        )}    \n${reset.grey('Enter your secret storage')} ${reset.blue(
+          'url',
+        )} ${reset.grey('and')} ${reset.blue('access token')} ${reset.grey(
+          '. Change the team to with which \nthe secret storage will be registered by running',
+        )} ${reset.blue('ops team:switch')}${reset.grey('.')} \n${white(
+          'Link your secret storage to your team',
+        )} ${reset.green('→')}`,
+        afterMessage: `${reset.green('✓')} URL    `,
+        validate: this.validateRegisterInput.bind(this),
+      },
+      {
+        type: 'password',
+        name: 'token',
+        message: `\n🔐 Register secret storage access token ${reset.green(
+          '→',
+        )}  \n${white('Enter access token:')} `,
+        afterMessage: `${reset.green('✓')} TOKEN ${reset.grey(
+          '********',
+        )}    \n🙌 Secrets registration complete!`,
+        validate: this.validateRegisterInput.bind(this),
+      },
+    ])
 
-    const { token } = await ux.prompt<{ token: string }>({
-      type: 'password',
-      name: 'token',
-      message: `\n🔐 Register secret storage access token ${reset.green(
-        '→',
-      )}  \n${white('Enter access token:')} `,
-      afterMessage: `${reset.green('✓')} TOKEN ${reset.grey(
-        '********',
-      )}    \n🙌 Secrets registration complete!`,
-      validate: this.validateRegisterInput.bind(this),
-    })
-
-    return {
-      activeTeam: inputs.activeTeam,
-      url: url,
-      token: token,
-    } as RegisterInputs
+    return { ...inputs, url, token }
   }
 
-  registerSecretsProvider = async (
-    inputs: RegisterInputs,
-  ): Promise<RegisterInputs> => {
+  registerSecretsProvider = async (inputs: RegisterInputs) => {
     try {
       const { data: response } = await this.services.api.create(
         `teams/${inputs.activeTeam.name}/secrets/register`,
@@ -105,16 +98,18 @@ export default class SecretsRegister extends Command {
       return inputs
     } catch (err) {
       this.debug('%O', err)
-      throw new APIError(err)
+      throw new RegisterSecretsProvider(err)
     }
   }
 
-  sendAnalytics = (user: User) => async (inputs: RemoveInputs) => {
-    const { email, username } = user
+  sendAnalytics = (state: State) => async () => {
+    const { team } = state.config
+    const { email, username } = state.config.user
+
     this.services.analytics.track(
       {
         userId: email,
-        teamId: this.team.id,
+        teamId: team.id,
         cliEvent: 'Ops CLI Register Secrets Provider',
         event: 'Ops CLI Register Secrets Provider',
         properties: {
@@ -124,12 +119,9 @@ export default class SecretsRegister extends Command {
       },
       this.accessToken,
     )
-    return inputs
   }
 
   async run() {
-    this.parse(SecretsRegister)
-
     try {
       await this.isLoggedIn()
 
@@ -137,7 +129,7 @@ export default class SecretsRegister extends Command {
         this.getActiveTeam,
         this.promptForSecretsProviderCredentials,
         this.registerSecretsProvider,
-        this.sendAnalytics(this.user),
+        this.sendAnalytics(this.state),
       )
       await switchPipeline()
     } catch (err) {

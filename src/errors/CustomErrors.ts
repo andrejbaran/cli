@@ -575,3 +575,13 @@ export class IncompleteOpsYml extends ErrorTemplate {
     )
   }
 }
+
+export class RegisterSecretsProvider extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white('😅 Uh-oh, we were not able to register the secrets provider'),
+      err,
+      expectedSource,
+    )
+  }
+}
