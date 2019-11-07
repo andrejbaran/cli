@@ -328,9 +328,14 @@ export default class Publish extends Command {
         )
 
         this.log(
-          `\n🙌 ${ux.colors.callOutCyan(
-            apiWorkflow.name,
-          )} has been published! \n`,
+          `\n🙌 ${ux.colors.callOutCyan(apiWorkflow.name)} has been published!`,
+        )
+
+        this.log(
+          `🖥  Visit your Op page here: ${ux.url(
+            `https://cto.ai/registry/${this.team.name}/${apiWorkflow.name}`,
+            `<https://cto.ai/registry/${this.team.name}/${apiWorkflow.name}>`,
+          )}`,
         )
         // this.sendAnalytics('workflow', apiWorkflow)
       } catch (err) {

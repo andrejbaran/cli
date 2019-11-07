@@ -148,8 +148,16 @@ export class Publish {
               console.log(
                 `\n🙌 ${ux.colors.callOutCyan(
                   imageUniqueId,
-                )} has been published! \n`,
+                )} has been published!`,
               )
+
+              console.log(
+                `🖥  Visit your Op page here: ${ux.url(
+                  `https://cto.ai/registry/${teamName}/${apiOp.name}`,
+                  `<https://cto.ai/registry/${teamName}/${apiOp.name}>`,
+                )}`,
+              )
+
               await registryAuthService.delete(
                 accessToken,
                 registryAuth.robotID,
