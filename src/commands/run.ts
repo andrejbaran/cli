@@ -446,6 +446,7 @@ export default class Run extends Command {
           id,
           name,
           description,
+          image: `${OPS_REGISTRY_HOST}/${name}`,
           argments: opParams.length,
         },
       },

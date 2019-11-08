@@ -28,6 +28,8 @@ export const createMockOp = (inputs: Partial<Op>): Op => {
       configDir: '',
       stateDir: '',
       teamID: '',
+      teamName: '',
+      isPublic: false,
       help: {
         usage: '',
         arguments: {},
@@ -56,6 +58,8 @@ export const createMockWorkflow = (inputs: Partial<Workflow>): Workflow => {
       configDir: '',
       stateDir: '',
       teamID: '',
+      teamName: '',
+      isPublic: false,
       help: {
         usage: '',
         arguments: {},

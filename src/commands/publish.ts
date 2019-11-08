@@ -45,13 +45,13 @@ export interface PublishInputs {
 }
 
 export default class Publish extends Command {
-  public static description = 'Publish an Op to your team.'
+  static description = 'Publish an Op to your team.'
 
-  public static flags = {
+  static flags = {
     help: flags.help({ char: 'h' }),
   }
 
-  public static args = [
+  static args = [
     {
       name: 'path',
       description: 'Path to the op you want to publish.',
@@ -59,13 +59,13 @@ export default class Publish extends Command {
     },
   ]
 
-  public docker: Docker | undefined
+  docker: Docker | undefined
 
-  public resolvePath = async (opPath: string) => {
+  resolvePath = async (opPath: string) => {
     return path.resolve(process.cwd(), opPath)
   }
 
-  public checkDocker = async (opPath: string) => {
+  checkDocker = async (opPath: string) => {
     const docker = await getDocker(this, 'publish')
     if (!docker) {
       throw new Error('No docker')
@@ -73,7 +73,7 @@ export default class Publish extends Command {
     return { opPath, docker }
   }
 
-  public determineQuestions = async (inputs: PublishInputs) => {
+  determineQuestions = async (inputs: PublishInputs) => {
     const { opsAndWorkflows } = await ux.prompt<{
       opsAndWorkflows: SourceResult
     }>({
@@ -92,7 +92,7 @@ export default class Publish extends Command {
     return { ...inputs, opsAndWorkflows }
   }
 
-  public getOpsAndWorkFlows = async ({
+  getOpsAndWorkFlows = async ({
     opPath,
     opsAndWorkflows,
     docker,
@@ -118,7 +118,7 @@ export default class Publish extends Command {
     return { ops, workflows, docker, version, opsAndWorkflows }
   }
 
-  public selectOpsAndWorkFlows = async ({
+  selectOpsAndWorkFlows = async ({
     ops,
     workflows,
     version,
@@ -139,7 +139,7 @@ export default class Publish extends Command {
     return { ops, workflows, version, docker, opsAndWorkflows }
   }
 
-  public selectOps = async (ops: Op[]) => {
+  selectOps = async (ops: Op[]) => {
     if (ops.length <= 1) {
       return ops
     }
@@ -160,7 +160,7 @@ export default class Publish extends Command {
     return answers.ops
   }
 
-  public selectWorkflows = async (workflows: Workflow[]) => {
+  selectWorkflows = async (workflows: Workflow[]) => {
     if (workflows.length <= 1) {
       return workflows
     }
@@ -201,7 +201,7 @@ export default class Publish extends Command {
     }
   }
 
-  public publishOpsAndWorkflows = async (inputs: PublishInputs) => {
+  publishOpsAndWorkflows = async (inputs: PublishInputs) => {
     switch (inputs.opsAndWorkflows) {
       case COMMAND:
         await this.opsPublishLoop(inputs)
@@ -215,7 +215,7 @@ export default class Publish extends Command {
     }
   }
 
-  public opsPublishLoop = async ({ ops, version }: PublishInputs) => {
+  opsPublishLoop = async ({ ops, version }: PublishInputs) => {
     for (const op of ops) {
       if (!isValidOpName(op.name)) {
         throw new InvalidInputCharacter('Op Name')
@@ -264,10 +264,7 @@ export default class Publish extends Command {
     }
   }
 
-  public workflowsPublishLoop = async ({
-    workflows,
-    version,
-  }: PublishInputs) => {
+  workflowsPublishLoop = async ({ workflows, version }: PublishInputs) => {
     for (const workflow of workflows) {
       if (workflow.remote) {
         const newSteps: string[] = []
@@ -337,7 +334,7 @@ export default class Publish extends Command {
             `<${OPS_API_HOST}${this.team.name}/${apiWorkflow.name}>`,
           )}\n`,
         )
-        // this.sendAnalytics('workflow', apiWorkflow)
+        this.sendAnalytics('workflow', apiWorkflow)
       } catch (err) {
         this.debug('%O', err)
         // 5023 is: Team not found
@@ -357,7 +354,7 @@ export default class Publish extends Command {
     }
   }
 
-  public sendAnalytics = (publishType: string, opOrWorkflow: Op | Workflow) => {
+  sendAnalytics = (publishType: string, opOrWorkflow: Op | Workflow) => {
     this.services.analytics.track({
       userId: this.user.email,
       teamId: this.team.id,
@@ -368,12 +365,14 @@ export default class Publish extends Command {
         username: this.user.username,
         type: publishType,
         name: opOrWorkflow.name,
+        description: opOrWorkflow.description,
+        image: `${OPS_REGISTRY_HOST}/${opOrWorkflow.id.toLowerCase()}`,
         tag: 'latest',
       },
     })
   }
 
-  public async run() {
+  async run() {
     try {
       await this.isLoggedIn()
       const { args } = this.parse(Publish)

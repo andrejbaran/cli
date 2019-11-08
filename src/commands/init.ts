@@ -388,7 +388,7 @@ export default class Init extends Command {
     try {
       const { destDir } = initPaths
       const { templates } = initParams
-      const { name } = this.getNameAndDescription(initParams)
+      const { name, description } = this.getNameAndDescription(initParams)
       this.services.analytics.track(
         {
           userId: this.user.email,
@@ -400,6 +400,7 @@ export default class Init extends Command {
             username: this.user.username,
             path: destDir,
             name,
+            description,
             templates,
           },
         },
