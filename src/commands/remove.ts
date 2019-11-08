@@ -239,6 +239,8 @@ export default class Remove extends Command {
           // type: removeType,
           id,
           name,
+          description,
+          image: `${OPS_REGISTRY_HOST}/${name}`,
         },
       },
       this.accessToken,

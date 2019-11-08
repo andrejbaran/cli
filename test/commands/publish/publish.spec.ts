@@ -56,20 +56,34 @@ describe('BuildStep', () => {
       .mockReturnValue({} as RegistryAuth)
 
     const config = await Config.load()
+
     cmd = new Publish([], config, {
       api: mockFeathersService,
       buildStepService: mockBuildStepService,
       registryAuthService: mockRegistryAuthService,
     } as Services)
+
+    cmd.sendAnalytics = jest.fn()
+
+    cmd.user = {
+      username: '',
+      email: '',
+      id: '',
+    }
     cmd.team = {
       id: 'team-id',
       name: 'team-name',
     }
     cmd.state = {
       config: {
-        tokens: { accessToken: '', refreshToken: '', idToken: '' },
+        tokens: {
+          sessionState: '',
+          accessToken: '',
+          refreshToken: '',
+          idToken: '',
+        },
         team: cmd.team,
-        user: {} as User,
+        user: cmd.user,
       },
     }
 
@@ -135,15 +149,28 @@ describe('BuildStep', () => {
       buildStepService: mockBuildStepService,
       registryAuthService: mockRegistryAuthService,
     } as Services)
+
+    cmd.sendAnalytics = jest.fn()
+
+    cmd.user = {
+      username: '',
+      email: '',
+      id: '',
+    }
     cmd.team = {
       id: 'team-id',
       name: 'team-name',
     }
     cmd.state = {
       config: {
-        tokens: { accessToken: '', refreshToken: '', idToken: '' },
+        tokens: {
+          sessionState: '',
+          accessToken: '',
+          refreshToken: '',
+          idToken: '',
+        },
         team: cmd.team,
-        user: {} as User,
+        user: cmd.user,
       },
     }
 
