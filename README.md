@@ -22,7 +22,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.5.23 darwin-x64 node-v11.14.0
+@cto.ai/ops/1.5.23 darwin-x64 node-v12.13.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -47,6 +47,7 @@ USAGE
 * [`ops remove [OPNAME]`](#ops-remove-opname)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
+* [`ops secrets:register`](#ops-secretsregister)
 * [`ops team:create`](#ops-teamcreate)
 * [`ops team:invite`](#ops-teaminvite)
 * [`ops team:join`](#ops-teamjoin)
@@ -268,6 +269,17 @@ OPTIONS
 ```
 
 _See code: [src/commands/search.ts](https://github.com/cto.ai/ops/blob/v1.5.23/src/commands/search.ts)_
+
+## `ops secrets:register`
+
+Register a secrets provider for a team
+
+```
+USAGE
+  $ ops secrets:register
+```
+
+_See code: [src/commands/secrets/register.ts](https://github.com/cto.ai/ops/blob/v1.5.23/src/commands/secrets/register.ts)_
 
 ## `ops team:create`
 
