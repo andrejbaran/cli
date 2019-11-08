@@ -79,7 +79,7 @@
     "/oclif.manifest.json",
     "/postinstall.js"
   ],
-  "homepage": "https://cto.ai/ops",
+  "homepage": "https://cto.ai/platform",
   "keywords": [
     "oclif"
   ],
@@ -110,7 +110,6 @@
       }
     }
   },
-  "repository": "cto.ai/ops",
   "scripts": {
     "build": "oclif-dev manifest && oclif-dev readme",
     "compile": "./node_modules/.bin/pkg . -t node8-macos,node8-linux,node8-win --output dist/ops",
