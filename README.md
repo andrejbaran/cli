@@ -47,6 +47,7 @@ USAGE
 * [`ops remove [OPNAME]`](#ops-remove-opname)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
+* [`ops secrets:list`](#ops-secretslist)
 * [`ops secrets:register`](#ops-secretsregister)
 * [`ops secrets:set`](#ops-secretsset)
 * [`ops team:create`](#ops-teamcreate)
@@ -282,6 +283,19 @@ USAGE
 
 _See code: [src/commands/secrets/register.ts](https://github.com/cto.ai/ops/blob/v1.5.24/src/commands/secrets/register.ts)_
 
+## `ops secrets:list`
+
+List all the keys that are stored
+
+```
+USAGE
+  $ ops secrets:list
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+_See code: [src/commands/secrets/list.ts](https://github.com/cto.ai/ops/blob/v1.5.23/src/commands/secrets/list.ts)_
 ## `ops secrets:set`
 
 Add a key & value
