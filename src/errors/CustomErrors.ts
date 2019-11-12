@@ -189,6 +189,23 @@ export class InvalidTeamNameFormat extends ErrorTemplate {
   }
 }
 
+export class NoTeamSelected extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(
+        `✋ Looks like you don't have a team selected. Please select a team using the ${terminalText(
+          `ops team:switch`,
+        )} command.`,
+      ),
+      err,
+      {
+        source: errorSource.EXPECTED,
+        exit: false,
+      },
+    )
+  }
+}
+
 export class CouldNotGetLatestVersion extends ErrorTemplate {
   constructor(err) {
     super(
