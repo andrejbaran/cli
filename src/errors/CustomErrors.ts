@@ -579,8 +579,38 @@ export class IncompleteOpsYml extends ErrorTemplate {
 export class RegisterSecretsProvider extends ErrorTemplate {
   constructor(err) {
     super(
-      white('😅 Uh-oh, we were not able to register the secrets provider'),
+      white('😅 Oops!, we were not able to register the secrets provider'),
       err,
+      expectedSource,
+    )
+  }
+}
+
+export class SetSecretsProvider extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white('😅 Oops!, we were not able to successfully set the secret'),
+      err,
+      expectedSource,
+    )
+  }
+}
+
+export class SecretsValuesNotEqual extends ErrorTemplate {
+  constructor() {
+    super(
+      white('🤔 Sorry, the values you have entered do not match!'),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class SecretsFlagsRequired extends ErrorTemplate {
+  constructor() {
+    super(
+      white('😅 Oops!, it appears that either flag -k or -v is missing'),
+      undefined,
       expectedSource,
     )
   }

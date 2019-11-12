@@ -48,6 +48,7 @@ USAGE
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
 * [`ops secrets:register`](#ops-secretsregister)
+* [`ops secrets:set`](#ops-secretsset)
 * [`ops team:create`](#ops-teamcreate)
 * [`ops team:invite`](#ops-teaminvite)
 * [`ops team:join`](#ops-teamjoin)
@@ -280,6 +281,21 @@ USAGE
 ```
 
 _See code: [src/commands/secrets/register.ts](https://github.com/cto.ai/ops/blob/v1.5.24/src/commands/secrets/register.ts)_
+
+## `ops secrets:set`
+
+Add a key & value
+
+```
+USAGE
+  $ ops secrets:set
+
+OPTIONS
+  -k, --key=key
+  -v, --value=value
+```
+
+_See code: [src/commands/secrets/set.ts](https://github.com/cto.ai/ops/blob/v1.5.24/src/commands/secrets/set.ts)_
 
 ## `ops team:create`
 
