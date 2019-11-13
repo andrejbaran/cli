@@ -167,7 +167,9 @@ export default class List extends Command {
         teamId: this.team.id,
         cliEvent: 'Ops CLI List',
         event: 'Ops CLI List',
-        properties: {},
+        properties: {
+          email: this.user.email,
+        },
       },
       this.accessToken,
     )

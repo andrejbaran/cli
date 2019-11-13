@@ -105,7 +105,7 @@ describe('checkForHelpMessage', () => {
       version,
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
-    }
+    } as RunInputs
     cmd = new Run([], config)
     cmd.printCustomHelp = jest.fn()
     const mockExit = jest.spyOn(process, 'exit').mockImplementation()
@@ -128,7 +128,7 @@ describe('checkForHelpMessage', () => {
       version,
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
-    }
+    } as RunInputs
 
     cmd = new Run([], config)
     cmd.printCustomHelp = jest.fn()
@@ -149,7 +149,7 @@ describe('checkForHelpMessage', () => {
       version,
       opsAndWorkflows: [mockWorkflow],
       opOrWorkflow: mockWorkflow,
-    }
+    } as RunInputs
     cmd = new Run([], config)
     cmd.printCustomHelp = jest.fn()
     cmd.checkForHelpMessage(inputs)
@@ -175,7 +175,7 @@ describe('executeOpOrWorkflowService', () => {
       version,
       opsAndWorkflows: [mockWorkflow],
       opOrWorkflow: mockWorkflow,
-    }
+    } as RunInputs
     cmd = new Run([], config, {
       workflowService: mockWorkflowService,
     } as Services)
@@ -203,7 +203,7 @@ describe('executeOpOrWorkflowService', () => {
       version,
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
-    }
+    } as RunInputs
     cmd = new Run([], config, {
       opService: mockOpService,
     } as Services)
@@ -215,13 +215,17 @@ describe('executeOpOrWorkflowService', () => {
       version,
     )
   })
-  test('should set the image if the  opOrWorkflow is a op and not published', async () => {
+  test('should set the image if the opOrWorkflow is a op and not published', async () => {
     config.team = {
       name: 'FAKE_TEAM_NAME',
     }
     const mockOpService = new OpService()
     mockOpService.run = jest.fn()
-    const mockOp = createMockOp({ isPublished: false, name: 'FAKE_OP_NAME' })
+    const mockOp = createMockOp({
+      isPublished: false,
+      teamName: 'FAKE_TEAM_NAME',
+      name: 'FAKE_OP_NAME',
+    })
     const opParams = ['arg1', 'arg2']
     const inputs: RunInputs = {
       parsedArgs: {
@@ -235,7 +239,7 @@ describe('executeOpOrWorkflowService', () => {
       version,
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
-    }
+    } as RunInputs
     cmd = new Run([], config, {
       opService: mockOpService,
     } as Services)

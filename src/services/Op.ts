@@ -76,10 +76,11 @@ export class OpService {
           cliEvent: 'Ops CLI Build',
           event: 'Ops CLI Build',
           properties: {
+            email: user.email,
             username: user.username,
             name: op.name,
             description: op.description,
-            email: user.email,
+            image: `${OPS_REGISTRY_HOST}/${op.name}`,
           },
         },
         accessToken,
