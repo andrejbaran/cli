@@ -1,6 +1,8 @@
 import { FeathersClient } from '~/services'
 import * as Config from '@oclif/config'
 import SecretsList from '~/commands/secrets/list'
+import { SecretListInputs } from '~/types'
+import { SecretService, AnalyticsService } from '~/services'
 import { sleep } from '../../utils'
 import {
   createMockTeam,
@@ -10,7 +12,6 @@ import {
 } from '../../mocks'
 import { NoTeamSelected } from '~/errors/CustomErrors'
 
-let cmd: SecretsList
 let config: Config.IConfig
 
 beforeEach(async () => {
@@ -22,68 +23,62 @@ afterEach(async () => {
   await sleep(500)
 })
 
-describe('ops secrets:list', () => {
+describe('SecretService', () => {
+  let service: SecretService
   test('Should return an error if there is no active team', async () => {
+    service = new SecretService()
+
     const mockToken = createMockTokens({})
     const mockTeam = createMockTeam({ id: '', name: '' })
-    const mockConfig = createMockConfig({ team: mockTeam, tokens: mockToken })
 
-    cmd = new SecretsList([], config)
-    cmd.state = createMockState({ config: mockConfig })
+    const mockInputs = { config: { team: mockTeam, tokens: mockToken } }
 
-    await expect(cmd.getApiSecrets({} as SecretListInputs)).rejects.toThrow(
-      new NoTeamSelected('No team selected'),
-    )
+    await expect(
+      service.getApiSecretsList(mockInputs as SecretListInputs),
+    ).rejects.toThrow(new NoTeamSelected('No team selected'))
   })
 
   const mockFeathersService = new FeathersClient()
   const mockToken = createMockTokens({})
   const mockTeam = createMockTeam({ id: 'FAKE_ID', name: 'FAKE_TEAM_NAME' })
-  const mockConfig = createMockConfig({ team: mockTeam, tokens: mockToken })
 
   test('Should return 0 secrets', async () => {
+    service = new SecretService()
+
     const mockSecrets = undefined
-
     mockFeathersService.find = jest.fn().mockReturnValue({ data: mockSecrets })
-
-    cmd = new SecretsList([], config, {
+    const mockInputs = {
       api: mockFeathersService,
-    } as Services)
-    cmd.state = createMockState({ config: mockConfig })
+      config: { team: mockTeam, tokens: mockToken },
+    }
 
-    const res = await cmd.getApiSecrets({
-      activeTeam: mockTeam,
-    } as SecretListInputs)
+    const res = await service.getApiSecretsList(mockInputs as SecretListInputs)
 
     expect(res.secrets).toBeUndefined()
   })
 
   test('Should return 4 secrets', async () => {
+    service = new SecretService()
+
     const mockSecrets = ['key1', 'key2', 'key3', 'key4']
-
     mockFeathersService.find = jest.fn().mockReturnValue({ data: mockSecrets })
-
-    cmd = new SecretsList([], config, {
+    const mockInputs = {
       api: mockFeathersService,
-    } as Services)
-    cmd.state = createMockState({ config: mockConfig })
+      config: { team: mockTeam, tokens: mockToken },
+    }
 
-    const res = await cmd.getApiSecrets({
-      activeTeam: mockTeam,
-    } as SecretListInputs)
+    const res = await service.getApiSecretsList(mockInputs as SecretListInputs)
 
     expect(res.secrets.length).toEqual(4)
     expect(res.secrets).toEqual(mockSecrets)
   })
 
   test('Should return secrets', async () => {
+    service = new SecretService()
+
     const mockSecrets = ['key1', 'key2']
-
-    cmd = new SecretsList([], config)
-
-    const res = await cmd.checkData({
-      secrets: mockSecrets,
-    } as SecretListInputs)
+    const mockInputs = { secrets: mockSecrets }
+    const res = await service.checkDataList(mockInputs as SecretListInputs)
 
     expect(res.secrets).toEqual(mockSecrets)
   })
