@@ -37,7 +37,6 @@ describe('register secrets', () => {
     expect(mockFeathersService.create).toBeCalledWith(
       `teams/${inputs.activeTeam.name}/secrets/register`,
       {
-        write_privilege: true,
         token: inputs.token,
         url: inputs.url,
       },
