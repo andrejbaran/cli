@@ -22,7 +22,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.5.25 darwin-x64 node-v12.12.0
+@cto.ai/ops/1.5.25 linux-x64 node-v12.12.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -47,6 +47,7 @@ USAGE
 * [`ops remove [OPNAME]`](#ops-remove-opname)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
+* [`ops secrets:delete`](#ops-secretsdelete)
 * [`ops secrets:list`](#ops-secretslist)
 * [`ops secrets:register`](#ops-secretsregister)
 * [`ops secrets:set`](#ops-secretsset)
@@ -247,7 +248,18 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src/commands/search.ts](https://github.com/cto.ai/ops/blob/v1.5.24/src/commands/search.ts)_
+## `ops secrets:delete`
+
+Delete a secret stored for the active team
+
+```
+USAGE
+  $ ops secrets:delete
+
+OPTIONS
+  -h, --help     show CLI help
+  -k, --key=key  Secret Key Name
+```
 
 ## `ops secrets:list`
 
