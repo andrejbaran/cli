@@ -69,7 +69,6 @@ export default class SecretsRegister extends Command {
       await this.services.api.create(
         `teams/${inputs.activeTeam.name}/secrets/register`,
         {
-          write_privilege: true,
           token: inputs.token,
           url: inputs.url,
         },
