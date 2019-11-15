@@ -47,6 +47,7 @@ test('it should run a published op by passing name as argument', async () => {
   expect(result).toContain(`Running ${EXISTING_OP_NAME}...`)
 
   const newFile = path.join(process.cwd(), NEW_FILE)
+  await sleep(500)
   const newFileExists = fs.existsSync(newFile)
   console.log('newfile', newFile, newFileExists)
   expect(newFileExists).toBeTruthy()
