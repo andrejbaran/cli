@@ -603,6 +603,20 @@ export class RegisterSecretsProvider extends ErrorTemplate {
   }
 }
 
+export class NoSecretsProviderFound extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(
+        `😅 Oops!, We are not able to find a secret provider for this team. You can register a secret provider using  ${ux.colors.callOutCyan(
+          'ops secrets:register',
+        )}`,
+      ),
+      err,
+      expectedSource,
+    )
+  }
+}
+
 export class SetSecretsProvider extends ErrorTemplate {
   constructor(err) {
     super(

@@ -50,6 +50,7 @@ USAGE
 * [`ops secrets:list`](#ops-secretslist)
 * [`ops secrets:register`](#ops-secretsregister)
 * [`ops secrets:set`](#ops-secretsset)
+* [`ops secrets:unregister`](#ops-secretsunregister)
 * [`ops team:create`](#ops-teamcreate)
 * [`ops team:invite`](#ops-teaminvite)
 * [`ops team:join`](#ops-teamjoin)
@@ -248,6 +249,20 @@ OPTIONS
 
 _See code: [src/commands/search.ts](https://github.com/cto.ai/ops/blob/v1.5.24/src/commands/search.ts)_
 
+## `ops secrets:list`
+
+List all the keys that are stored for the active team
+
+```
+USAGE
+  $ ops secrets:list
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+_See code: [src/commands/secrets/list.ts](https://github.com/cto.ai/ops/blob/v1.5.24/src/commands/secrets/list.ts)_
+
 ## `ops secrets:register`
 
 Register a secrets provider for a team
@@ -259,19 +274,6 @@ USAGE
 
 _See code: [src/commands/secrets/register.ts](https://github.com/cto.ai/ops/blob/v1.5.24/src/commands/secrets/register.ts)_
 
-## `ops secrets:list`
-
-List all the keys that are stored
-
-```
-USAGE
-  $ ops secrets:list
-
-OPTIONS
-  -h, --help  show CLI help
-```
-
-_See code: [src/commands/secrets/list.ts](https://github.com/cto.ai/ops/blob/v1.5.23/src/commands/secrets/list.ts)_
 ## `ops secrets:set`
 
 Add a key & value
@@ -286,6 +288,17 @@ OPTIONS
 ```
 
 _See code: [src/commands/secrets/set.ts](https://github.com/cto.ai/ops/blob/v1.5.24/src/commands/secrets/set.ts)_
+
+## `ops secrets:unregister`
+
+Unregister a secrets provider for a team
+
+```
+USAGE
+  $ ops secrets:unregister
+```
+
+_See code: [src/commands/secrets/unregister.ts](https://github.com/cto.ai/ops/blob/v1.5.24/src/commands/secrets/unregister.ts)_
 
 ## `ops team:create`
 
