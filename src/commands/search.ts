@@ -137,24 +137,21 @@ export default class Search extends Command {
   selectOpOrWorkflowPrompt = async (
     inputs: SearchInputs,
   ): Promise<SearchInputs> => {
+    const { reset, multiBlue, multiOrange, white, callOutCyan } = this.ux.colors
+    const commandText = multiBlue('\u2022Command')
+    const workflowText = multiOrange('\u2022Workflow')
     const { selectedOpOrWorkflow } = await this.ux.prompt<{
       selectedOpOrWorkflow: Op | Workflow
     }>({
       type: 'autocomplete',
       name: 'selectedOpOrWorkflow',
       pageSize: 5,
-      message: `\nSelect a public ${this.ux.colors.multiBlue(
-        '\u2022Command',
-      )} or ${this.ux.colors.multiOrange(
-        '\u2022Workflow',
-      )} to run ${this.ux.colors.reset.green('→')}\n${this.ux.colors.reset.dim(
-        '🔍 Search:',
-      )} `,
+      message: `\nSelect a public ${commandText} or ${workflowText} to continue ${reset.green(
+        '→',
+      )}\n${reset.dim('🔍 Search:')} `,
       source: this._autocompleteSearch.bind(this),
-      bottomContent: `\n \n${this.ux.colors.white(
-        `Or, run ${this.ux.colors.callOutCyan(
-          'ops help',
-        )} for usage information.`,
+      bottomContent: `\n \n${white(
+        `Or, run ${callOutCyan('ops help')} for usage information.`,
       )}`,
     })
     return { ...inputs, selectedOpOrWorkflow }
@@ -224,18 +221,15 @@ export default class Search extends Command {
   }
 
   private _formatOpOrWorkflowName = (opOrWorkflow: Op | Workflow) => {
-    const name = this.ux.colors.reset.white(opOrWorkflow.name)
-    const teamName = opOrWorkflow.teamName
-      ? `@${this.ux.colors.reset.white(opOrWorkflow.teamName)}/`
-      : ''
+    const { reset, multiOrange, multiBlue } = this.ux.colors
+    const teamName = opOrWorkflow.teamName ? `@${opOrWorkflow.teamName}/` : ''
+    const name = `${reset.white(`${teamName}${opOrWorkflow.name}`)} ${reset.dim(
+      `(${opOrWorkflow.version})`,
+    )}`
     if (opOrWorkflow.type === WORKFLOW_TYPE) {
-      return `${this.ux.colors.reset(
-        this.ux.colors.multiOrange('\u2022'),
-      )} ${teamName}${name}`
+      return `${reset(multiOrange('\u2022'))} ${name}`
     } else {
-      return `${this.ux.colors.reset(
-        this.ux.colors.multiBlue('\u2022'),
-      )} ${teamName}${name}`
+      return `${reset(multiBlue('\u2022'))} ${name}`
     }
   }
 

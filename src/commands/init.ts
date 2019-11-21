@@ -18,6 +18,7 @@ import {
   YAML_TYPE_STRING,
 } from '~/constants/opConfig'
 import { titleCase, appendSuffix } from '~/utils'
+import { validVersionChars } from '~/utils'
 
 export default class Init extends Command {
   static description = 'Easily create a new Op.'
@@ -54,6 +55,17 @@ export default class Init extends Command {
       afterMessageAppend: this.ux.colors.reset(' added!'),
       validate: this._validateDescription,
     },
+    [appendSuffix(COMMAND, 'Version')]: {
+      type: 'input',
+      name: appendSuffix(COMMAND, 'Version'),
+      message: `\nProvide a version ${this.ux.colors.reset.green(
+        '→',
+      )}  \n📝 ${this.ux.colors.white('Version:')}`,
+      afterMessage: this.ux.colors.reset.green('✓'),
+      afterMessageAppend: this.ux.colors.reset(' added!'),
+      validate: this._validateVersion,
+      default: '0.1.0',
+    },
     [appendSuffix(WORKFLOW, 'Name')]: {
       type: 'input',
       name: appendSuffix(WORKFLOW, 'Name'),
@@ -77,6 +89,17 @@ export default class Init extends Command {
       afterMessage: this.ux.colors.reset.green('✓'),
       afterMessageAppend: this.ux.colors.reset(' added!'),
       validate: this._validateDescription,
+    },
+    [appendSuffix(WORKFLOW, 'Version')]: {
+      type: 'input',
+      name: appendSuffix(WORKFLOW, 'Version'),
+      message: `\nProvide a version ${this.ux.colors.reset.green(
+        '→',
+      )}\n\n📝 ${this.ux.colors.white('Version:')}`,
+      afterMessage: this.ux.colors.reset.green('✓'),
+      afterMessageAppend: this.ux.colors.reset(' added!'),
+      validate: this._validateVersion,
+      default: '0.1.0',
     },
   }
 
@@ -275,30 +298,44 @@ export default class Init extends Command {
     initParams: InitParams,
     yamlDoc: yaml.ast.Document,
   ) => {
-    const { templates, commandName, commandDescription } = initParams
+    const {
+      templates,
+      commandName,
+      commandDescription,
+      commandVersion,
+    } = initParams
     if (!templates.includes(COMMAND)) {
       // @ts-ignore
-      yamlDoc.delete('ops')
+      yamlDoc.delete('commands')
       return
     }
+    yamlDoc
+      // @ts-ignore
+      .getIn(['commands', 0])
+      .set('name', `${commandName}:${commandVersion}`)
     // @ts-ignore
-    yamlDoc.getIn(['ops', 0]).set('name', commandName)
-    // @ts-ignore
-    yamlDoc.getIn(['ops', 0]).set('description', commandDescription)
+    yamlDoc.getIn(['commands', 0]).set('description', commandDescription)
   }
 
   customizeWorkflowYaml = async (
     initParams: InitParams,
     yamlDoc: yaml.ast.Document,
   ) => {
-    const { templates, workflowName, workflowDescription } = initParams
+    const {
+      templates,
+      workflowName,
+      workflowDescription,
+      workflowVersion,
+    } = initParams
     if (!templates.includes(WORKFLOW)) {
       // @ts-ignore
       yamlDoc.delete('workflows')
       return
     }
-    // @ts-ignore
-    yamlDoc.getIn(['workflows', 0]).set('name', workflowName)
+    yamlDoc
+      // @ts-ignore
+      .getIn(['workflows', 0])
+      .set('name', `${workflowName}:${workflowVersion}`)
     // @ts-ignore
     yamlDoc.getIn(['workflows', 0]).set('description', workflowDescription)
   }
@@ -435,6 +472,15 @@ export default class Init extends Command {
   _validateDescription(input: string) {
     if (input === '')
       return 'You need to provide a description of your op before continuing'
+    return true
+  }
+
+  private _validateVersion(input: string) {
+    if (input === '')
+      return 'You need to provide a version of your op before continuing'
+    if (!input.match(validVersionChars)) {
+      return `Sorry, version can only contain letters, digits, underscores, periods and dashes\nand must start and end with a letter or a digit`
+    }
     return true
   }
 

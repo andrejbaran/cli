@@ -38,13 +38,14 @@ USAGE
 * [`ops account:signout`](#ops-accountsignout)
 * [`ops account:signup`](#ops-accountsignup)
 * [`ops account:support`](#ops-accountsupport)
+* [`ops add [OPNAME]`](#ops-add-opname)
 * [`ops build [PATH]`](#ops-build-path)
 * [`ops cleanup [OPNAME]`](#ops-cleanup-opname)
 * [`ops help [COMMAND]`](#ops-help-command)
 * [`ops init`](#ops-init)
 * [`ops list`](#ops-list)
 * [`ops publish PATH`](#ops-publish-path)
-* [`ops remove [OPNAME]`](#ops-remove-opname)
+* [`ops remove OP`](#ops-remove-op)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
 * [`ops team:create`](#ops-teamcreate)
@@ -106,6 +107,21 @@ Contact our support team with questions.
 ```
 USAGE
   $ ops account:support
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops add [OPNAME]`
+
+Add an op to your team.
+
+```
+USAGE
+  $ ops add [OPNAME]
+
+ARGUMENTS
+  OPNAME  Name of the public op to be added to your team. It should be of the format - @teamname/opName:versionName
 
 OPTIONS
   -h, --help  show CLI help
@@ -197,16 +213,16 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-## `ops remove [OPNAME]`
+## `ops remove OP`
 
 Remove an Op from your team.
 
 ```
 USAGE
-  $ ops remove [OPNAME]
+  $ ops remove OP
 
 ARGUMENTS
-  OPNAME  A part of the name or description of the command or workflow you want to remove.
+  OP  The name and version of the command or workflow you want to remove. E.g. my-command:0.1.0
 
 OPTIONS
   -h, --help  show CLI help

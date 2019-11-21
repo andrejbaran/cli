@@ -17,6 +17,8 @@ describe('BuildStep', () => {
   it('should validate all steps for remote workflow', async () => {
     const workflowArray: Workflow[] = [
       createMockWorkflow({
+        name: 'mockWorkflow',
+        version: 'latest',
         remote: true,
         steps: [
           'ops run op1',
@@ -86,6 +88,9 @@ describe('BuildStep', () => {
         user: cmd.user,
       },
     }
+    cmd.ux = {
+      prompt: jest.fn().mockReturnValue({ publishDescription: 'v1 release' }),
+    }
 
     await cmd.workflowsPublishLoop(inputs)
 
@@ -105,6 +110,8 @@ describe('BuildStep', () => {
   it('should replace all glue code steps with ops run', async () => {
     const workflowArray: Workflow[] = [
       createMockWorkflow({
+        name: 'mockWorkflow',
+        version: 'latest',
         remote: true,
         steps: [
           'ops run op1',
@@ -113,12 +120,14 @@ describe('BuildStep', () => {
           'ops run op3',
           "var stuff2 = 'mock values 2';",
         ],
+        publishDescription: 'v1 release',
         teamID: 'team-id',
       }),
     ]
 
     const inputs: PublishInputs = {
       workflows: workflowArray,
+      version: '1',
     } as PublishInputs
 
     // SPY ON FEATHERS CREATE
@@ -152,6 +161,8 @@ describe('BuildStep', () => {
 
     cmd.sendAnalytics = jest.fn()
 
+    const teamName = 'team-name'
+
     cmd.user = {
       username: '',
       email: '',
@@ -159,7 +170,7 @@ describe('BuildStep', () => {
     }
     cmd.team = {
       id: 'team-id',
-      name: 'team-name',
+      name: teamName,
     }
     cmd.state = {
       config: {
@@ -176,11 +187,16 @@ describe('BuildStep', () => {
 
     cmd.getRegistryAuth = jest.fn().mockReturnValue({} as RegistryAuth)
 
+    cmd.ux = {
+      prompt: jest.fn().mockReturnValue({ publishDescription: 'v1 release' }),
+    }
+
     await cmd.workflowsPublishLoop(inputs)
 
     expect(mockFeathersService.create).toHaveBeenCalledWith(
-      'workflows',
+      `/teams/${teamName}/ops`,
       createMockWorkflow({
+        name: 'mockWorkflow',
         remote: true,
         steps: [
           'ops run mock-op',
@@ -189,7 +205,10 @@ describe('BuildStep', () => {
           'ops run mock-op',
           'ops run mock-op',
         ],
+        publishDescription: 'v1 release',
+        platformVersion: '1',
         teamID: 'team-id',
+        version: 'latest',
       }),
       { headers: { Authorization: undefined } },
     )

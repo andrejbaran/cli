@@ -8,7 +8,12 @@
 
 export { parseYaml } from './yamlParser'
 export { asyncPipe, _trace } from './asyncPipe'
-export { validateEmail, validChars, validCharsTeamName } from './validate'
+export {
+  validateEmail,
+  validChars,
+  validCharsTeamName,
+  validVersionChars,
+} from './validate'
 export { onExit } from './onExit'
 export { getOpImageTag, getOpUrl, PUBLIC_OPS_PREFIX } from './getOpUrl'
 export { handleMandatory, handleUndefined } from './guards'
