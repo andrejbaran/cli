@@ -1,5 +1,5 @@
 version: "1"
-ops:
+commands:
   - name: js
     description: js
     run: node /ops/index.js

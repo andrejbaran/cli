@@ -16,6 +16,7 @@ import {
 import {
   CouldNotMakeDir,
   InvalidInputCharacter,
+  InvalidOpVersionFormat,
   YamlPortError,
 } from '~/errors/CustomErrors'
 import { ErrorTemplate } from '~/errors/ErrorTemplate'
@@ -25,7 +26,7 @@ import { ImageService } from '~/services/Image'
 import { RegistryAuthService } from '~/services/RegistryAuth'
 import { Config, Container, Op } from '~/types'
 import { asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
-import { isValidOpName } from '~/utils/validate'
+import { isValidOpName, isValidOpVersion } from '~/utils/validate'
 
 const debug = Debug('ops:OpService')
 
@@ -52,16 +53,22 @@ export class OpService {
       tokens: { accessToken },
     } = config
     for (const op of ops) {
+      if (!('run' in op)) continue
       if (!isValidOpName(op.name)) {
         throw new InvalidInputCharacter('Op Name')
       }
+      if (!isValidOpVersion(op)) {
+        throw new InvalidOpVersionFormat()
+      }
       console.log(
-        `🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(opPath)}\n`,
+        `🛠  ${ux.colors.white('Building:')} ${ux.colors.callOutCyan(
+          op.name + ':' + op.version,
+        )}\n`,
       )
       const opImageTag = getOpImageTag(
         teamName,
         op.name,
-        undefined,
+        op.version,
         op.isPublic,
       )
       await this.imageService.build(
@@ -80,7 +87,7 @@ export class OpService {
             username: user.username,
             name: op.name,
             description: op.description,
-            image: `${OPS_REGISTRY_HOST}/${op.name}`,
+            image: `${OPS_REGISTRY_HOST}/${op.name}:${op.version}`,
           },
         },
         accessToken,
@@ -164,7 +171,7 @@ export class OpService {
       config.tokens.accessToken,
       op.teamName,
       op.name,
-      version, // TODO: change it op.version once its added but for now setting it to platform version
+      version,
       true,
       false,
     )
@@ -177,7 +184,7 @@ export class OpService {
       robotID,
       op.teamName,
       op.name,
-      version, // TODO: change it op.version once its added but for now setting it to platform version)
+      version,
     )
   }
 
@@ -187,7 +194,7 @@ export class OpService {
     const opImageTag = getOpImageTag(
       teamName,
       opIdentifier,
-      undefined,
+      op.version,
       op.isPublic,
     )
     return getOpUrl(OPS_REGISTRY_HOST, opImageTag)

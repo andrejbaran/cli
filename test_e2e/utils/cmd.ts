@@ -1,3 +1,6 @@
+import * as OclifConfig from '@oclif/config'
+import fs, { readJsonSync } from 'fs-extra'
+import path from 'path'
 import { spawn, ChildProcess, SpawnOptions } from 'child_process'
 import concat from 'concat-stream'
 import axios from 'axios'
@@ -103,6 +106,35 @@ const cleanup = async () => {
   }
 }
 
+const cleanupAddedOp = async opFullName => {
+  try {
+    const config = await OclifConfig.load()
+    const configData = readJsonSync(path.join(config.configDir, 'config.json'))
+
+    const token = configData && configData.tokens.accessToken
+
+    const [field1, field2] = opFullName.split('/')
+    const opTeamName = field1.substring(1)
+    const [opName, versionName] = field2.split(':')
+
+    const teamName = EXISTING_USER_NAME
+    await axios.delete(
+      `${defaultEnv.OPS_GO_API_HOST}api/v1/teams/${teamName}/ops/refs`,
+      {
+        headers: { Authorization: token },
+        data: {
+          opName,
+          opTeamName,
+          versionName,
+        },
+      },
+    )
+    console.log('cleaned up added op successfully')
+  } catch (error) {
+    console.error({ error })
+  }
+}
+
 const sleep = (milliseconds: number) => {
   return new Promise(resolve => setTimeout(() => resolve(), milliseconds))
 }
@@ -118,4 +150,4 @@ const signout = async () => {
   return run(['account:signout'])
 }
 
-export { run, sleep, cleanup, signin, signout }
+export { run, sleep, cleanup, cleanupAddedOp, signin, signout }

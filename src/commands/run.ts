@@ -2,7 +2,6 @@ import { ux } from '@cto.ai/sdk'
 import fuzzy from 'fuzzy'
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import * as yaml from 'yaml'
 
 import Command, { flags } from '~/base'
 
@@ -13,10 +12,6 @@ import {
   Config,
   Workflow,
   RunCommandArgs,
-  OpsFindQuery,
-  OpsFindResponse,
-  WorkflowsFindQuery,
-  WorkflowsFindResponse,
   OpsYml,
 } from '~/types'
 
@@ -26,19 +21,13 @@ import {
   InvalidOpName,
   NoOpsFound,
   UnauthorizedtoAccessOp,
+  NoTeamFound,
 } from '~/errors/CustomErrors'
 
-import {
-  OP_FILE,
-  WORKFLOW_ENDPOINT,
-  COMMAND_ENDPOINT,
-  WORKFLOW_TYPE,
-  COMMAND_TYPE,
-} from '~/constants/opConfig'
+import { OP_FILE, WORKFLOW_TYPE, COMMAND_TYPE } from '~/constants/opConfig'
 import { OPS_REGISTRY_HOST } from '~/constants/env'
 import { asyncPipe, _trace, parseYaml } from '~/utils'
 import { isValidTeamName, isValidOpName } from '~/utils/validate'
-import { OpsGetResponse } from '~/types/OpsGetResponse'
 
 const { multiBlue, multiOrange, green, dim, reset, bold } = ux.colors
 
@@ -55,10 +44,10 @@ export interface RunInputs {
   parsedArgs: RunCommandArgs
   teamName: string
   opName: string
+  opVersion: string
   config: Config
   opsAndWorkflows: (Op | Workflow)[]
   opOrWorkflow: Op | Workflow
-  version: string
 }
 
 export default class Run extends Command {
@@ -149,9 +138,12 @@ export default class Run extends Command {
     if (!yamlContents) {
       return { ...inputs, opsAndWorkflows: [] }
     }
-    const { ops, workflows, version } = yamlContents
+    const { ops, workflows } = yamlContents
 
-    return { ...inputs, opsAndWorkflows: [...ops, ...workflows], version }
+    return {
+      ...inputs,
+      opsAndWorkflows: [...ops, ...workflows],
+    }
   }
 
   addMissingApiFieldsToLocalOps = async (
@@ -330,7 +322,7 @@ export default class Run extends Command {
         parsedArgs,
         parsedArgs: { opParams },
         teamName,
-        version,
+        opVersion,
       } = inputs
       if (opOrWorkflow.type === WORKFLOW_TYPE) {
         await this.services.workflowService.run(opOrWorkflow, opParams, config)
@@ -346,7 +338,7 @@ export default class Run extends Command {
           opOrWorkflow,
           parsedArgs,
           config,
-          version,
+          opVersion,
         )
       }
       return { ...inputs, opOrWorkflow }
@@ -358,13 +350,17 @@ export default class Run extends Command {
 
   /**
    * Extracts the Op Team and Name from the input argument
-   * @cto.ai/github -> { teamName: cto.ai, opname: github }
-   * cto.ai/github -> { teamName: cto.ai, opname: github }
-   * github -> { teamName: '', opname: github }
+   * @cto.ai/github -> { teamName: cto.ai, opname: github, opVersion: '' }
+   * cto.ai/github -> { teamName: cto.ai, opname: github, opVersion: '' }
+   * github -> { teamName: '', opname: github, opVersion: '' }
+   * @cto.ai/github:0.1.0 -> { teamName: cto.ai, opname: github, opVersion: '0.1.0' }
+   * cto.ai/github:customVersion -> { teamName: cto.ai, opname: github, opVersion: 'customVersion' }
+   * github:myVersion -> { teamName: '', opname: github, opVersion: 'myVersion' }
    * cto.ai/extra/blah -> InvalidOpName
+   * cto.ai/extra:version1:version2 -> InvalidOpName
    * null -> InvalidOpName
    */
-  parseTeamAndOpName = (inputs: RunInputs) => {
+  parseTeamOpNameVersion = (inputs: RunInputs) => {
     const {
       parsedArgs: {
         args: { nameOrPath },
@@ -377,17 +373,45 @@ export default class Run extends Command {
     const splits = nameOrPath.split('/')
     if (splits.length === 0 || splits.length > 2) throw new InvalidOpName()
     if (splits.length === 1) {
-      let [opName] = splits
-      opName = isValidOpName(splits[0]) ? splits[0] : ''
-      return { ...inputs, teamName: configTeamName, opName }
+      let [opNameAndVersion] = splits
+
+      opNameAndVersion = splits[0]
+
+      const { opName, opVersion } = this.parseOpNameAndVersion(opNameAndVersion)
+      if (!isValidOpName(opName)) throw new InvalidOpName()
+      return { ...inputs, teamName: configTeamName, opName, opVersion }
     }
-    let [teamName, opName] = splits
+    let [teamName, opNameAndVersion] = splits
     teamName = teamName.startsWith('@')
       ? teamName.substring(1, teamName.length)
       : teamName
     teamName = isValidTeamName(teamName) ? teamName : ''
-    opName = isValidOpName(opName) ? opName : ''
-    return { ...inputs, teamName, opName }
+
+    const { opName, opVersion } = this.parseOpNameAndVersion(opNameAndVersion)
+
+    if (!isValidOpName(opName)) throw new InvalidOpName()
+    return { ...inputs, teamName, opName, opVersion }
+  }
+
+  /**
+   * Extracts the version and op name from input argument.
+   * github -> { opName: 'github', opVersion: '' }
+   * github:0.1.0 -> { opName: 'github', opVersion: '0.1.0' }
+   * github:: -> InvalidOpName
+   */
+  parseOpNameAndVersion = (
+    opNameAndVersion: string,
+  ): { opName: string; opVersion: string } => {
+    const splits = opNameAndVersion.split(':')
+    if (splits.length === 0 || splits.length > 2) throw new InvalidOpName()
+    if (splits.length === 1) {
+      return {
+        opName: opNameAndVersion,
+        opVersion: '',
+      }
+    }
+    const [opName, opVersion] = splits
+    return { opName, opVersion }
   }
 
   getApiOps = async (inputs: RunInputs): Promise<RunInputs> => {
@@ -396,28 +420,47 @@ export default class Run extends Command {
       teamName,
       opName,
       opsAndWorkflows: previousOpsAndWorkflows = [],
+      opVersion,
     } = inputs
-    let apiOp
+    let apiOp: Op | Workflow
     try {
       if (!opName) return { ...inputs }
       teamName = teamName ? teamName : config.team.name
-      ;({ data: apiOp } = await this.services.api.find(
-        `teams/${teamName}/ops/${opName}`,
-        {
-          headers: {
-            Authorization: this.accessToken,
+
+      if (opVersion) {
+        ;({ data: apiOp } = await this.services.api.find(
+          `teams/${teamName}/ops/${opName}/versions/${opVersion}`,
+          {
+            headers: {
+              Authorization: this.accessToken,
+            },
           },
-        },
-      ))
+        ))
+      } else {
+        ;({ data: apiOp } = await this.services.api.find(
+          `teams/${teamName}/ops/${opName}`,
+          {
+            headers: {
+              Authorization: this.accessToken,
+            },
+          },
+        ))
+      }
     } catch (err) {
       this.debug('%O', err)
+      if (err.error[0].code === 404) {
+        throw new NoOpsFound(`@${teamName}/${opName}:${opVersion}`)
+      }
       if (err.error[0].code === 4011) {
         throw new UnauthorizedtoAccessOp(err)
+      }
+      if (err.error[0].code === 4033) {
+        throw new NoTeamFound(teamName)
       }
       throw new APIError(err)
     }
     if (!apiOp && !previousOpsAndWorkflows.length) {
-      throw new NoOpsFound(opName)
+      throw new NoOpsFound(opName, teamName)
     }
     if (!apiOp) {
       return { ...inputs }
@@ -431,7 +474,7 @@ export default class Run extends Command {
 
   sendAnalytics = async (inputs: RunInputs): Promise<RunInputs> => {
     const {
-      opOrWorkflow: { id, name, description },
+      opOrWorkflow: { id, name, description, version },
       parsedArgs: { opParams },
     } = inputs
     this.services.analytics.track(
@@ -446,7 +489,7 @@ export default class Run extends Command {
           id,
           name,
           description,
-          image: `${OPS_REGISTRY_HOST}/${name}`,
+          image: `${OPS_REGISTRY_HOST}/${name}:${version}`,
           argments: opParams.length,
         },
       },
@@ -486,7 +529,7 @@ export default class Run extends Command {
           this.getOpsAndWorkflowsFromFileSystem(process.cwd()),
           this.addMissingApiFieldsToLocalOps,
           this.filterLocalOps,
-          this.parseTeamAndOpName,
+          this.parseTeamOpNameVersion,
           this.getApiOps,
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,

@@ -39,6 +39,8 @@ export const createMockOp = (inputs: Partial<Op>): Op => {
       createdAt: '',
       updatedAt: '',
       type: COMMAND_TYPE,
+      platformVersion: '',
+      publishDescription: '',
     },
     inputs,
   )
@@ -69,6 +71,9 @@ export const createMockWorkflow = (inputs: Partial<Workflow>): Workflow => {
       createdAt: '',
       updatedAt: '',
       type: WORKFLOW_TYPE,
+      version: 'latest',
+      platformVersion: '',
+      publishDescription: '',
     },
     inputs,
   )

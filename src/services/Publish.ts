@@ -8,6 +8,7 @@ import {
   DockerPublishNoImageFound,
   ImagePushError,
   ImageTagError,
+  VersionIsTaken,
 } from '../errors/CustomErrors'
 import { ApiService, Op, RegistryAuth } from '../types'
 import getDocker from '../utils/get-docker'
@@ -21,16 +22,16 @@ const debug = Debug('ops:PublishService')
 export class Publish {
   public publishOpToAPI = async (
     op: Op,
-    version: string,
-    teamID: string,
+    platformVersion: string,
+    teamName: string,
     accessToken: string,
     api: ApiService,
     isGlueCode: boolean = false,
   ) => {
     try {
       const res = await api.create(
-        'ops',
-        { ...op, version, teamID, isGlueCode, isPublic: op.isPublic },
+        `/teams/${teamName}/ops`,
+        { ...op, platformVersion, isGlueCode, isPublic: op.isPublic },
         {
           headers: {
             Authorization: accessToken,
@@ -39,6 +40,9 @@ export class Publish {
       )
       return res
     } catch (err) {
+      if (err.error[0].message === 'version is taken') {
+        throw new VersionIsTaken()
+      }
       throw new CouldNotCreateOp(err.message)
     }
   }
@@ -54,9 +58,9 @@ export class Publish {
   ) => {
     const imageUniqueId = `${
       registryAuth.projectFullName
-    }/${apiOp.id.toLowerCase()}`
+    }/${apiOp.id.toLowerCase()}:${apiOp.version}`
 
-    const imageName = `${registryAuth.projectFullName}/${apiOp.name}`
+    const imageName = `${registryAuth.projectFullName}/${apiOp.name}:${apiOp.version}`
 
     const self = this
     const docker = await getDocker(self, 'publish')
@@ -128,7 +132,7 @@ export class Publish {
         const taggedImage = docker.getImage(imageUniqueId)
         const stream = await taggedImage
           .push({
-            tag: 'latest',
+            tag: apiOp.version,
             authconfig: registryAuth.authconfig,
           })
           .catch(err => {

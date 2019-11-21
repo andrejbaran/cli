@@ -1,6 +1,6 @@
 version: "1"
-ops:
-  - name: hello-world
+commands:
+  - name: hello-world:0.1.0
     description: Your first hello-world op
     public: false
     sourceCodeURL: ""
@@ -24,7 +24,7 @@ ops:
         build: "Build flag"
         clear: "Clears"
 workflows:
-  - name: hello-world
+  - name: hello-world:0.1.0
     description: Your first hello-world op
     public: false
     sourceCodeURL: ""

@@ -1,6 +1,6 @@
 version: '1'
-ops:
-  - name: write_a_file_op
+commands:
+  - name: write_a_file_op:0.1.0
     description: bind mount the cwd and write a file called BRANDNEWFILE.txt
     public: false
     sourceCodeURL: ""
@@ -28,7 +28,7 @@ ops:
         build: Build flag
         clear: Clears
 workflows:
-  - name: hello-world
+  - name: hello-world:0.1.0
     description: Your first hello-world op
     remote: false
     public: false

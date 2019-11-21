@@ -17,7 +17,7 @@ export const getOpUrl = (registryHost: string, opImageTag: string) => {
 export const getOpImageTag = (
   teamName: string,
   opIdentifier: string,
-  tag: string = 'latest',
+  tag: string,
   isPublic: boolean = false,
 ) => {
   return `${

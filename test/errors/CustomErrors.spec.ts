@@ -166,7 +166,7 @@ describe('Custom Errors', () => {
     expect(ErrorTemplate).toHaveBeenCalledTimes(1)
     expect(ErrorTemplate).toHaveBeenCalledWith(
       white(
-        '😅 Uh-oh, this workflow already exists, please remove it try again.',
+        '😅 Uh-oh, this workflow already exists, please remove it and try again.',
       ),
       newError,
       expectedSource,

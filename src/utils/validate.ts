@@ -1,13 +1,20 @@
-import { Op } from '../types'
+import { Op, Workflow } from '../types'
 
 export const validChars = /^[a-zA-Z0-9-_]+$/
 export const validCharsTeamName = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/
+export const validVersionChars = /^[\w][\w.-]{0,127}$/
+export const validOpsAddArg = /^@[a-z0-9]+([._-][a-z0-9]+)*\/[\w\d-_]+\:*([\w.-])*$/
 
-export const isValidOpName = (opName: string) =>
-  typeof opName === 'string' && validChars.test(opName)
+export const isValidOpName = (opName: string) => {
+  return typeof opName === 'string' && validChars.test(opName)
+}
 
 export const isValidTeamName = (teamName: string) =>
   typeof teamName === 'string' && validCharsTeamName.test(teamName)
+
+export const isValidOpVersion = ({ version }: Op | Workflow): boolean => {
+  return typeof version === 'string' && validVersionChars.test(version)
+}
 
 // RFCC 5322 official standard to validate emails
 export const validateEmail = (email: string): boolean => {
@@ -30,4 +37,8 @@ export const validateCpassword = (
     return `❗ Password doesn't match, please try again.`
   }
   return true
+}
+
+export const isValidOpFullName = (opFullName: string): boolean => {
+  return validOpsAddArg.test(opFullName)
 }

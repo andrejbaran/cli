@@ -6,7 +6,11 @@ import { Publish } from './Publish'
 import { OpService } from './../services/Op'
 import { RegistryAuthService } from './../services/RegistryAuth'
 import Debug from 'debug'
-import { CouldNotGetRegistryToken } from '~/errors/CustomErrors'
+import {
+  CouldNotGetRegistryToken,
+  InvalidGlueCode,
+} from '~/errors/CustomErrors'
+import { GLUECODE_TYPE } from '~/constants/opConfig'
 const debug = Debug('ops:BuildStepsService')
 
 export class BuildSteps {
@@ -53,13 +57,16 @@ export class BuildSteps {
     const glueCodeOp = <Op>{
       bind: ['/tmp:/tmp', 'Dockerfile'],
       description: 'glue code',
+      publishDescription: 'glue code',
       mountCwd: false,
       mountHome: false,
       name: opName,
       network: 'host',
+      version: 'latest',
       run: '/bin/sdk-daemon node /ops/index.js',
       src: ['Dockerfile', 'index.js', 'package.json', '.dockerignore'],
       isPublic: isPublic,
+      type: GLUECODE_TYPE,
     }
 
     const glueCodeClone: Op = JSON.parse(JSON.stringify(glueCodeOp))
@@ -69,10 +76,14 @@ export class BuildSteps {
       config,
     )
 
+    if (!('run' in glueCodeOp)) {
+      throw new InvalidGlueCode()
+    }
+
     const { data: apiOp } = await publishService.publishOpToAPI(
       glueCodeOp,
-      version,
-      teamID,
+      '1',
+      teamName,
       accessToken,
       featherClient,
       true,
@@ -91,17 +102,20 @@ export class BuildSteps {
         throw new CouldNotGetRegistryToken(err)
       })
 
-    await publishService.publishOpToRegistry(
-      apiOp,
-      registryAuth,
-      teamName,
-      accessToken,
-      registryAuthService,
-      featherClient,
-      version,
-    )
-
-    return `ops run ${opName}`
+    await publishService
+      .publishOpToRegistry(
+        apiOp,
+        registryAuth,
+        teamName,
+        accessToken,
+        registryAuthService,
+        featherClient,
+        version,
+      )
+      .catch(err => {
+        throw new CouldNotGetRegistryToken(err)
+      })
+    return `ops run @${teamName}/${opName}:${apiOp.version}`
   }
 
   public isOpRun(step: string): boolean {

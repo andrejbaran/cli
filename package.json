@@ -123,6 +123,7 @@
     "pretty": "prettier --write src/**/*.ts",
     "test": "jest --coverage",
     "test:e2e": "jest -c test_e2e/jest.config.js --runInBand",
+    "test:e2e:debug": "node --inspect-brk node_modules/.bin/jest -c test_e2e/jest.config.js --runInBand",
     "test:e2e:update": "jest -c test_e2e/jest.config.js --runInBand -u",
     "test:watch": "jest --watch",
     "tsc": "tsc -b src",
