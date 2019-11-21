@@ -8,7 +8,7 @@ import {
   NEW_COMMAND_DESCRIPTION,
   NEW_COMMAND_VERSION,
 } from '../utils/constants'
-
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
 const pathToOp = `./${NEW_COMMAND_NAME}`
 
 beforeEach(async () => {
