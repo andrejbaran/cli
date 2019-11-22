@@ -32,14 +32,18 @@ beforeEach(async () => {
   }
 })
 
-afterAll(async () => {
-  await run(['account:signout'])
-  // avoid jest open handle error
+afterEach(async () => {
   await sleep(500)
   if (fs.existsSync(pathToOp)) {
     fs.removeSync(pathToOp)
     console.log(pathToOp, ' directory deleted successfully.')
   }
+})
+
+afterAll(async () => {
+  await run(['account:signout'])
+  // avoid jest open handle error
+  await sleep(500)
 })
 
 test('it should use default version if none is provided in the ops.yml', async () => {
