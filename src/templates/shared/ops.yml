@@ -1,3 +1,4 @@
+# for more info visit https://cto.ai/docs/ops-reference
 version: "1"
 commands:
   - name: hello-world:0.1.0
@@ -6,9 +7,8 @@ commands:
     sourceCodeURL: ""
     run: node /ops/index.js
     env:
-      - "USER=world"
-      - "OPS_ACCESS_TOKEN"
-      - "OPS_ENV_VAR=$HOST_ENV_VAR"
+      - "MY_ENV_VAR=$MY_ENV_VAR"
+      - "MY_ACCESS_TOKEN=$MY_ACCESS_TOKEN"
     mountCwd: false
     mountHome: false
     bind:
@@ -31,5 +31,5 @@ workflows:
     steps:
       - node ./index.js
     env:
-      - "USER=world"
-      - "OPS_ACCESS_TOKEN"
+      - "MY_ENV_VAR=$MY_ENV_VAR"
+      - "MY_ACCESS_TOKEN=$MY_ACCESS_TOKEN"
