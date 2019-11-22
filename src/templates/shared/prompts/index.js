@@ -1,16 +1,15 @@
-const { ux } = require('@cto.ai/sdk');
-const fuzzy = require('fuzzy');
-const { STATES } = require('../constants');
+const { ux } = require('@cto.ai/sdk')
+const { STATES } = require('../constants')
 
-const { white, reset } = ux.colors;
+const { white, reset } = ux.colors
 
 const inputPrompts = [
   {
     type: 'input',
     name: 'email',
-    message: `\nYou can prompt the user for input ${reset.green(
-      '→',
-    )}\n${white('Type input here')}`,
+    message: `\nYou can prompt the user for input ${reset.green('→')}\n${white(
+      'Type input here',
+    )}`,
     afterMessage: `${reset.green('✓')} Input`,
     afterMessageAppend: `${reset(' added!')}`,
   },
@@ -29,9 +28,7 @@ const listPrompts = [
   {
     type: 'list',
     name: 'list',
-    message: `\nWhat impact is the incident having ${reset.green(
-      '→',
-    )}`,
+    message: `\nWhat impact is the incident having ${reset.green('→')}`,
     choices: [
       'All customers are affected.',
       'Large segment of customers are affected.',
@@ -65,8 +62,6 @@ const continuePrompts = [
     type: 'input',
     name: 'continue',
     message: `\nPress enter to continue →`,
-    afterMessage: ' ',
-    transformer: input => ' ',
   },
 ]
 
@@ -75,19 +70,7 @@ const fuzzySearchPrompts = [
     type: 'autocomplete',
     name: 'autocomplete',
     message: `\nSelect a state to travel from ${reset.green('→')} `,
-    source: (answers, input) => {
-      input = input || ''
-      return new Promise(function(resolve) {
-        setTimeout(function() {
-          var fuzzyResult = fuzzy.filter(input, STATES)
-          resolve(
-            fuzzyResult.map(function(el) {
-              return el.original
-            }),
-          )
-        })
-      })
-    },
+    autocomplete: STATES,
     afterMessage: `${reset.green('✓')} State selected!`,
   },
 ]
@@ -109,4 +92,4 @@ module.exports = {
   continuePrompts,
   fuzzySearchPrompts,
   datePickerPrompts,
-};
+}
