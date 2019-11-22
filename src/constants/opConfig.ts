@@ -23,6 +23,9 @@ export type OpTypes = IWorkflow | ICommand | IGlueCode
 export const COMMAND_ENDPOINT = 'ops'
 export const WORKFLOW_ENDPOINT = 'workflows'
 
+export const SDK2 = '2'
+export const SDK2_DAEMON_ENTRYPOINT = '/bin/sdk-daemon'
+
 export const getEndpointFromOpType = (opType: OpTypes) => {
   return opType === WORKFLOW ? WORKFLOW_ENDPOINT : COMMAND_ENDPOINT
 }
