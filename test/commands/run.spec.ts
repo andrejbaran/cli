@@ -41,7 +41,9 @@ describe('getOpsAndWorkflowsFromFileSystem', () => {
     const result = (await cmd.parseYamlFile(nameOrPath)) as OpsYml
 
     expect(result.ops[0].name).toBe('hello-world')
+    expect(result.ops[0].version).toBe('0.1.0')
     expect(result.workflows[0].name).toBe('hello-world')
+    expect(result.workflows[0].version).toBe('0.1.0')
     expect(result.version).toBe('1')
   })
 
@@ -191,6 +193,8 @@ describe('executeOpOrWorkflowService', () => {
     mockOpService.run = jest.fn()
     const mockOp = createMockOp({ isPublished: true })
     const opParams = ['arg1', 'arg2']
+    const opVersion = 'mock-op-version'
+
     const inputs: RunInputs = {
       parsedArgs: {
         args: {
@@ -203,6 +207,7 @@ describe('executeOpOrWorkflowService', () => {
       version,
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
+      opVersion,
     } as RunInputs
     cmd = new Run([], config, {
       opService: mockOpService,
@@ -212,7 +217,7 @@ describe('executeOpOrWorkflowService', () => {
       mockOp,
       inputs.parsedArgs,
       config,
-      version,
+      opVersion,
     )
   })
   test('should set the image if the opOrWorkflow is a op and not published', async () => {
@@ -227,6 +232,8 @@ describe('executeOpOrWorkflowService', () => {
       name: 'FAKE_OP_NAME',
     })
     const opParams = ['arg1', 'arg2']
+    const opVersion = 'mock-op-version'
+
     const inputs: RunInputs = {
       parsedArgs: {
         args: {
@@ -239,6 +246,7 @@ describe('executeOpOrWorkflowService', () => {
       version,
       opsAndWorkflows: [mockOp],
       opOrWorkflow: mockOp,
+      opVersion,
     } as RunInputs
     cmd = new Run([], config, {
       opService: mockOpService,
@@ -248,7 +256,7 @@ describe('executeOpOrWorkflowService', () => {
       mockOp,
       inputs.parsedArgs,
       config,
-      version,
+      opVersion,
     )
   })
 })
@@ -379,5 +387,28 @@ describe('getApiOps', () => {
 
     cmd = new Run([], config, { api: mockFeathersService } as Services)
     await expect(cmd.getApiOps(inputs)).rejects.toThrow(apiError)
+  })
+})
+
+describe('ops run: parseOpNameAndVersion', () => {
+  test('Should be able to split name and version on a happy path', async () => {
+    cmd = new Run([], config, {} as Services)
+
+    const opName = 'mock-op-name'
+    const opVersion = 'mock-op-version'
+    const nameAndVersion = cmd.parseOpNameAndVersion(`${opName}:${opVersion}`)
+
+    expect(nameAndVersion.opName).toEqual(opName)
+    expect(nameAndVersion.opVersion).toEqual(opVersion)
+  })
+
+  test('Should be able to return name if version is not given', async () => {
+    cmd = new Run([], config, {} as Services)
+
+    const opName = 'mock-op-name'
+    const nameAndVersion = cmd.parseOpNameAndVersion(opName)
+
+    expect(nameAndVersion.opName).toEqual(opName)
+    expect(nameAndVersion.opVersion).toEqual('')
   })
 })

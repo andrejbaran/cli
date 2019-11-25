@@ -19,7 +19,7 @@ export default class List extends Command {
   getApiOps = async (inputs: ListInputs): Promise<ListInputs> => {
     try {
       const { data: opResults } = await this.services.api.find(
-        `teams/${this.state.config.team.name}/ops`,
+        `teams/${inputs.config.team.name}/ops`,
         {
           headers: {
             Authorization: this.accessToken,
@@ -76,23 +76,37 @@ export default class List extends Command {
       )
       process.exit()
     }
-
+    const {
+      reset,
+      multiBlue,
+      multiOrange,
+      white,
+      callOutCyan,
+      secondary,
+    } = this.ux.colors
+    const {
+      config: {
+        team: { name },
+      },
+    } = inputs
+    const commandText = multiBlue('\u2022Command')
+    const workflowText = multiOrange('\u2022Workflow')
+    const teamText = secondary(`@${name}`)
+    const subHeader = reset.dim(
+      '🌎 = Public 🔑 = Private 🖥  = Local  🔍 Search:',
+    )
     const { selectedOp } = await this.ux.prompt<{ selectedOp: Op | Workflow }>({
       type: 'autocomplete',
       name: 'selectedOp',
       pageSize: 5,
-      message: `\nSelect a ${this.ux.colors.multiBlue(
-        '\u2022Command',
-      )} or ${this.ux.colors.multiOrange(
-        '\u2022Workflow',
-      )} to run ${this.ux.colors.reset.green('→')}\n${this.ux.colors.reset.dim(
-        '🌎 = Public 🔑 = Private 🖥  = Local  🔍 Search:',
-      )} `,
+      message: `\nListing ops for team ${teamText}${callOutCyan(
+        `. Select a ${commandText} or ${workflowText} to continue ${reset.green(
+          '→',
+        )}\n${subHeader} `,
+      )}`,
       source: this._autocompleteSearch.bind(this),
-      bottomContent: `\n \n${this.ux.colors.white(
-        `Or, run ${this.ux.colors.callOutCyan(
-          'ops help',
-        )} for usage information.`,
+      bottomContent: `\n \n${white(
+        `Or, run ${callOutCyan('ops help')} for usage information.`,
       )}`,
     })
 
@@ -118,15 +132,20 @@ export default class List extends Command {
   }
 
   _formatOpOrWorkflowName = (op: Op | Workflow) => {
-    const name = this.ux.colors.reset.white(op.name)
+    const { reset, multiOrange, multiBlue } = this.ux.colors
+    const teamName = op.teamName ? `@${op.teamName}/` : ''
+    const opVersion = op.version ? `(${op.version})` : ''
+    const name = `${reset.white(`${teamName}${op.name}`)} ${reset.dim(
+      `${opVersion}`,
+    )}`
     if (op.type === WORKFLOW_TYPE) {
-      return `${this.ux.colors.reset(
-        this.ux.colors.multiOrange('\u2022'),
-      )} ${this._formatOpOrWorkflowEmoji(op)} ${name}`
+      return `${reset(multiOrange('\u2022'))} ${this._formatOpOrWorkflowEmoji(
+        op,
+      )} ${name}`
     } else {
-      return `${this.ux.colors.reset(
-        this.ux.colors.multiBlue('\u2022'),
-      )} ${this._formatOpOrWorkflowEmoji(op)} ${name}`
+      return `${reset(multiBlue('\u2022'))} ${this._formatOpOrWorkflowEmoji(
+        op,
+      )} ${name}`
     }
   }
 
@@ -142,11 +161,11 @@ export default class List extends Command {
 
   showRunMessage = (inputs: ListInputs): ListInputs => {
     const {
-      selectedOp: { name, local },
+      selectedOp: { name, local, version, teamName },
     } = inputs
     let runCmd = 'ops run .'
     if (!local) {
-      runCmd = `ops run ${name}`
+      runCmd = `ops run @${teamName}/${name}:${version}`
     }
     this.log(
       `\n💻 Run ${this.ux.colors.green('$')} ${this.ux.colors.italic.dim(
@@ -179,6 +198,7 @@ export default class List extends Command {
   async run() {
     try {
       await this.isLoggedIn()
+      const { config } = this.state
 
       const listPipeline = asyncPipe(
         this.getApiOps,
@@ -189,7 +209,7 @@ export default class List extends Command {
         this.showRunMessage,
       )
 
-      await listPipeline({})
+      await listPipeline({ config })
     } catch (err) {
       this.debug('%0', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })

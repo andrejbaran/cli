@@ -22,7 +22,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.5.25 linux-x64 node-v12.12.0
+@cto.ai/ops/1.6.1 darwin-x64 node-v11.14.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -38,13 +38,14 @@ USAGE
 * [`ops account:signout`](#ops-accountsignout)
 * [`ops account:signup`](#ops-accountsignup)
 * [`ops account:support`](#ops-accountsupport)
+* [`ops add [OPNAME]`](#ops-add-opname)
 * [`ops build [PATH]`](#ops-build-path)
 * [`ops cleanup [OPNAME]`](#ops-cleanup-opname)
 * [`ops help [COMMAND]`](#ops-help-command)
 * [`ops init`](#ops-init)
 * [`ops list`](#ops-list)
 * [`ops publish PATH`](#ops-publish-path)
-* [`ops remove [OPNAME]`](#ops-remove-opname)
+* [`ops remove OP`](#ops-remove-op)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
 * [`ops secrets:delete`](#ops-secretsdelete)
@@ -111,6 +112,21 @@ Contact our support team with questions.
 ```
 USAGE
   $ ops account:support
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops add [OPNAME]`
+
+Add an op to your team.
+
+```
+USAGE
+  $ ops add [OPNAME]
+
+ARGUMENTS
+  OPNAME  Name of the public op to be added to your team. It should be of the format - @teamname/opName:versionName
 
 OPTIONS
   -h, --help  show CLI help
@@ -202,16 +218,16 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-## `ops remove [OPNAME]`
+## `ops remove OP`
 
 Remove an Op from your team.
 
 ```
 USAGE
-  $ ops remove [OPNAME]
+  $ ops remove OP
 
 ARGUMENTS
-  OPNAME  A part of the name or description of the command or workflow you want to remove.
+  OP  The name and version of the command or workflow you want to remove. E.g. my-command:0.1.0
 
 OPTIONS
   -h, --help  show CLI help
@@ -420,7 +436,7 @@ These are known as "cli-acceptance-tests" in Concourse: https://concourse.stg-pl
 
 ### How to run E2E tests locally
 
-The default test server is staging, but you can override this by passing in your own `OPS_REGISTRY_HOST` and `OPS_API_HOST` values from your shell config. 
+The default test server is staging, but you can override this by passing in your own `OPS_REGISTRY_HOST` and `OPS_API_HOST` values from your shell config.
 
 Run tests against staging:
 

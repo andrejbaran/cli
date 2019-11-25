@@ -116,7 +116,7 @@ export class CouldNotCreateWorkflow extends ErrorTemplate {
   constructor(err) {
     super(
       white(
-        '😅 Uh-oh, this workflow already exists, please remove it try again.',
+        '😅 Uh-oh, this workflow already exists, please remove it and try again.',
       ),
       err,
       expectedSource,
@@ -277,6 +277,18 @@ export class InvalidInputCharacter extends ErrorTemplate {
   }
 }
 
+export class InvalidOpVersionFormat extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        '❗ Sorry, version is required and can only contain letters, digits, underscores, \n    periods and dashes and must start and end with a letter or a digit',
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
 export class MissingRequiredArgument extends ErrorTemplate {
   constructor(command: string) {
     super(
@@ -309,7 +321,7 @@ export class DockerPublishNoImageFound extends ErrorTemplate {
   constructor(opName: string, teamName: string) {
     super(
       white(
-        `✋ We couldn't find an image for that ${actionBlue(
+        `✋ We couldn't find an image for ${actionBlue(
           opName,
         )}.\n ⚙️  Please build this op for ${actionBlue(
           `${teamName}`,
@@ -332,12 +344,14 @@ export class NoLocalOpsFound extends ErrorTemplate {
 }
 
 export class NoOpsFound extends ErrorTemplate {
-  constructor(opName) {
-    super(
-      white(`💩 We couldn't find any ops with the name ${opName}!`),
-      undefined,
-      expectedSource,
-    )
+  constructor(opName: string, teamName?: string) {
+    let message = `💩 We couldn't find any ops with the name ${ux.colors.blueBright(
+      opName,
+    )}`
+    if (teamName) {
+      message += ` in the team ${ux.colors.cyan(teamName)}.`
+    }
+    super(white(message), undefined, expectedSource)
   }
 }
 export class NoWorkflowsFound extends ErrorTemplate {
@@ -364,6 +378,18 @@ export class InvalidStepsFound extends ErrorTemplate {
   constructor(step: string) {
     super(
       white(`💩 Workflow step: ${step} is invalid!`),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class InvalidGlueCode extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `❗️ Looks like a problem occured with on of the workflows steps.\n   ${tryAgainOrContact}`,
+      ),
       undefined,
       expectedSource,
     )
@@ -545,7 +571,7 @@ export class TokenExpiredError extends ErrorTemplate {
   }
 }
 
-export class CannotDeleteOps extends ErrorTemplate {
+export class CannotDeleteOp extends ErrorTemplate {
   constructor(err) {
     super(
       white(
@@ -561,11 +587,17 @@ export class InvalidOpName extends ErrorTemplate {
   constructor() {
     super(
       white(
-        `❗ Sorry, we cannot find that op. Please enter an op with the format:\n- ${ux.colors.bold(
+        `❗ Sorry, we cannot find that op. Please enter an op with one of the following format:\n- ops run ${ux.colors.bold(
           '@teamName',
-        )}/${ux.colors.cyan('opName')}\n- ${ux.colors.cyan(
+        )}/${ux.colors.cyan('opName')}:${ux.colors.reset(
+          'version',
+        )}\n- ops run ${ux.colors.bold('@teamName')}/${ux.colors.cyan(
           'opName',
-        )}: for ops you have in your team, or a folder in your current working directory`,
+        )} ${ux.colors.dim(
+          '(for the latest version of the op)',
+        )}\n- ops run ${ux.colors.cyan('opName')} ${ux.colors.dim(
+          '(for ops you have in your team, or a folder in your current working directory)',
+        )}`,
       ),
       undefined,
       expectedSource,
@@ -587,6 +619,81 @@ export class IncompleteOpsYml extends ErrorTemplate {
   constructor(message: string) {
     super(
       white(`❗ Sorry, we have difficulty parsing your ops.yml. ${message}`),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class InvalidRemoveOpFormat extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `❗ Sorry, please provide both the name and version of the op you want to remove. \n    E.g. ${terminalText(
+          'ops remove my-command:0.1.0',
+        )}`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+export class OpAlreadyBelongsToTeam extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `✋ That's odd. It seems like you are trying to add an op that belongs to your team.`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class OpNotFoundOpsAdd extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `✋ That's odd. It seems like you are trying to add an op that does not exist.`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class OpAlreadyAdded extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `✋ That's odd. It seems like you are trying to add an op that's already added to your team.`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class VersionIsTaken extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `🤔  It seems like the version of the op that you are trying to publish is already taken. Please try again with a different version name.`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class NoTeamFound extends ErrorTemplate {
+  constructor(teamName) {
+    super(
+      white(
+        `🤔 Sorry, we couldn't find a team with name ${ux.colors.cyan(
+          teamName,
+        )}.`,
+      ),
       undefined,
       expectedSource,
     )

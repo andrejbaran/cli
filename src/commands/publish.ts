@@ -10,6 +10,7 @@ import {
   OP_FILE,
   WORKFLOW,
   WORKFLOW_ENDPOINT,
+  COMMAND_TYPE,
 } from '../constants/opConfig'
 import {
   CouldNotCreateWorkflow,
@@ -21,6 +22,8 @@ import {
   DockerPublishNoImageFound,
   CouldNotGetRegistryToken,
   InvalidWorkflowStep,
+  InvalidOpVersionFormat,
+  VersionIsTaken,
 } from '../errors/CustomErrors'
 import {
   Container,
@@ -30,10 +33,9 @@ import {
   Workflow,
   RegistryAuth,
 } from '../types'
-import { asyncPipe } from '../utils/asyncPipe'
+import { asyncPipe, getOpImageTag, parseYaml } from '../utils'
 import getDocker from '../utils/get-docker'
-import { isValidOpName } from '../utils/validate'
-import { getOpImageTag, parseYaml } from '~/utils'
+import { isValidOpName, isValidOpVersion } from '../utils/validate'
 
 export interface PublishInputs {
   opPath: string
@@ -220,12 +222,24 @@ export default class Publish extends Command {
       if (!isValidOpName(op.name)) {
         throw new InvalidInputCharacter('Op Name')
       }
-
-      // TODO: Change 'latest' to the user's intended version once it is in place
+      if (!isValidOpVersion(op)) {
+        throw new InvalidOpVersionFormat()
+      }
+      const { publishDescription } = await this.ux.prompt({
+        type: 'input',
+        name: 'publishDescription',
+        message: `\nProvide a changelog of what's new for ${op.name}:${
+          op.version
+        } ${ux.colors.reset.green('→')}\n\n ${ux.colors.white('Changelog:')}`,
+        afterMessage: ux.colors.reset.green('✓'),
+        afterMessageAppend: ux.colors.reset(' added!'),
+        validate: this._validateDescription,
+      })
+      op.publishDescription = publishDescription
       const opName = getOpImageTag(
         this.team.name,
         op.name,
-        'latest',
+        op.version,
         op.isPublic,
       )
       const localImage = await this.services.imageService.checkLocalImage(
@@ -235,38 +249,57 @@ export default class Publish extends Command {
       if (!localImage) {
         throw new DockerPublishNoImageFound(op.name, this.team.name)
       }
+      if ('run' in op) {
+        op.type = COMMAND_TYPE
+        const {
+          data: apiOp,
+        }: { data: Op } = await this.services.publishService.publishOpToAPI(
+          op,
+          version,
+          this.team.name,
+          this.accessToken,
+          this.services.api,
+        )
 
-      const {
-        data: apiOp,
-      }: { data: Op } = await this.services.publishService.publishOpToAPI(
-        op,
-        version,
-        this.team.id,
-        this.accessToken,
-        this.services.api,
-      )
+        const registryAuth = await this.getRegistryAuth(op.name, op.version)
 
-      // TODO: Setting version as 'platform version' for now
-      // but it has to be changed to op.version when versioning is added
-      const registryAuth = await this.getRegistryAuth(op.name, version)
+        await this.services.publishService.publishOpToRegistry(
+          apiOp,
+          registryAuth,
+          this.team.name,
+          this.accessToken,
+          this.services.registryAuthService,
+          this.services.api,
+          version,
+        )
 
-      await this.services.publishService.publishOpToRegistry(
-        apiOp,
-        registryAuth,
-        this.team.name,
-        this.accessToken,
-        this.services.registryAuthService,
-        this.services.api,
-        version,
-      )
-
-      this.sendAnalytics('op', apiOp)
+        this.sendAnalytics('op', apiOp)
+      }
     }
   }
 
   workflowsPublishLoop = async ({ workflows, version }: PublishInputs) => {
     for (const workflow of workflows) {
-      if (workflow.remote) {
+      if (!isValidOpName(workflow.name)) {
+        throw new InvalidInputCharacter('Workflow Name')
+      }
+      if (!isValidOpVersion(workflow)) {
+        throw new InvalidOpVersionFormat()
+      }
+
+      const { publishDescription } = await this.ux.prompt({
+        type: 'input',
+        name: 'publishDescription',
+        message: `\nProvide a publish description for ${workflow.name}:${
+          workflow.version
+        } ${ux.colors.reset.green('→')}\n\n ${ux.colors.white('Description:')}`,
+        afterMessage: ux.colors.reset.green('✓'),
+        afterMessageAppend: ux.colors.reset(' added!'),
+        validate: this._validateDescription,
+      })
+      workflow.publishDescription = publishDescription
+
+      if ('remote' in workflow && workflow.remote) {
         const newSteps: string[] = []
         for (const step of workflow.steps) {
           let newStep = ''
@@ -311,12 +344,8 @@ export default class Publish extends Command {
         const {
           data: apiWorkflow,
         }: { data: Op } = await this.services.api.create(
-          WORKFLOW_ENDPOINT,
-          {
-            ...workflow,
-            version,
-            teamID: this.team.id,
-          },
+          `/teams/${this.team.name}/ops`,
+          { ...workflow, platformVersion: version, type: 'workflow' },
           {
             headers: {
               Authorization: this.accessToken,
@@ -348,6 +377,8 @@ export default class Publish extends Command {
           InvalidWorkflowStepCodes.includes(err.error[0].code)
         ) {
           throw new InvalidWorkflowStep(err)
+        } else if (err.error[0].message === 'version is taken') {
+          throw new VersionIsTaken()
         }
         throw new CouldNotCreateWorkflow(err.message)
       }
@@ -366,10 +397,18 @@ export default class Publish extends Command {
         type: publishType,
         name: opOrWorkflow.name,
         description: opOrWorkflow.description,
-        image: `${OPS_REGISTRY_HOST}/${opOrWorkflow.id.toLowerCase()}`,
+        image: `${OPS_REGISTRY_HOST}/${opOrWorkflow.id.toLowerCase()}:${
+          opOrWorkflow.version
+        }`,
         tag: 'latest',
       },
     })
+  }
+
+  _validateDescription(input: string) {
+    if (input === '')
+      return 'You need to provide a publish description of your op before continuing'
+    return true
   }
 
   async run() {

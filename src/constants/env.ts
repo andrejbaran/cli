@@ -6,9 +6,7 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-export const defaultApiHost = 'https://cto.ai/'
-
-export const OPS_API_HOST = process.env.OPS_API_HOST || defaultApiHost
+export const OPS_API_HOST = process.env.OPS_API_HOST || 'https://cto.ai/'
 
 export const OPS_API_PATH = process.env.OPS_API_PATH || 'api/v1'
 

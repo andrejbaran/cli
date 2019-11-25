@@ -32,6 +32,8 @@ export interface Workflow extends BaseFields {
 
 interface BaseFields {
   name: string
+  version: string
+  platformVersion: string
   description: string
   publishDescription?: string
   env: string[]

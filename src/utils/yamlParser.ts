@@ -1,7 +1,10 @@
+import { ux } from '@cto.ai/sdk'
 import { OpsYml, Workflow, Op } from '~/types'
 import * as yaml from 'yaml'
 import { IncompleteOpsYml } from '~/errors/CustomErrors'
+import { WORKFLOW_TYPE, COMMAND_TYPE, COMMAND } from '../constants/opConfig'
 
+const { white, callOutCyan } = ux.colors
 const checkCommandNecessryFields = (commandContents: Op) => {
   if (!commandContents.run || typeof commandContents.run !== 'string') {
     throw new IncompleteOpsYml('The run command must be included as a string')
@@ -37,32 +40,74 @@ const checkOpNecessaryFields = (opContents: Op | Workflow) => {
   return true
 }
 
+const _splitOpNameAndVersion = (op: Op | Workflow): [string, string] => {
+  const splits = op.name.split(':')
+  return [splits[0], splits[1]]
+}
+
 export const parseYaml = (manifest: string): OpsYml => {
-  const yamlContents: any = manifest && yaml.parse(manifest)
-
-  if (!yamlContents) throw new IncompleteOpsYml('Ops.yml is empty')
-
-  if (yamlContents.ops) {
-    yamlContents.ops = yamlContents.ops.map(op => {
-      const newOp = { ...op }
-      newOp.isPublic = newOp.public
-      delete newOp.public
-      checkOpNecessaryFields(newOp)
-      checkCommandNecessryFields(newOp)
-      return newOp
+  const { version, ops = [], workflows = [], commands = [] } =
+    manifest && yaml.parse(manifest)
+  let yamlContents: OpsYml = {
+    version,
+    ops: [],
+    workflows: [],
+  }
+  if (ops.length > 0) {
+    console.log(
+      white(
+        `It looks like your ops.yml is a little out of date.\nYou should replace the ${callOutCyan(
+          'ops',
+        )} field with ${callOutCyan('commands')}.\nLearn more here ${ux.url(
+          'https://cto.ai/docs/ops-reference',
+          'https://cto.ai/docs/ops-reference',
+        )}`,
+      ),
+    )
+    const parsedOps = ops.map(op => {
+      const newCommand = formatRequiredFields(op, COMMAND_TYPE)
+      checkOpNecessaryFields(newCommand)
+      checkCommandNecessryFields(newCommand)
+      return newCommand
     })
+    yamlContents.ops = [...yamlContents.ops, ...parsedOps]
+  }
+  if (commands.length > 0) {
+    const parsedCommands = commands.map(op => {
+      const newCommand = formatRequiredFields(op, COMMAND_TYPE)
+      checkOpNecessaryFields(newCommand)
+      checkCommandNecessryFields(newCommand)
+      return newCommand
+    })
+    yamlContents.ops = [...yamlContents.ops, ...parsedCommands]
   }
 
-  if (yamlContents.workflows) {
-    yamlContents.workflows = yamlContents.workflows.map(wf => {
-      const newWf = { ...wf }
-      newWf.isPublic = newWf.public
-      delete newWf.public
+  if (workflows.length > 0) {
+    yamlContents.workflows = workflows.map(wf => {
+      const newWf = formatRequiredFields(wf, WORKFLOW_TYPE)
       checkOpNecessaryFields(newWf)
       checkWorkflowNecessryFields(newWf)
       return newWf
     })
   }
-
   return yamlContents
+}
+
+const formatRequiredFields = (opOrWorkflow, type) => {
+  const defaultVersion = `0.1.0`
+  const defaultVersionLog = `\nℹ️  It looks like your ops.yml is a little out of date. It does not have a version, we are setting the default version to ${ux.colors.callOutCyan(
+    defaultVersion,
+  )}. Learn more ${ux.url('here', 'https://cto.ai/docs/ops-reference')}.\n`
+  const newOp = { ...opOrWorkflow }
+  newOp.isPublic = newOp.public
+  delete newOp.public
+  let [opName, opVersion] = _splitOpNameAndVersion(opOrWorkflow)
+  if (!opVersion) {
+    opVersion = defaultVersion
+    console.log(defaultVersionLog)
+  }
+  newOp.name = opName
+  newOp.version = opVersion
+  newOp.type = type
+  return newOp
 }

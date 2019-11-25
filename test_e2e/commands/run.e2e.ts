@@ -43,10 +43,10 @@ test('it should run a published op by passing name as argument', async () => {
 
   console.log(`ops run ${EXISTING_OP_NAME}`)
   const result = await run(['run', EXISTING_OP_NAME])
-
   expect(result).toContain(`Running ${EXISTING_OP_NAME}...`)
 
   const newFile = path.join(process.cwd(), NEW_FILE)
+  await sleep(500)
   const newFileExists = fs.existsSync(newFile)
   console.log('newfile', newFile, newFileExists)
   expect(newFileExists).toBeTruthy()
@@ -133,6 +133,7 @@ test('it should init a local workflow then run it unpublished', async () => {
       NEW_WORKFLOW_NAME,
       ENTER,
       NEW_WORKFLOW_DESCRIPTION,
+      ENTER,
       ENTER,
     ],
   )

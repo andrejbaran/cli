@@ -34,10 +34,12 @@ describe('promptOps', () => {
     const inputs = {
       opResults: [{}],
       selectedOp: createMockOp({}),
+      config: {
+        team: createMockTeam({}),
+      },
     } as ListInputs
 
     cmd.user = createMockUser({})
-    cmd.team = createMockTeam({})
 
     await cmd.promptOps(inputs)
     expect(cmd.ux.prompt.mock.calls.length).toBe(1)
@@ -62,9 +64,8 @@ describe('getApiOps', () => {
       .mockReturnValue({ data: mockReturnedOps })
 
     cmd = new List([], config, { api: mockFeathersService } as Services)
-    cmd.state = createMockState({ config: mockConfig })
 
-    const res = await cmd.getApiOps({} as ListInputs)
+    const res = await cmd.getApiOps({ config: mockConfig } as ListInputs)
     expect(res.opResults).toEqual(mockReturnedOps)
   })
 })
@@ -89,11 +90,11 @@ describe('filterOutGlueCodes', () => {
     cmd = new List([], config, { api: mockFeathersService } as Services)
 
     const inputs = {
+      config: mockConfig,
       opResults: mockReturnedOps,
       selectedOp: {},
     } as ListInputs
 
-    cmd.state = createMockState({ config: mockConfig })
     const noGlue = await cmd.filterOutGlueCodes(inputs)
     expect(noGlue.opResults.length).toEqual(1)
   })

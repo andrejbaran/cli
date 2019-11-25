@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Friday, 24th May 2019 1:41:52 pm
  * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Friday, 25th October 2019 10:44:44 am
+ * @lastModifiedTime: Wednesday, 20th November 2019 11:50:04 am
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -13,13 +13,20 @@ import { run, signin, sleep, cleanup } from '../utils/cmd'
 import {
   ENTER,
   NEW_COMMAND_DESCRIPTION,
+  NEW_COMMAND_PUBLISH_DESCRIPTION,
+  NEW_COMMAND_REMOVE_DESCRIPTION,
   NEW_COMMAND_NAME,
+  NEW_COMMAND_VERSION,
   SPACE,
   DOWN,
   NEW_WORKFLOW_NAME,
   NEW_WORKFLOW_DESCRIPTION,
+  NEW_WORKFLOW_PUBLISH_DESCRIPTION,
+  NEW_WORKFLOW_REMOVE_DESCRIPTION,
+  NEW_WORKFLOW_VERSION,
   UP,
   Y,
+  OP_TO_ADD,
 } from '../utils/constants'
 import { COMMAND, WORKFLOW } from '~/constants/opConfig'
 
@@ -30,7 +37,7 @@ beforeEach(async () => {
   await run(['account:signout'])
 })
 
-afterAll(async () => {
+afterEach(async () => {
   // avoid jest open handle error
   await cleanup()
   await sleep(500)
@@ -43,7 +50,15 @@ test('it should init a command, build, publish, list, remove', async () => {
   console.log('ops init a command')
   const initRes = await run(
     ['init'],
-    [SPACE, ENTER, NEW_COMMAND_NAME, ENTER, NEW_COMMAND_DESCRIPTION, ENTER],
+    [
+      SPACE,
+      ENTER,
+      NEW_COMMAND_NAME,
+      ENTER,
+      NEW_COMMAND_DESCRIPTION,
+      ENTER,
+      ENTER,
+    ],
   )
   expect(initRes.toLowerCase()).toContain('success!')
   expect(initRes.toLowerCase()).toContain(
@@ -59,7 +74,10 @@ test('it should init a command, build, publish, list, remove', async () => {
   await sleep(500)
 
   console.log(`ops publish ${NEW_COMMAND_NAME}`)
-  const publishRes = await run(['publish', NEW_COMMAND_NAME], [ENTER])
+  const publishRes = await run(
+    ['publish', NEW_COMMAND_NAME],
+    [ENTER, ENTER, NEW_COMMAND_PUBLISH_DESCRIPTION, ENTER, ENTER],
+  )
   expect(publishRes.toLowerCase()).toContain('preparing:')
   expect(publishRes).toContain('has been published!')
   await sleep(1000)
@@ -76,13 +94,12 @@ test('it should init a command, build, publish, list, remove', async () => {
   console.log(`ops remove ${NEW_COMMAND_NAME}`)
   // ENTER, ENTER doesn't work for some reason
   const removeRes = await run(
-    ['remove', NEW_COMMAND_NAME],
-    [DOWN, UP, Y, ENTER, ENTER],
+    ['remove', `${NEW_COMMAND_NAME}:${NEW_COMMAND_VERSION}`],
+    [NEW_COMMAND_REMOVE_DESCRIPTION, ENTER, Y, ENTER],
   )
-
-  const regexPattern = `${NEW_COMMAND_NAME}:[a-z0-9-]+ has been removed from the registry!`
-  const regexObj = new RegExp(regexPattern, 'g')
-  expect(removeRes).toMatch(regexObj)
+  expect(removeRes).toContain(
+    `${NEW_COMMAND_NAME}:${NEW_COMMAND_VERSION} has been removed from the registry!`,
+  )
   await sleep(500)
 
   const pathToOp = `./${NEW_COMMAND_NAME}`
@@ -108,6 +125,7 @@ test('it should init a workflow, publish, list, remove', async () => {
       ENTER,
       NEW_WORKFLOW_DESCRIPTION,
       ENTER,
+      ENTER,
     ],
   )
   expect(initRes.toLowerCase()).toContain('success!')
@@ -119,7 +137,11 @@ test('it should init a workflow, publish, list, remove', async () => {
   await sleep(500)
 
   console.log(`ops publish ${NEW_WORKFLOW_NAME}`)
-  const publishRes = await run(['publish', NEW_WORKFLOW_NAME], [DOWN, ENTER])
+  const publishRes = await run(
+    ['publish', NEW_WORKFLOW_NAME],
+    [DOWN, ENTER, ENTER, NEW_WORKFLOW_PUBLISH_DESCRIPTION, ENTER],
+  )
+
   expect(publishRes).toContain(`${NEW_WORKFLOW_NAME} has been published!`)
   await sleep(1000)
 
@@ -130,13 +152,13 @@ test('it should init a workflow, publish, list, remove', async () => {
 
   console.log(`ops remove ${NEW_WORKFLOW_NAME}`)
   const removeRes = await run(
-    ['remove', NEW_WORKFLOW_NAME],
-    [DOWN, Y, ENTER, ENTER],
+    ['remove', `${NEW_WORKFLOW_NAME}:${NEW_WORKFLOW_VERSION}`],
+    [NEW_WORKFLOW_REMOVE_DESCRIPTION, ENTER, Y, ENTER],
   )
 
-  const regexPattern = `${NEW_WORKFLOW_NAME}:[a-z0-9-]+ has been removed from the registry!`
-  const regexObj = new RegExp(regexPattern, 'g')
-  expect(removeRes).toMatch(regexObj)
+  expect(removeRes).toContain(
+    `${NEW_WORKFLOW_NAME}:${NEW_WORKFLOW_VERSION} has been removed from the registry!`,
+  )
   await sleep(500)
 
   const pathToWorkflow = `./${NEW_WORKFLOW_NAME}`
@@ -147,37 +169,39 @@ test('it should init a workflow, publish, list, remove', async () => {
   }
 })
 
-test('it should not delete a command if it is being used in a remote workflow', async () => {
+test('it should ops search, ops add, ops list', async () => {
+  await signin()
+  await sleep(500)
+
+  console.log('ops list')
+  const listRes = await run(['list'], [ENTER])
+  expect(listRes).not.toContain(OP_TO_ADD)
+  await sleep(500)
+
+  console.log('ops search')
+  const searchRes = await run(['search'], [ENTER])
+  expect(searchRes).toContain(OP_TO_ADD)
+  await sleep(500)
+
+  console.log(`ops add ${OP_TO_ADD}`)
+  const addRes = await run(['add'], [OP_TO_ADD])
+  expect(addRes).toContain(
+    `Good job! ${OP_TO_ADD} has been successfully added to your team.`,
+  )
+  await sleep(500)
+
+  console.log('ops list')
+  const listRes2 = await run(['list'], [ENTER])
+  expect(listRes2).toContain(OP_TO_ADD)
+  await sleep(500)
+})
+
+test.only('it be able to publish multiple versions of an op', async () => {
   await signin()
   await sleep(500)
 
   console.log('ops init a command')
   const initRes = await run(
-    ['init'],
-    [SPACE, ENTER, NEW_COMMAND_NAME, ENTER, NEW_COMMAND_DESCRIPTION, ENTER],
-  )
-  expect(initRes.toLowerCase()).toContain('success!')
-  expect(initRes.toLowerCase()).toContain(
-    `to test your ${COMMAND} run: $ ops run ${NEW_COMMAND_NAME}`,
-  )
-
-  await sleep(500)
-
-  console.log(`ops build ${NEW_COMMAND_NAME}`)
-  const buildRes = await run(['build', NEW_COMMAND_NAME])
-  expect(buildRes.toLowerCase()).toContain('successfully built')
-
-  await sleep(500)
-
-  console.log(`ops publish ${NEW_COMMAND_NAME}`)
-  const publishRes = await run(['publish', NEW_COMMAND_NAME], [ENTER])
-  expect(publishRes.toLowerCase()).toContain('preparing:')
-  expect(publishRes).toContain('has been published!')
-
-  await sleep(500)
-
-  console.log('ops init a workflow')
-  const initWfRes = await run(
     ['init'],
     [
       DOWN,
@@ -187,60 +211,41 @@ test('it should not delete a command if it is being used in a remote workflow', 
       ENTER,
       NEW_WORKFLOW_DESCRIPTION,
       ENTER,
+      ENTER,
     ],
+    3000,
   )
-  expect(initWfRes.toLowerCase()).toContain('success!')
-  expect(initWfRes).toContain(`🚀 To test your ${WORKFLOW} run:`)
-  expect(initWfRes).toContain(
-    `cd ${NEW_WORKFLOW_NAME} && npm install && ops run .`,
-  )
-
-  console.log('modify ops.yml')
-  const destDir = `${path.resolve(process.cwd())}/${NEW_WORKFLOW_NAME}`
-  const doc = yaml.parseDocument(fs.readFileSync(`${destDir}/ops.yml`, 'utf-8'))
-  doc
-    // @ts-ignore
-    .getIn(['workflows', 0])
-    .setIn(['steps', 1], `ops run ${NEW_COMMAND_NAME}`)
-  // @ts-ignore
-  doc.getIn(['workflows', 0]).set('remote', true)
-  fs.writeFileSync(`${destDir}/ops.yml`, doc.toString())
-
-  await sleep(200)
-
-  console.log(`ops publish ${NEW_WORKFLOW_NAME}`)
-  const publishWfRes = await run(['publish', NEW_WORKFLOW_NAME], [DOWN, ENTER])
-  expect(publishWfRes).toContain(`${NEW_WORKFLOW_NAME} has been published!`)
+  expect(initRes.toLowerCase()).toContain('success')
+  expect(initRes.toLowerCase()).toContain('to test your workflow run:')
 
   await sleep(500)
 
-  console.log(`ops remove ${NEW_COMMAND_NAME}`)
-
-  const removeRes = await run(
-    ['remove', NEW_COMMAND_NAME],
-    [DOWN, UP, Y, ENTER, ENTER],
+  console.log(`ops publish ${NEW_WORKFLOW_NAME}`)
+  const publishRes = await run(
+    ['publish', NEW_WORKFLOW_NAME],
+    [DOWN, ENTER, ENTER, NEW_WORKFLOW_PUBLISH_DESCRIPTION, ENTER],
   )
-  expect(removeRes).toContain('❗ Sorry, we cannot delete the op.')
-  expect(removeRes).toContain(
-    'Please verify that it is not being used in some other op.',
+  expect(publishRes.toLowerCase()).toContain(`has been published!`)
+  expect(publishRes.toLowerCase()).toContain('visit your op page here:')
+
+  await sleep(500)
+  const manifest = fs.readFileSync(`${NEW_WORKFLOW_NAME}/ops.yml`, 'utf8')
+  const parsedYaml = yaml.parseDocument(manifest)
+  parsedYaml
+    // @ts-ignore
+    .getIn(['workflows', 0])
+    .set('name', `${NEW_WORKFLOW_NAME}:newversion`)
+  const parsedYamlString = parsedYaml.toString()
+  fs.writeFileSync(`${NEW_WORKFLOW_NAME}/ops.yml`, parsedYamlString)
+
+  await sleep(500)
+  console.log(`ops publish ${NEW_WORKFLOW_NAME}:newversion`)
+  const publishResNewVersion = await run(
+    ['publish', NEW_WORKFLOW_NAME],
+    [DOWN, ENTER, ENTER, NEW_WORKFLOW_PUBLISH_DESCRIPTION, ENTER],
   )
-
-  // remove command and workflow created above
-  await run(['remove', NEW_WORKFLOW_NAME], [DOWN, UP, Y, ENTER, ENTER])
-  await run(['remove', NEW_COMMAND_NAME], [DOWN, UP, Y, ENTER, ENTER])
-
-  // cleanup directories
-  const pathToOp = `./${NEW_COMMAND_NAME}`
-
-  if (fs.existsSync(pathToOp)) {
-    fs.removeSync(pathToOp)
-    console.log(pathToOp, ' directory deleted successfully.')
-  }
-
-  const pathToWorkflow = `./${NEW_WORKFLOW_NAME}`
-
-  if (fs.existsSync(pathToWorkflow)) {
-    fs.removeSync(pathToWorkflow)
-    console.log(pathToWorkflow, ' directory deleted successfully.')
-  }
+  expect(publishResNewVersion.toLowerCase()).toContain(`has been published!`)
+  expect(publishResNewVersion.toLowerCase()).toContain(
+    'visit your op page here:',
+  )
 })
