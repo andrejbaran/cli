@@ -10,86 +10,68 @@ const inputPrompts = [
     message: `\nYou can prompt the user for input ${reset.green('→')}\n${white(
       'Type input here',
     )}`,
-    afterMessage: `${reset.green('✓')} Input`,
-    afterMessageAppend: `${reset(' added!')}`,
   },
   {
     type: 'password',
     name: 'password',
-    mask: '*',
     message: `\nYou can also prompt the user for a password ${reset.green(
       '→',
     )}\n${white('Enter password here')}`,
-    afterMessage: `${reset.green('✓')} Password added!`,
   },
 ]
 
-const listPrompts = [
-  {
-    type: 'list',
-    name: 'list',
-    message: `\nWhat impact is the incident having ${reset.green('→')}`,
-    choices: [
-      'All customers are affected.',
-      'Large segment of customers are affected.',
-      'Small segment of customers are affected.',
-      'Site performance degraded for some customers.',
-      'Potential issue, but customers are currently unaware.',
-      'All customers are affected.',
-      'Large segment of customers are affected.',
-      'Small segment of customers are affected.',
-      'Site performance degraded for some customers.',
-      'All customers are affected.',
-      'Large segment of customers are affected.',
-      'Small segment of customers are affected.',
-      'Site performance degraded for some customers.',
-    ],
-    afterMessage: `${reset.green('✓')} Incident added!`,
-  },
-]
+const listPrompt = {
+  type: 'list',
+  name: 'list',
+  message: `\nWhat impact is the incident having ${reset.green('→')}`,
+  choices: [
+    'All customers are affected.',
+    'Large segment of customers are affected.',
+    'Small segment of customers are affected.',
+    'Site performance degraded for some customers.',
+    'Potential issue, but customers are currently unaware.',
+    'All customers are affected.',
+    'Large segment of customers are affected.',
+    'Small segment of customers are affected.',
+    'Site performance degraded for some customers.',
+    'All customers are affected.',
+    'Large segment of customers are affected.',
+    'Small segment of customers are affected.',
+    'Site performance degraded for some customers.',
+  ],
+}
 
-const confirmPrompts = [
-  {
-    type: 'confirm',
-    name: 'confirm',
-    message: `\nIs the incident closed ${reset.green('→')}\n\n`,
-    afterMessage: `${reset.green('✓')} Confirmation`,
-  },
-]
+const confirmPrompt = {
+  type: 'confirm',
+  name: 'confirm',
+  message: `\nIs the incident closed ${reset.green('→')}\n\n`,
+}
 
-const continuePrompts = [
-  {
-    type: 'input',
-    name: 'continue',
-    message: `\nPress enter to continue →`,
-  },
-]
+const continuePrompt = {
+  type: 'input',
+  name: 'continue',
+  message: `\nPress enter to continue →`,
+}
 
-const fuzzySearchPrompts = [
-  {
-    type: 'autocomplete',
-    name: 'autocomplete',
-    message: `\nSelect a state to travel from ${reset.green('→')} `,
-    autocomplete: STATES,
-    afterMessage: `${reset.green('✓')} State selected!`,
-  },
-]
+const fuzzySearchPrompt = {
+  type: 'autocomplete',
+  name: 'autocomplete',
+  message: `\nSelect a state to travel from ${reset.green('→')} `,
+  autocomplete: STATES,
+}
 
-const datePickerPrompts = [
-  {
-    type: 'datepicker',
-    name: 'datepicker',
-    message: `\nWhen are you going ${reset.green('→')}`,
-    format: ['m', '/', 'd', '/', 'yy', ' ', 'h', ':', 'MM', ' ', 'TT'],
-    afterMessage: `${reset.green('✓')} Date Selected`,
-  },
-]
+const datePickerPrompt = {
+  type: 'datepicker',
+  name: 'datepicker',
+  message: `\nWhen are you going ${reset.green('→')}`,
+  variant: 'datetime',
+}
 
 module.exports = {
   inputPrompts,
-  listPrompts,
-  confirmPrompts,
-  continuePrompts,
-  fuzzySearchPrompts,
-  datePickerPrompts,
+  listPrompt,
+  confirmPrompt,
+  continuePrompt,
+  fuzzySearchPrompt,
+  datePickerPrompt,
 }
