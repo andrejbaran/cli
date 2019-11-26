@@ -61,7 +61,7 @@ const fuzzySearchPrompt = {
 }
 
 const datePickerPrompt = {
-  type: 'datepicker',
+  type: 'datetime',
   name: 'datepicker',
   message: `\nWhen are you going ${reset.green('→')}`,
   variant: 'datetime',
