@@ -6,6 +6,8 @@ import {
   APIError,
   AnalyticsError,
   NoSecretsProviderFound,
+  NoTeamFound,
+  UserUnauthorized,
 } from '~/errors/CustomErrors'
 
 interface UnregisterInput {
@@ -46,6 +48,15 @@ export default class UnregisterSecret extends Command {
       )
       return inputs
     } catch (err) {
+      if (err.error[0].message === 'team not found') {
+        throw new NoTeamFound(this.state.config.team.name)
+      }
+      if (
+        err.error[0].code === 403 ||
+        err.error[0].message === 'team not authorized'
+      ) {
+        throw new UserUnauthorized(err)
+      }
       if (err.error[0].code === 404) {
         throw new NoSecretsProviderFound(err)
       }
