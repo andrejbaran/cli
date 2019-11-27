@@ -3,7 +3,7 @@ const { STATES } = require('../constants')
 
 const { white, reset } = ux.colors
 
-const inputPrompt = [
+const inputPrompts = [
   {
     type: 'input',
     name: 'email',
