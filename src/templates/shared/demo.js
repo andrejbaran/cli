@@ -29,6 +29,9 @@ const main = async () => {
 
   // Trigger prompt
   await ux.print(ux.colors.bold.underline('\n⭐ Prompts '))
+  await ux.print(
+    `You can prompt the user for input or a password ${ux.colors.green('→')}`,
+  )
   await ux.print(promptsDescription)
 
   // INPUT

@@ -3,20 +3,16 @@ const { STATES } = require('../constants')
 
 const { white, reset } = ux.colors
 
-const inputPrompts = [
+const inputPrompt = [
   {
     type: 'input',
     name: 'email',
-    message: `\nYou can prompt the user for input ${reset.green('→')}\n${white(
-      'Type input here',
-    )}`,
+    message: 'Type input here',
   },
   {
     type: 'password',
     name: 'password',
-    message: `\nYou can also prompt the user for a password ${reset.green(
-      '→',
-    )}\n${white('Enter password here')}`,
+    message: 'Enter password here',
   },
 ]
 
@@ -44,19 +40,20 @@ const listPrompt = {
 const confirmPrompt = {
   type: 'confirm',
   name: 'confirm',
-  message: `\nIs the incident closed ${reset.green('→')}\n\n`,
+  message: `Is the incident closed ${reset.green('→')}`,
 }
 
 const continuePrompt = {
   type: 'input',
   name: 'continue',
-  message: `\nPress enter to continue →`,
+  message: `Press enter to continue →`,
+  allowEmpty: true,
 }
 
 const fuzzySearchPrompt = {
   type: 'autocomplete',
   name: 'autocomplete',
-  message: `\nSelect a state to travel from ${reset.green('→')} `,
+  message: `Select a state to travel from ${reset.green('→')} `,
   autocomplete: STATES,
 }
 
