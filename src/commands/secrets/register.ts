@@ -5,6 +5,8 @@ import { asyncPipe } from '~/utils'
 import {
   InvalidTeamNameFormat,
   RegisterSecretsProvider,
+  NoTeamFound,
+  UserUnauthorized,
 } from '~/errors/CustomErrors'
 
 const { white, reset } = ux.colors
@@ -82,6 +84,15 @@ export default class SecretsRegister extends Command {
       return inputs
     } catch (err) {
       this.debug('%O', err)
+      if (err.error[0].message === 'team not found') {
+        throw new NoTeamFound(inputs.activeTeam.name)
+      }
+      if (
+        err.error[0].code === 403 ||
+        err.error[0].message === 'team not authorized'
+      ) {
+        throw new UserUnauthorized(err)
+      }
       throw new RegisterSecretsProvider(err)
     }
   }
