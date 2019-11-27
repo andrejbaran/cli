@@ -714,9 +714,9 @@ export class NoSecretsProviderFound extends ErrorTemplate {
   constructor(err) {
     super(
       white(
-        `😅 Oops!, We are not able to find a secret provider for this team. You can register a secret provider using  ${ux.colors.callOutCyan(
+        `😅 Oops!, We are not able to find a secrets provider for this team. You can register a secrets provider using  ${terminalText(
           'ops secrets:register',
-        )}`,
+        )}.`,
       ),
       err,
       expectedSource,

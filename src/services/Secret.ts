@@ -3,7 +3,11 @@ import Debug from 'debug'
 import { ux } from '@cto.ai/sdk'
 import { Answers, Fuzzy, SecretListInputs, Config, ApiService } from '~/types'
 import { asyncPipe } from '~/utils/asyncPipe'
-import { APIError, NoTeamSelected } from '~/errors/CustomErrors'
+import {
+  APIError,
+  NoTeamSelected,
+  NoSecretsProviderFound,
+} from '~/errors/CustomErrors'
 
 const debug = Debug('ops:SecretService')
 
@@ -31,6 +35,9 @@ export class SecretService {
         throw err
       }
       debug('error: %O', err)
+      if (err.error[0].message === 'no secrets provider registered') {
+        throw new NoSecretsProviderFound(err)
+      }
       throw new APIError(err)
     }
   }
@@ -103,6 +110,7 @@ export class SecretService {
       return results
     } catch (err) {
       debug('%O', err)
+      throw err
     }
   }
 }
