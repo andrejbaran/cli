@@ -6,6 +6,7 @@ import {
   SetSecretsProvider,
   SecretsValuesNotEqual,
   SecretsFlagsRequired,
+  NoSecretsProviderFound,
 } from '~/errors/CustomErrors'
 import { flags } from '@oclif/parser'
 
@@ -60,7 +61,7 @@ export default class SecretsSet extends Command {
         validate: this.validateRegisterInput.bind(this),
       },
       {
-        type: 'input',
+        type: 'password',
         name: 'valueOriginal',
         message: `\nNext add the secret's value to be stored ${reset.green(
           '→',
@@ -68,7 +69,7 @@ export default class SecretsSet extends Command {
         validate: this.validateRegisterInput.bind(this),
       },
       {
-        type: 'input',
+        type: 'password',
         name: 'valueConfirm',
         message: `\nPlease confirm the secret's value to be stored ${reset.green(
           '→',
@@ -107,8 +108,24 @@ export default class SecretsSet extends Command {
       return inputs
     } catch (err) {
       this.debug('%O', err)
+      if (err.error[0].message === 'no secrets provider registered') {
+        throw new NoSecretsProviderFound(err)
+      }
       throw new SetSecretsProvider(err)
     }
+  }
+
+  logMessage = (inputs: SetSecretInputs): SetSecretInputs => {
+    this.log(
+      `\n ${white(
+        `🙌 Great job! Secret ${ux.colors.callOutCyan(
+          inputs.key,
+        )} has been added to your team ${ux.colors.blueBright(
+          inputs.state.config.team.name,
+        )}!`,
+      )}`,
+    )
+    return inputs
   }
 
   sendAnalytics = (inputs: SetSecretInputs) => async () => {
@@ -149,6 +166,7 @@ export default class SecretsSet extends Command {
       const switchPipeline = asyncPipe(
         this.promptForSecret,
         this.setSecret,
+        this.logMessage,
         this.sendAnalytics,
       )
       await switchPipeline({

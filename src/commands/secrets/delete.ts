@@ -2,7 +2,12 @@ import Command, { flags } from '~/base'
 import SecretsList from './list'
 import { SecretListInputs } from '~/types'
 import { asyncPipe } from '~/utils/asyncPipe'
-import { APIError, AnalyticsError, NoTeamSelected } from '~/errors/CustomErrors'
+import {
+  APIError,
+  AnalyticsError,
+  NoTeamSelected,
+  NoSecretsProviderFound,
+} from '~/errors/CustomErrors'
 
 interface SecretDeleteInput {
   selectedSecret: string
@@ -57,6 +62,9 @@ export default class SecretsDelete extends Command {
       )
       return inputs
     } catch (err) {
+      if (err.error[0].message === 'no secrets provider registered') {
+        throw new NoSecretsProviderFound(err)
+      }
       throw new APIError(err)
     }
   }
