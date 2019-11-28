@@ -94,7 +94,7 @@ export class BuildSteps {
         accessToken,
         teamName,
         glueCodeOp.name,
-        version,
+        'latest',
         false,
         true, // pushAccess is true as its publish
       )
