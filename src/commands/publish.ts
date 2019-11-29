@@ -24,6 +24,7 @@ import {
   InvalidWorkflowStep,
   InvalidOpVersionFormat,
   VersionIsTaken,
+  APIError,
 } from '../errors/CustomErrors'
 import {
   Container,
@@ -36,6 +37,7 @@ import {
 import { asyncPipe, getOpImageTag, parseYaml } from '../utils'
 import getDocker from '../utils/get-docker'
 import { isValidOpName, isValidOpVersion } from '../utils/validate'
+import { ErrorTemplate } from '~/errors/ErrorTemplate'
 
 export interface PublishInputs {
   opPath: string
@@ -218,170 +220,185 @@ export default class Publish extends Command {
   }
 
   opsPublishLoop = async ({ ops, version }: PublishInputs) => {
-    for (const op of ops) {
-      if (!isValidOpName(op.name)) {
-        throw new InvalidInputCharacter('Op Name')
-      }
-      if (!isValidOpVersion(op)) {
-        throw new InvalidOpVersionFormat()
-      }
-      const { publishDescription } = await this.ux.prompt({
-        type: 'input',
-        name: 'publishDescription',
-        message: `\nProvide a changelog of what's new for ${op.name}:${
-          op.version
-        } ${ux.colors.reset.green('→')}\n\n ${ux.colors.white('Changelog:')}`,
-        afterMessage: ux.colors.reset.green('✓'),
-        afterMessageAppend: ux.colors.reset(' added!'),
-        validate: this._validateDescription,
-      })
-      op.publishDescription = publishDescription
-      const opName = getOpImageTag(
-        this.team.name,
-        op.name,
-        op.version,
-        op.isPublic,
-      )
-      const localImage = await this.services.imageService.checkLocalImage(
-        `${OPS_REGISTRY_HOST}/${opName}`,
-      )
-
-      if (!localImage) {
-        throw new DockerPublishNoImageFound(op.name, this.team.name)
-      }
-      if ('run' in op) {
-        op.type = COMMAND_TYPE
-        const {
-          data: apiOp,
-        }: { data: Op } = await this.services.publishService.publishOpToAPI(
-          op,
-          version,
+    try {
+      for (const op of ops) {
+        if (!isValidOpName(op.name)) {
+          throw new InvalidInputCharacter('Op Name')
+        }
+        if (!isValidOpVersion(op)) {
+          throw new InvalidOpVersionFormat()
+        }
+        const { publishDescription } = await this.ux.prompt({
+          type: 'input',
+          name: 'publishDescription',
+          message: `\nProvide a changelog of what's new for ${op.name}:${
+            op.version
+          } ${ux.colors.reset.green('→')}\n\n ${ux.colors.white('Changelog:')}`,
+          afterMessage: ux.colors.reset.green('✓'),
+          afterMessageAppend: ux.colors.reset(' added!'),
+          validate: this._validateDescription,
+        })
+        op.publishDescription = publishDescription
+        const opName = getOpImageTag(
           this.team.name,
-          this.accessToken,
-          this.services.api,
+          op.name,
+          op.version,
+          op.isPublic,
+        )
+        const localImage = await this.services.imageService.checkLocalImage(
+          `${OPS_REGISTRY_HOST}/${opName}`,
         )
 
-        const registryAuth = await this.getRegistryAuth(op.name, op.version)
+        if (!localImage) {
+          throw new DockerPublishNoImageFound(op.name, this.team.name)
+        }
+        if ('run' in op) {
+          op.type = COMMAND_TYPE
+          const {
+            data: apiOp,
+          }: { data: Op } = await this.services.publishService.publishOpToAPI(
+            op,
+            version,
+            this.team.name,
+            this.accessToken,
+            this.services.api,
+          )
 
-        await this.services.publishService.publishOpToRegistry(
-          apiOp,
-          registryAuth,
-          this.team.name,
-          this.accessToken,
-          this.services.registryAuthService,
-          this.services.api,
-          version,
-        )
+          const registryAuth = await this.getRegistryAuth(op.name, op.version)
 
-        this.sendAnalytics('op', apiOp)
+          await this.services.publishService.publishOpToRegistry(
+            apiOp,
+            registryAuth,
+            this.team.name,
+            this.accessToken,
+            this.services.registryAuthService,
+            this.services.api,
+            version,
+          )
+
+          this.sendAnalytics('op', apiOp)
+        }
       }
+    } catch (err) {
+      if (err instanceof ErrorTemplate) {
+        throw err
+      }
+      throw new APIError(err)
+      4
     }
   }
 
   workflowsPublishLoop = async ({ workflows, version }: PublishInputs) => {
-    for (const workflow of workflows) {
-      if (!isValidOpName(workflow.name)) {
-        throw new InvalidInputCharacter('Workflow Name')
-      }
-      if (!isValidOpVersion(workflow)) {
-        throw new InvalidOpVersionFormat()
-      }
+    try {
+      for (const workflow of workflows) {
+        if (!isValidOpName(workflow.name)) {
+          throw new InvalidInputCharacter('Workflow Name')
+        }
+        if (!isValidOpVersion(workflow)) {
+          throw new InvalidOpVersionFormat()
+        }
 
-      const { publishDescription } = await this.ux.prompt({
-        type: 'input',
-        name: 'publishDescription',
-        message: `\nProvide a publish description for ${workflow.name}:${
-          workflow.version
-        } ${ux.colors.reset.green('→')}\n\n ${ux.colors.white('Description:')}`,
-        afterMessage: ux.colors.reset.green('✓'),
-        afterMessageAppend: ux.colors.reset(' added!'),
-        validate: this._validateDescription,
-      })
-      workflow.publishDescription = publishDescription
+        const { publishDescription } = await this.ux.prompt({
+          type: 'input',
+          name: 'publishDescription',
+          message: `\nProvide a publish description for ${workflow.name}:${
+            workflow.version
+          } ${ux.colors.reset.green('→')}\n\n ${ux.colors.white(
+            'Description:',
+          )}`,
+          afterMessage: ux.colors.reset.green('✓'),
+          afterMessageAppend: ux.colors.reset(' added!'),
+          validate: this._validateDescription,
+        })
+        workflow.publishDescription = publishDescription
 
-      if ('remote' in workflow && workflow.remote) {
-        const newSteps: string[] = []
-        for (const step of workflow.steps) {
-          let newStep = ''
+        if ('remote' in workflow && workflow.remote) {
+          const newSteps: string[] = []
+          for (const step of workflow.steps) {
+            let newStep = ''
 
-          if (await this.services.buildStepService.isGlueCode(step)) {
-            const opPath = path.resolve(
-              __dirname,
-              './../templates/workflowsteps/js/',
-            )
+            if (await this.services.buildStepService.isGlueCode(step)) {
+              const opPath = path.resolve(
+                __dirname,
+                './../templates/workflowsteps/js/',
+              )
 
-            newStep = await this.services.buildStepService.buildAndPublishGlueCode(
-              step,
-              this.team.id,
-              this.team.name,
-              this.accessToken,
-              opPath,
-              this.user,
-              this.services.publishService,
-              this.services.opService,
-              this.services.api,
-              this.services.registryAuthService,
-              this.state.config,
-              workflow.isPublic,
-              version,
-            )
+              newStep = await this.services.buildStepService.buildAndPublishGlueCode(
+                step,
+                this.team.id,
+                this.team.name,
+                this.accessToken,
+                opPath,
+                this.user,
+                this.services.publishService,
+                this.services.opService,
+                this.services.api,
+                this.services.registryAuthService,
+                this.state.config,
+                workflow.isPublic,
+                version,
+              )
 
-            newSteps.push(newStep)
-          } else {
-            if (!this.services.buildStepService.isOpRun(step)) {
-              this.debug('InvalidStepsFound - Step:', step)
-              throw new InvalidStepsFound(step)
+              newSteps.push(newStep)
+            } else {
+              if (!this.services.buildStepService.isOpRun(step)) {
+                this.debug('InvalidStepsFound - Step:', step)
+                throw new InvalidStepsFound(step)
+              }
+
+              newSteps.push(step)
             }
-
-            newSteps.push(step)
           }
+
+          workflow.steps = newSteps
         }
 
-        workflow.steps = newSteps
-      }
-
-      try {
-        const {
-          data: apiWorkflow,
-        }: { data: Op } = await this.services.api.create(
-          `/teams/${this.team.name}/ops`,
-          { ...workflow, platformVersion: version, type: 'workflow' },
-          {
-            headers: {
-              Authorization: this.accessToken,
+        try {
+          const {
+            data: apiWorkflow,
+          }: { data: Op } = await this.services.api.create(
+            `/teams/${this.team.name}/ops`,
+            { ...workflow, platformVersion: version, type: 'workflow' },
+            {
+              headers: {
+                Authorization: this.accessToken,
+              },
             },
-          },
-        )
+          )
 
-        this.log(
-          `\n🙌 ${ux.colors.callOutCyan(apiWorkflow.name)} has been published!`,
-        )
+          this.log(
+            `\n🙌 ${ux.colors.callOutCyan(
+              apiWorkflow.name,
+            )} has been published!`,
+          )
 
-        this.log(
-          `🖥  Visit your Op page here: ${ux.url(
-            `${OPS_API_HOST}registry/${this.team.name}/${apiWorkflow.name}`,
-            `<${OPS_API_HOST}${this.team.name}/${apiWorkflow.name}>`,
-          )}\n`,
-        )
-        this.sendAnalytics('workflow', apiWorkflow)
-      } catch (err) {
-        this.debug('%O', err)
-        // 5023 is: Team not found
-        // 5027 is: Op not found
-        // 5409 is: You do not have membership to this opp
-        const InvalidWorkflowStepCodes = [5023, 5027, 5409]
-        if (
-          err &&
-          err.error &&
-          err.error[0] &&
-          InvalidWorkflowStepCodes.includes(err.error[0].code)
-        ) {
-          throw new InvalidWorkflowStep(err)
-        } else if (err.error[0].message === 'version is taken') {
-          throw new VersionIsTaken()
+          this.log(
+            `🖥  Visit your Op page here: ${ux.url(
+              `${OPS_API_HOST}registry/${this.team.name}/${apiWorkflow.name}`,
+              `<${OPS_API_HOST}${this.team.name}/${apiWorkflow.name}>`,
+            )}\n`,
+          )
+          this.sendAnalytics('workflow', apiWorkflow)
+        } catch (err) {
+          this.debug('%O', err)
+          const InvalidWorkflowStepCodes = [400, 404]
+          if (
+            err &&
+            err.error &&
+            err.error[0] &&
+            InvalidWorkflowStepCodes.includes(err.error[0].code)
+          ) {
+            if (err.error[0].message === 'version is taken') {
+              throw new VersionIsTaken()
+            }
+            throw new InvalidWorkflowStep(err)
+          }
+          throw new CouldNotCreateWorkflow(err.message)
         }
-        throw new CouldNotCreateWorkflow(err.message)
       }
+    } catch (err) {
+      if (err instanceof ErrorTemplate) throw err
+      throw new APIError(err)
     }
   }
 
