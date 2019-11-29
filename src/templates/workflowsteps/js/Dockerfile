@@ -15,7 +15,7 @@ ADD . .
 ############################
 # Final container
 ############################
-FROM registry.cto.ai/official_images/node:12.10-stretch-slim
+FROM registry.cto.ai/official_images/node:latest
 
 WORKDIR /ops
 
