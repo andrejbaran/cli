@@ -83,7 +83,7 @@ export default class SecretsDelete extends Command {
     return inputs
   }
 
-  sendAnalytics = (inputs: SecretDeleteInput) => async () => {
+  sendAnalytics = async (inputs: SecretDeleteInput) => {
     try {
       this.services.analytics.track(
         {
@@ -100,6 +100,7 @@ export default class SecretsDelete extends Command {
         },
         this.state.config.tokens.accessToken,
       )
+      return inputs
     } catch (err) {
       this.debug('%O', err)
       throw new AnalyticsError(err)
@@ -123,8 +124,8 @@ export default class SecretsDelete extends Command {
       const secretDeletePipeline = asyncPipe(
         this.confirmSecretDeletion,
         this.deleteSecretAPI,
-        this.logMessage,
         this.sendAnalytics,
+        this.logMessage,
       )
 
       await secretDeletePipeline(inputs)
