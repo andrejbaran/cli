@@ -3,6 +3,7 @@ import Command from '~/base'
 import { State } from '~/types'
 import { asyncPipe } from '~/utils'
 import {
+  AnalyticsError,
   SetSecretsProvider,
   SecretsValuesNotEqual,
   SecretsFlagsRequired,
@@ -128,23 +129,28 @@ export default class SecretsSet extends Command {
     return inputs
   }
 
-  sendAnalytics = (inputs: SetSecretInputs) => async () => {
+  sendAnalytics = async (inputs: SetSecretInputs) => {
     const { team } = inputs.state.config
     const { email, username } = inputs.state.config.user
-
-    this.services.analytics.track(
-      {
-        userId: email,
-        teamId: team.id,
-        cliEvent: 'Ops CLI Set Secrets',
-        event: 'Ops CLI Set Secrets',
-        properties: {
-          email,
-          username,
+    try {
+      this.services.analytics.track(
+        {
+          userId: email,
+          teamId: team.id,
+          cliEvent: 'Ops CLI Set Secrets',
+          event: 'Ops CLI Set Secrets',
+          properties: {
+            email,
+            username,
+          },
         },
-      },
-      this.accessToken,
-    )
+        this.accessToken,
+      )
+      return inputs
+    } catch (err) {
+      this.debug('%O', err)
+      throw new AnalyticsError(err)
+    }
   }
 
   validateFlags = (k: string | undefined, v: string | undefined) => {
@@ -166,8 +172,8 @@ export default class SecretsSet extends Command {
       const switchPipeline = asyncPipe(
         this.promptForSecret,
         this.setSecret,
-        this.logMessage,
         this.sendAnalytics,
+        this.logMessage,
       )
       await switchPipeline({
         state: this.state,

@@ -36,7 +36,7 @@ export default class UnregisterSecret extends Command {
   unregisterAPI = async (inputs: UnregisterInput): Promise<UnregisterInput> => {
     try {
       if (!inputs.confirmDelete) return inputs
-      this.log('\n 🗑  Removing secret provider...')
+      this.log('\n🗑  Removing secret provider...')
       await this.services.api.remove(
         `/teams/${this.state.config.team.name}/secrets`,
         'unregister',
@@ -68,7 +68,7 @@ export default class UnregisterSecret extends Command {
     if (!inputs.confirmDelete) return inputs
 
     this.log(
-      `\n ⚡️ the secret provider has been ${this.ux.colors.red(
+      `\n⚡️ the secret provider has been ${this.ux.colors.red(
         'deleted',
       )} from the team ${this.ux.colors.multiBlue(
         this.state.config.team.name,
@@ -78,7 +78,7 @@ export default class UnregisterSecret extends Command {
     return inputs
   }
 
-  sendAnalytics = (inputs: UnregisterInput) => async () => {
+  sendAnalytics = async (inputs: UnregisterInput) => {
     try {
       this.services.analytics.track(
         {
@@ -95,6 +95,7 @@ export default class UnregisterSecret extends Command {
         },
         this.state.config.tokens.accessToken,
       )
+      return inputs
     } catch (err) {
       this.debug('%O', err)
       throw new AnalyticsError(err)
@@ -108,8 +109,8 @@ export default class UnregisterSecret extends Command {
       const unregisterPipeline = asyncPipe(
         this.unregisterConfirm,
         this.unregisterAPI,
-        this.logMessage,
         this.sendAnalytics,
+        this.logMessage,
       )
       await unregisterPipeline()
     } catch (err) {

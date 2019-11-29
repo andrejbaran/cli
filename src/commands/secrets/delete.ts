@@ -71,7 +71,7 @@ export default class SecretsDelete extends Command {
     if (!inputs.confirmDelete) return inputs
 
     this.log(
-      `\n ⚡️ the secret ${this.ux.colors.multiBlue(
+      `\n⚡️ the secret ${this.ux.colors.multiBlue(
         inputs.selectedSecret,
       )} has been ${this.ux.colors.red(
         'deleted',
