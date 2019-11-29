@@ -1,8 +1,6 @@
 import Command from '~/base'
-import { Team } from '~/types'
 import { asyncPipe } from '~/utils'
 import {
-  NoTeamSelected,
   APIError,
   AnalyticsError,
   NoSecretsProviderFound,
@@ -19,9 +17,6 @@ export default class UnregisterSecret extends Command {
 
   unregisterConfirm = async (): Promise<UnregisterInput> => {
     const { team } = this.state.config
-    if (team.id === '') {
-      throw new NoTeamSelected('No team selected')
-    }
     const { confirmDelete } = await this.ux.prompt<{ confirmDelete: boolean }>({
       type: 'confirm',
       name: 'confirmDelete',

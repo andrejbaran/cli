@@ -1,8 +1,7 @@
-import fuzzy from 'fuzzy'
 import Command, { flags } from '~/base'
-import { Answers, Fuzzy, SecretListInputs } from '~/types'
+import { SecretListInputs } from '~/types'
 import { asyncPipe } from '~/utils/asyncPipe'
-import { APIError, NoTeamSelected, AnalyticsError } from '~/errors/CustomErrors'
+import { AnalyticsError } from '~/errors/CustomErrors'
 
 export default class SecretsList extends Command {
   static description = 'List all the keys that are stored for the active team'

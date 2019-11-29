@@ -3,11 +3,7 @@ import Debug from 'debug'
 import { ux } from '@cto.ai/sdk'
 import { Answers, Fuzzy, SecretListInputs, Config, ApiService } from '~/types'
 import { asyncPipe } from '~/utils/asyncPipe'
-import {
-  APIError,
-  NoTeamSelected,
-  NoSecretsProviderFound,
-} from '~/errors/CustomErrors'
+import { APIError, NoSecretsProviderFound } from '~/errors/CustomErrors'
 
 const debug = Debug('ops:SecretService')
 
@@ -19,9 +15,7 @@ export class SecretService {
   ): Promise<SecretListInputs> => {
     try {
       const { team, tokens } = inputs.config
-      if (!team.id) {
-        throw new NoTeamSelected('No team selected')
-      }
+
       const { api } = inputs
       const findResponse = await api.find(`/teams/${team.name}/secrets`, {
         headers: {
@@ -31,9 +25,6 @@ export class SecretService {
       let { data: secrets } = findResponse
       return { ...inputs, secrets }
     } catch (err) {
-      if (err instanceof NoTeamSelected) {
-        throw err
-      }
       debug('error: %O', err)
       if (err.error[0].message === 'no secrets provider registered') {
         throw new NoSecretsProviderFound(err)

@@ -1,16 +1,9 @@
 import { FeathersClient } from '~/services'
 import * as Config from '@oclif/config'
-import SecretsList from '~/commands/secrets/list'
 import { SecretListInputs } from '~/types'
-import { SecretService, AnalyticsService } from '~/services'
+import { SecretService } from '~/services'
 import { sleep } from '../../utils'
-import {
-  createMockTeam,
-  createMockTokens,
-  createMockConfig,
-  createMockState,
-} from '../../mocks'
-import { NoTeamSelected } from '~/errors/CustomErrors'
+import { createMockTeam, createMockTokens } from '../../mocks'
 
 let config: Config.IConfig
 
@@ -25,18 +18,6 @@ afterEach(async () => {
 
 describe('SecretService', () => {
   let service: SecretService
-  test('Should return an error if there is no active team', async () => {
-    service = new SecretService()
-
-    const mockToken = createMockTokens({})
-    const mockTeam = createMockTeam({ id: '', name: '' })
-
-    const mockInputs = { config: { team: mockTeam, tokens: mockToken } }
-
-    await expect(
-      service.getApiSecretsList(mockInputs as SecretListInputs),
-    ).rejects.toThrow(new NoTeamSelected('No team selected'))
-  })
 
   const mockFeathersService = new FeathersClient()
   const mockToken = createMockTokens({})

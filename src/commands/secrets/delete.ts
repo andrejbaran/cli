@@ -4,7 +4,6 @@ import { asyncPipe } from '~/utils/asyncPipe'
 import {
   APIError,
   AnalyticsError,
-  NoTeamSelected,
   NoSecretsProviderFound,
   NoSecretFound,
 } from '~/errors/CustomErrors'
@@ -29,9 +28,7 @@ export default class SecretsDelete extends Command {
     if (typeof selectedSecret === 'undefined') {
       throw new NoSecretFound()
     }
-    if (!this.state.config.team.id) {
-      throw new NoTeamSelected('No team selected')
-    }
+
     const { confirmDelete } = await this.ux.prompt<{ confirmDelete: boolean }>({
       type: 'confirm',
       name: 'confirmDelete',
