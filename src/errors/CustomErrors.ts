@@ -753,3 +753,15 @@ export class SecretsFlagsRequired extends ErrorTemplate {
     )
   }
 }
+
+export class NoSecretFound extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `😞  Sorry, we weren't able to select the secret key. ${tryAgainOrContact}`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}

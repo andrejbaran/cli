@@ -1,5 +1,4 @@
 import Command, { flags } from '~/base'
-import SecretsList from './list'
 import { SecretListInputs } from '~/types'
 import { asyncPipe } from '~/utils/asyncPipe'
 import {
@@ -7,6 +6,7 @@ import {
   AnalyticsError,
   NoTeamSelected,
   NoSecretsProviderFound,
+  NoSecretFound,
 } from '~/errors/CustomErrors'
 
 interface SecretDeleteInput {
@@ -27,9 +27,7 @@ export default class SecretsDelete extends Command {
   ): Promise<SecretDeleteInput> => {
     const { selectedSecret } = inputs
     if (typeof selectedSecret === 'undefined') {
-      throw new Error(
-        `😞  Sorry, we weren't able to select the secret key. Please try again or contact the support team.`,
-      )
+      throw new NoSecretFound()
     }
     if (!this.state.config.team.id) {
       throw new NoTeamSelected('No team selected')
