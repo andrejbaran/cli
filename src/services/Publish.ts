@@ -40,6 +40,7 @@ export class Publish {
       )
       return res
     } catch (err) {
+      debug('%O', err)
       if (err.error[0].message === 'version is taken') {
         throw new VersionIsTaken()
       }
