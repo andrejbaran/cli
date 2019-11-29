@@ -51,7 +51,7 @@ export default class AccountSignout extends Command {
   }
 
   sendAnalytics = () => {
-    this.services.analytics.track(
+    await this.services.analytics.track(
       {
         userId: this.user.email,
         teamId: this.team.id,

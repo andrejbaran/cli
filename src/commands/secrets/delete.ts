@@ -82,7 +82,7 @@ export default class SecretsDelete extends Command {
 
   sendAnalytics = async (inputs: SecretDeleteInput) => {
     try {
-      this.services.analytics.track(
+      await this.services.analytics.track(
         {
           userId: this.state.config.user.email,
           teamId: this.state.config.team.id,

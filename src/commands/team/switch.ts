@@ -107,7 +107,7 @@ export default class TeamSwitch extends Command {
     return inputs
   }
 
-  sendAnalytics = (config: Config) => (inputs: SwitchInputs) => {
+  sendAnalytics = async (config: Config) => async (inputs: SwitchInputs) => {
     const {
       user: { email, username },
     } = config
@@ -115,7 +115,7 @@ export default class TeamSwitch extends Command {
       activeTeam: { id: oldTeamId },
       teamSelected: { id: newTeamId },
     } = inputs
-    this.services.analytics.track(
+    await this.services.analytics.track(
       {
         userId: email,
         cliEvent: 'Ops CLI Team:Switch',

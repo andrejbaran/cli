@@ -12,7 +12,7 @@ export default class SecretsList extends Command {
 
   sendAnalytics = (inputs: SecretListInputs) => async () => {
     try {
-      this.services.analytics.track(
+      await this.services.analytics.track(
         {
           userId: this.state.config.user.email,
           teamId: this.state.config.team.id,

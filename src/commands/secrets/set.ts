@@ -133,7 +133,7 @@ export default class SecretsSet extends Command {
     const { team } = inputs.state.config
     const { email, username } = inputs.state.config.user
     try {
-      this.services.analytics.track(
+      await this.services.analytics.track(
         {
           userId: email,
           teamId: team.id,

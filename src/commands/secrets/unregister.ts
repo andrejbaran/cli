@@ -75,7 +75,7 @@ export default class UnregisterSecret extends Command {
 
   sendAnalytics = async (inputs: UnregisterInput) => {
     try {
-      this.services.analytics.track(
+      await this.services.analytics.track(
         {
           userId: this.state.config.user.email,
           teamId: this.state.config.team.id,

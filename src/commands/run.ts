@@ -477,7 +477,7 @@ export default class Run extends Command {
       opOrWorkflow: { id, name, description, version },
       parsedArgs: { opParams },
     } = inputs
-    this.services.analytics.track(
+    await this.services.analytics.track(
       {
         userId: this.user.email,
         teamId: this.team.id,

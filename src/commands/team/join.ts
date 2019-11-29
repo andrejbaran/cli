@@ -79,14 +79,16 @@ export default class TeamJoin extends Command {
     return inputs
   }
 
-  sendAnalytics = (config: Config) => (inputs: JoinInputs): void => {
+  sendAnalytics = async (config: Config) => async (
+    inputs: JoinInputs,
+  ): Promise<void> => {
     const {
       newTeam: { id: teamId },
     } = inputs
     const {
       user: { email, username },
     } = config
-    this.services.analytics.track(
+    await this.services.analytics.track(
       {
         userId: email,
         teamId,

@@ -84,7 +84,7 @@ export default class TeamCreate extends Command {
     const {
       team: { id: teamId, name },
     } = inputs
-    this.services.analytics.track(
+    await this.services.analytics.track(
       {
         cliEvent: 'Ops Team Create',
         event: 'Ops Team Create',

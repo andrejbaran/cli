@@ -178,7 +178,7 @@ export default class Remove extends Command {
         tokens: { accessToken },
       },
     } = inputs
-    this.services.analytics.track(
+    await this.services.analytics.track(
       {
         userId: email,
         teamId,

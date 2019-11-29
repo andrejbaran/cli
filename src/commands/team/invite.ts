@@ -140,7 +140,7 @@ export default class TeamInvite extends Command {
       user: { email, username },
       team: { id: teamId },
     } = config
-    this.services.analytics.track(
+    await this.services.analytics.track(
       {
         userId: email,
         teamId,

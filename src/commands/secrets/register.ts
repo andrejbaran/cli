@@ -101,7 +101,7 @@ export default class SecretsRegister extends Command {
     const { team } = state.config
     const { email, username } = state.config.user
 
-    this.services.analytics.track(
+    await this.services.analytics.track(
       {
         userId: email,
         teamId: team.id,
