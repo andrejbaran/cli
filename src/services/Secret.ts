@@ -37,7 +37,7 @@ export class SecretService {
     if (!inputs.secrets) {
       console.log(
         ux.colors.whiteBright(
-          `\n 😞 No secrets found in your team. Try again or run ${ux.colors.callOutCyan(
+          `\n😞 No secrets found in your team. Try again or run ${ux.colors.callOutCyan(
             'ops team:switch',
           )} to switch your current team. \n`,
         ),
