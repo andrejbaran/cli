@@ -91,13 +91,13 @@ const main = async () => {
   await ux.print(ux.colors.bold.underline('\n⭐ Progress Indicators '))
   await ux.print(progressIndicatorsSection)
 
-  await ux.spinner.start(ux.colors.blue(' Computing UX'))
+  await ux.spinner.start(ux.colors.blue('Computing UX'))
   // Wait
   await ux.wait(2000)
   await ux.spinner.stop(ux.colors.green('Done!'))
 
   // Progress Bar
-  await ux.print(ux.colors.white('\n Downloading Progress Bar'))
+  await ux.print(ux.colors.white('\nDownloading Progress Bar'))
   const bar1 = ux.progress.init()
   await bar1.start(200, 0)
   for (let i = 0; i < 100; i++) {
