@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@cto.ai/sdk": "^2.0.0-rc.2"
+    "@cto.ai/sdk": "^2.0.0"
   }
 }
