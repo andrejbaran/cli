@@ -44,7 +44,7 @@ export class AnalyticsService {
   }
 
   /* The track method lets you record the actions your users perform. */
-  track(payload: AnalyticsTrack, accessToken?: string) {
+  async track(payload: AnalyticsTrack, accessToken?: string) {
     if (OPS_DEBUG) {
       return null
     }
@@ -63,6 +63,11 @@ export class AnalyticsService {
           debug('%O', err)
         })
     }
-    return this.segmentClient.track(payload)
+    return new Promise((res, rej) => {
+      this.segmentClient.track(payload, (err, data) => {
+        if (err) rej(err)
+        res(data)
+      })
+    })
   }
 }
