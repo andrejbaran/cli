@@ -52,7 +52,11 @@ test('it should error out if op trying to remove is not found', async () => {
 
   const notFoundOpName = 'my-command:0.1.0'
   const result = await run(['remove', notFoundOpName])
-  expect(result).toContain(
-    `We couldn't find any ops with the name ${notFoundOpName} in the team ${EXISTING_USER_NAME}`,
-  )
+
+  // TODO: Change this to the commented expect below once
+  // https://git.cto.ai/ops/api/merge_requests/393 is merged.
+  expect(result).toContain(`Looks like an API error occurred`)
+  // expect(result).toContain(
+  //   `We couldn't find any ops with the name ${notFoundOpName} in the team ${EXISTING_USER_NAME}`,
+  // )
 })
