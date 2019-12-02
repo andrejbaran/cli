@@ -107,7 +107,7 @@ export default class Init extends Command {
     const { templates } = await this.ux.prompt<Partial<InitParams>>({
       type: 'checkbox',
       name: 'templates',
-      message: `\n What type of op would you like to create ${this.ux.colors.reset.green(
+      message: `What type of op would you like to create ${this.ux.colors.reset.green(
         '→',
       )}`,
       choices: [

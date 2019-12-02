@@ -14,6 +14,7 @@ export interface Op extends BaseFields {
   type: COMMAND_TYPE | GLUECODE_TYPE
   // OPS.YML
   run: string
+  sdk?: string
   bind: string[]
   network?: string
   src: string[]

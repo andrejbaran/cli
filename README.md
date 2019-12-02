@@ -48,6 +48,11 @@ USAGE
 * [`ops remove OP`](#ops-remove-op)
 * [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
 * [`ops search [FILTER]`](#ops-search-filter)
+* [`ops secrets:delete`](#ops-secretsdelete)
+* [`ops secrets:list`](#ops-secretslist)
+* [`ops secrets:register`](#ops-secretsregister)
+* [`ops secrets:set`](#ops-secretsset)
+* [`ops secrets:unregister`](#ops-secretsunregister)
 * [`ops team:create`](#ops-teamcreate)
 * [`ops team:invite`](#ops-teaminvite)
 * [`ops team:join`](#ops-teamjoin)
@@ -259,6 +264,62 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
+## `ops secrets:delete`
+
+Delete a secret stored for the active team
+
+```
+USAGE
+  $ ops secrets:delete
+
+OPTIONS
+  -h, --help     show CLI help
+  -k, --key=key  Secret Key Name
+```
+
+## `ops secrets:list`
+
+List all the keys that are stored for the active team
+
+```
+USAGE
+  $ ops secrets:list
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops secrets:register`
+
+Register a secrets provider for a team
+
+```
+USAGE
+  $ ops secrets:register
+```
+
+## `ops secrets:set`
+
+Add a key & value
+
+```
+USAGE
+  $ ops secrets:set
+
+OPTIONS
+  -k, --key=key
+  -v, --value=value
+```
+
+## `ops secrets:unregister`
+
+Unregister a secrets provider for a team
+
+```
+USAGE
+  $ ops secrets:unregister
+```
+
 ## `ops team:create`
 
 Create your team.
@@ -367,7 +428,7 @@ These are known as "cli-acceptance-tests" in Concourse: https://concourse.stg-pl
 
 ### How to run E2E tests locally
 
-The default test server is staging, but you can override this by passing in your own `OPS_REGISTRY_HOST` and `OPS_API_HOST` values from your shell config. 
+The default test server is staging, but you can override this by passing in your own `OPS_REGISTRY_HOST` and `OPS_API_HOST` values from your shell config.
 
 Run tests against staging:
 

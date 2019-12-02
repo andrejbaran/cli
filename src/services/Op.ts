@@ -13,6 +13,7 @@ import {
   OPS_REGISTRY_HOST,
   OPS_SEGMENT_KEY,
 } from '~/constants/env'
+import { SDK2, SDK2_DAEMON_ENTRYPOINT } from '../constants/opConfig'
 import {
   CouldNotMakeDir,
   InvalidInputCharacter,
@@ -131,6 +132,9 @@ export class OpService {
       op,
       parsedArgs: { opParams },
     } = inputs
+    if (op.sdk === SDK2) {
+      op.run = `${SDK2_DAEMON_ENTRYPOINT} ${op.run}`
+    }
     op.run = [op.run, ...opParams].join(' ')
     op.runId = uuid()
     return { ...inputs, op }

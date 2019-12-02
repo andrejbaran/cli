@@ -2,7 +2,12 @@ import * as Config from '@oclif/config'
 import Remove from '~/commands/remove'
 
 import { COMMAND, WORKFLOW } from '~/constants/opConfig'
-import { APIError, CannotDeleteOp } from '~/errors/CustomErrors'
+import {
+  APIError,
+  CannotDeleteOp,
+  InvalidRemoveOpFormat,
+} from '~/errors/CustomErrors'
+import { createMockTeam, createMockConfig } from '../mocks'
 import { ErrorResponse } from '~/errors/ErrorTemplate'
 import { FeathersClient } from '~/services/Feathers'
 import { Op, Services, RemoveInputs } from '~/types'
@@ -19,6 +24,53 @@ beforeEach(async () => {
 afterEach(async () => {
   // avoid jest open handle error
   await sleep(500)
+})
+
+describe('validateOpNameAndVersion', () => {
+  test('Check validity of op argument provided by user', async () => {
+    const mockFeathersService = new FeathersClient()
+    cmd = new Remove([], config, { api: mockFeathersService } as Services)
+
+    const mockConfig = createMockConfig({
+      team: createMockTeam({ id: 'test-id', name: 'test-team-name' }),
+    })
+    const output1 = cmd.validateOpNameAndVersion({
+      op: '@teamname/opName:versionName',
+      config: mockConfig,
+    })
+    expect(output1.opTeamName).toBe('teamname')
+    expect(output1.opName).toBe('opName')
+    expect(output1.opVersion).toBe('versionName')
+
+    const output2 = cmd.validateOpNameAndVersion({
+      op: 'opName:versionName',
+      config: mockConfig,
+    })
+    expect(output2.opTeamName).toBe(mockConfig.team.name)
+    expect(output2.opName).toBe('opName')
+    expect(output2.opVersion).toBe('versionName')
+
+    const input3 = { op: '@teamname/opName', config: mockConfig }
+    try {
+      cmd.validateOpNameAndVersion(input3)
+    } catch (err) {
+      expect(err).toStrictEqual(new InvalidRemoveOpFormat())
+    }
+
+    const input4 = { op: 'opName', config: mockConfig }
+    try {
+      cmd.validateOpNameAndVersion(input4)
+    } catch (err) {
+      expect(err).toStrictEqual(new InvalidRemoveOpFormat())
+    }
+
+    const input5 = { op: '@/opName:versionName', config: mockConfig }
+    try {
+      cmd.validateOpNameAndVersion(input5)
+    } catch (err) {
+      expect(err).toStrictEqual(new InvalidRemoveOpFormat())
+    }
+  })
 })
 
 describe('getApiOpsOrWorkflows', () => {
@@ -41,6 +93,7 @@ describe('getApiOpsOrWorkflows', () => {
     const inputs = {
       opName: fakeOpName,
       opVersion: fakeOpVersion,
+      opTeamName: fakeTeamName,
       config: {
         team: {
           name: fakeTeamName,

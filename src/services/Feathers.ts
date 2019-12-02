@@ -1,8 +1,8 @@
 /**
  * @author: JP Lew (jp@cto.ai)
  * @date: Sunday, 28th April 2019 1:16:46 am
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Friday, 7th June 2019 2:56:00 pm
+ * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
+ * @lastModifiedTime: Thursday, 28th November 2019 4:17:41 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -39,7 +39,11 @@ export class FeathersClient {
     return this.feathersClient.service(service).patch(token, payload)
   }
 
-  async remove(service: string, id: string, params?: object): Promise<any> {
+  async remove(
+    service: string,
+    id: string | null,
+    params?: object,
+  ): Promise<any> {
     return this.feathersClient.service(service).remove(id, params)
   }
 }
