@@ -612,9 +612,11 @@ export class InvalidRemoveOpFormat extends ErrorTemplate {
   constructor() {
     super(
       white(
-        `❗ Sorry, please provide both the name and version of the op you want to remove. \n    E.g. ${terminalText(
+        `❗ Sorry, please provide op you want to remove in a valid format. E.g. \n  ${terminalText(
+          'ops remove @team-name/my-command:0.1.0',
+        )} - for added ops \n  ${terminalText(
           'ops remove my-command:0.1.0',
-        )}`,
+        )} - for your own ops \n `,
       ),
       undefined,
       expectedSource,
@@ -676,6 +678,72 @@ export class NoTeamFound extends ErrorTemplate {
         `🤔 Sorry, we couldn't find a team with name ${ux.colors.cyan(
           teamName,
         )}.`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class RegisterSecretsProvider extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white('😅 Oops!, we were not able to register the secrets provider'),
+      err,
+      expectedSource,
+    )
+  }
+}
+
+export class NoSecretsProviderFound extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(
+        `😅 Oops!, We are not able to find a secrets provider for this team. You can register a secrets provider using  ${terminalText(
+          'ops secrets:register',
+        )}.`,
+      ),
+      err,
+      expectedSource,
+    )
+  }
+}
+
+export class SetSecretsProvider extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white('😅 Oops!, we were not able to successfully set the secret'),
+      err,
+      expectedSource,
+    )
+  }
+}
+
+export class SecretsValuesNotEqual extends ErrorTemplate {
+  constructor() {
+    super(
+      white('🤔 Sorry, the values you have entered do not match!'),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class SecretsFlagsRequired extends ErrorTemplate {
+  constructor() {
+    super(
+      white('😅 Oops!, it appears that either flag -k or -v is missing'),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class NoSecretFound extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `😞  Sorry, we weren't able to select the secret key. ${tryAgainOrContact}`,
       ),
       undefined,
       expectedSource,

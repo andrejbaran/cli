@@ -122,7 +122,7 @@ const cleanupAddedOp = async opFullName => {
       `${defaultEnv.OPS_GO_API_HOST}api/v1/teams/${teamName}/ops/refs`,
       {
         headers: { Authorization: token },
-        data: {
+        params: {
           opName,
           opTeamName,
           versionName,

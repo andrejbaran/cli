@@ -2,7 +2,7 @@
  * @author: JP Lew (jp@cto.ai)
  * @date: Friday, 24th May 2019 1:41:52 pm
  * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Wednesday, 20th November 2019 11:50:04 am
+ * @lastModifiedTime: Friday, 29th November 2019 2:26:52 pm
  * @copyright (c) 2019 CTO.ai
  */
 
@@ -98,7 +98,7 @@ test('it should init a command, build, publish, list, remove', async () => {
     [NEW_COMMAND_REMOVE_DESCRIPTION, ENTER, Y, ENTER],
   )
   expect(removeRes).toContain(
-    `${NEW_COMMAND_NAME}:${NEW_COMMAND_VERSION} has been removed from the registry!`,
+    `${NEW_COMMAND_NAME}:${NEW_COMMAND_VERSION} has been successfully removed`,
   )
   await sleep(500)
 
@@ -157,7 +157,7 @@ test('it should init a workflow, publish, list, remove', async () => {
   )
 
   expect(removeRes).toContain(
-    `${NEW_WORKFLOW_NAME}:${NEW_WORKFLOW_VERSION} has been removed from the registry!`,
+    `${NEW_WORKFLOW_NAME}:${NEW_WORKFLOW_VERSION} has been successfully removed`,
   )
   await sleep(500)
 
@@ -169,7 +169,7 @@ test('it should init a workflow, publish, list, remove', async () => {
   }
 })
 
-test('it should ops search, ops add, ops list', async () => {
+test('it should ops add, ops list, ops remove added_op, ops list', async () => {
   await signin()
   await sleep(500)
 
@@ -178,25 +178,28 @@ test('it should ops search, ops add, ops list', async () => {
   expect(listRes).not.toContain(OP_TO_ADD)
   await sleep(500)
 
-  console.log('ops search')
-  const searchRes = await run(['search'], [ENTER])
-  expect(searchRes).toContain(OP_TO_ADD)
-  await sleep(500)
-
   console.log(`ops add ${OP_TO_ADD}`)
-  const addRes = await run(['add'], [OP_TO_ADD])
-  expect(addRes).toContain(
-    `Good job! ${OP_TO_ADD} has been successfully added to your team.`,
-  )
+  const addRes = await run(['add'], [`${OP_TO_ADD}:latest`])
+  expect(addRes).toContain(`has been successfully added to your team.`)
   await sleep(500)
 
   console.log('ops list')
   const listRes2 = await run(['list'], [ENTER])
   expect(listRes2).toContain(OP_TO_ADD)
   await sleep(500)
+
+  console.log('ops remove addedOp')
+  const removeRes = await run(['remove', `${OP_TO_ADD}:latest`], [Y, ENTER])
+  expect(removeRes).toContain(`has been successfully removed`)
+  await sleep(500)
+
+  console.log('ops list')
+  const listRes3 = await run(['list'], [ENTER])
+  expect(listRes3).not.toContain(OP_TO_ADD)
+  await sleep(500)
 })
 
-test.only('it be able to publish multiple versions of an op', async () => {
+test('it be able to publish multiple versions of an op', async () => {
   await signin()
   await sleep(500)
 

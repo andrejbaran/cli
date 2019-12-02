@@ -2,7 +2,7 @@
  * @author: Prachi Singh (prachi@hackcapital.com)
  * @date: Wednesday, 20th November 2019 1:40:32 pm
  * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Wednesday, 20th November 2019 2:45:33 pm
+ * @lastModifiedTime: Friday, 29th November 2019 1:28:26 pm
  *
  * DESCRIPTION: ops remove e2e only error and non-ok test cases
  *
@@ -39,9 +39,7 @@ test('it should error out if ops remove called with invalid op name', async () =
 
   const invalidOpName = '@invalid-op-name'
   const result = await run(['remove', invalidOpName])
-  expect(result).toContain(
-    'Sorry, please provide both the name and version of the op you want to remove',
-  )
+  expect(result).toContain('Sorry')
 })
 
 test('it should error out if op trying to remove is not found', async () => {

@@ -2,10 +2,11 @@
 version: "1"
 commands:
   - name: hello-world:0.1.0
-    description: Your first hello-world op
     public: false
-    sourceCodeURL: ""
+    description: Your first hello-world op
     run: node /ops/index.js
+    sdk: "2"
+    sourceCodeURL: ""
     env:
       - "MY_ENV_VAR=$MY_ENV_VAR"
       - "MY_ACCESS_TOKEN=$MY_ACCESS_TOKEN"

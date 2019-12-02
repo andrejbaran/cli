@@ -1,9 +1,10 @@
 version: "1"
 commands:
   - name: js
+    public: false
     description: js
     run: node /ops/index.js
-    public: false
+    sdk: "2"
     env:
       - USER=world
       - OPS_ACCESS_TOKEN

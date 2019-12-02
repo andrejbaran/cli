@@ -8,6 +8,7 @@ import { WorkflowService } from './Workflow'
 import { OpService } from './Op'
 import { KeycloakService } from './Keycloak'
 import { RegistryAuthService } from './RegistryAuth'
+import { SecretService } from './Secret'
 
 export {
   FeathersClient,
@@ -19,6 +20,7 @@ export {
   OpService,
   KeycloakService,
   RegistryAuthService,
+  SecretService,
 }
 
 export const defaultServicesList = {
@@ -31,4 +33,5 @@ export const defaultServicesList = {
   opService: new OpService(),
   keycloakService: new KeycloakService(),
   registryAuthService: new RegistryAuthService(),
+  secretService: new SecretService(),
 }

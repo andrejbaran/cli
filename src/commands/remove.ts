@@ -27,18 +27,33 @@ export default class Remove extends Command {
     help: flags.help({ char: 'h' }),
   }
 
-  validateOpNameAndVersion = async (
+  validateOpNameAndVersion = (
     inputs: Pick<RemoveInputs, 'op' | 'config'>,
-  ): Promise<
-    Omit<RemoveInputs, 'opOrWorkflow' | 'confirmRemove' | 'deleteDescription'>
+  ): Omit<
+    RemoveInputs,
+    'opOrWorkflow' | 'confirmRemove' | 'deleteDescription'
   > => {
     let { op } = inputs
-    const [opName, opVersion] = op.split(':')
 
-    if (!opName || !opVersion || opName.includes('@') || op.includes('/')) {
-      throw new InvalidRemoveOpFormat()
+    if (op.charAt(0) === '@' && op.includes('/')) {
+      const [field1, field2] = op.split('/')
+      const opTeamName = field1 ? field1.substring(1) : undefined
+      const [opName, opVersion] = field2
+        ? field2.split(':')
+        : [undefined, undefined]
+
+      if (!opTeamName || !opName || !opVersion) {
+        throw new InvalidRemoveOpFormat()
+      }
+      return { ...inputs, opTeamName, opName, opVersion }
+    } else {
+      const [opName, opVersion] = op.split(':')
+      if (!opName || !opVersion) {
+        throw new InvalidRemoveOpFormat()
+      }
+      const opTeamName = inputs.config.team.name
+      return { ...inputs, opTeamName, opName, opVersion }
     }
-    return { ...inputs, opName, opVersion }
   }
 
   getApiOpsOrWorkflows = async (
@@ -48,22 +63,23 @@ export default class Remove extends Command {
       const {
         opName,
         opVersion,
+        opTeamName,
         config: {
-          team: { name: teamName },
           tokens: { accessToken },
         },
       } = inputs
+
       const {
         data: opOrWorkflow,
       }: { data: Op | Workflow } = await this.services.api
-        .find(`teams/${teamName}/ops/${opName}/versions/${opVersion}`, {
+        .find(`teams/${opTeamName}/ops/${opName}/versions/${opVersion}`, {
           headers: {
             Authorization: accessToken,
           },
         })
         .catch(err => {
           if (err.error[0].code === 404) {
-            throw new NoOpsFound(`${opName}:${opVersion}`, teamName)
+            throw new NoOpsFound(`${opName}:${opVersion}`, opTeamName)
           }
           throw err
         })
@@ -82,6 +98,11 @@ export default class Remove extends Command {
     inputs: RemoveInputs,
   ): Promise<RemoveInputs> => {
     const { opOrWorkflow } = inputs
+
+    if (opOrWorkflow.teamName !== inputs.config.team.name) {
+      return inputs
+    }
+
     const { deleteDescription } = await ux.prompt<{
       deleteDescription: string
     }>({
@@ -130,18 +151,28 @@ export default class Remove extends Command {
         opOrWorkflow: { teamName, name, version },
         deleteDescription,
         config: {
+          team: { name: ownTeamName },
           tokens: { accessToken },
         },
       } = inputs
       this.log(`\n 🗑  Removing op ${name}:${version}...`)
-      await this.services.api.remove(
-        `teams/${teamName}/ops/${name}/versions`,
-        version,
-        {
-          query: { deleteDescription },
-          headers: { Authorization: accessToken },
-        },
-      )
+
+      if (teamName === inputs.config.team.name) {
+        await this.services.api.remove(
+          `teams/${teamName}/ops/${name}/versions`,
+          version,
+          {
+            query: { deleteDescription },
+            headers: { Authorization: accessToken },
+          },
+        )
+        return inputs
+      }
+      // remove added op
+      await this.services.api.remove(`teams/${ownTeamName}/ops/refs`, null, {
+        query: { opTeamName: teamName, opName: name, versionName: version },
+        headers: { Authorization: accessToken },
+      })
       return inputs
     } catch (err) {
       this.debug('%O', err)
@@ -151,14 +182,14 @@ export default class Remove extends Command {
 
   logMessage = (inputs: RemoveInputs): RemoveInputs => {
     const {
-      opOrWorkflow: { version, name },
+      opOrWorkflow: { version, name, teamName },
       confirmRemove,
     } = inputs
     if (!confirmRemove) return inputs
     this.log(
       `\n ⚡️ ${ux.colors.bold(
-        `${name}:${version}`,
-      )} has been ${ux.colors.green('removed')} from the registry!`,
+        `@${teamName}/${name}:${version}`,
+      )} has been successfully ${ux.colors.green('removed')} from your ops!`,
     )
 
     this.log(
