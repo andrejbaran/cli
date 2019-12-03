@@ -1,7 +1,7 @@
-const { ux, sdk } = require('@cto.ai/sdk')
+const { sdk } = require('@cto.ai/sdk')
 
     async function main() {
-      ux.print('hello')
+      ux.print('hi')
     }
 
     main()
