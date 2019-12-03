@@ -40,7 +40,7 @@ export class BuildSteps {
     const indexJs = path.resolve(opPath, 'index.js')
     fs.writeFileSync(
       indexJs,
-      `const { sdk } = require('@cto.ai/sdk')
+      `const { ux,sdk } = require('@cto.ai/sdk')
 
     async function main() {
       ${step}
