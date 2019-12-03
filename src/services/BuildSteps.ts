@@ -43,7 +43,7 @@ export class BuildSteps {
       `const { sdk } = require('@cto.ai/sdk')
 
     async function main() {
-      sdk.log('${step}')
+      ${step}
     }
 
     main()`,
