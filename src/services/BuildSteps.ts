@@ -72,7 +72,7 @@ export class BuildSteps {
     const glueCodeClone: Op = JSON.parse(JSON.stringify(glueCodeOp))
     await opService.opsBuildLoop(
       [glueCodeClone],
-      path.resolve(__dirname, '../templates/workflowsteps/js'),
+      path.resolve(__dirname, opPath),
       config,
     )
 
@@ -81,7 +81,7 @@ export class BuildSteps {
     }
 
     const { data: apiOp } = await publishService.publishOpToAPI(
-      glueCodeOp,
+      glueCodeClone,
       '1',
       teamName,
       accessToken,

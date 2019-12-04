@@ -101,7 +101,6 @@ export default class Publish extends Command {
     opsAndWorkflows,
     docker,
   }: PublishInputs) => {
-    console.log('HEELP3', opPath)
     const manifest = await fs
 
       .readFile(path.join(opPath, OP_FILE), 'utf8')
@@ -213,11 +212,9 @@ export default class Publish extends Command {
         await this.opsPublishLoop(inputs)
         break
       case WORKFLOW:
-        console.log('HEEELP2', inputs)
         await this.workflowsPublishLoop(inputs)
         break
       default:
-        console.log('HEEELP66', inputs)
         await this.opsPublishLoop(inputs)
         await this.workflowsPublishLoop(inputs)
     }
@@ -302,7 +299,6 @@ export default class Publish extends Command {
         if (!isValidOpVersion(workflow)) {
           throw new InvalidOpVersionFormat()
         }
-        console.log(opPath)
         const { publishDescription } = await this.ux.prompt({
           type: 'input',
           name: 'publishDescription',
@@ -327,14 +323,12 @@ export default class Publish extends Command {
               //   __dirname,
               //   './../templates/workflowsteps/js/',
               // )
-              const opPath2 = path.resolve(process.cwd(), opPath)
-              console.log(opPath2)
               newStep = await this.services.buildStepService.buildAndPublishGlueCode(
                 step,
                 this.team.id,
                 this.team.name,
                 this.accessToken,
-                opPath2,
+                opPath,
                 this.user,
                 this.services.publishService,
                 this.services.opService,
@@ -438,7 +432,6 @@ export default class Publish extends Command {
     try {
       await this.isLoggedIn()
       const { args } = this.parse(Publish)
-      console.log('HEEELP0', args)
       const publishPipeline = asyncPipe(
         this.resolvePath,
         this.checkDocker,
