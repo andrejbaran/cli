@@ -48,14 +48,13 @@ export class BuildSteps {
 
     main()`,
     )
-
     const rand = Math.random()
       .toString(36)
       .substring(7)
     const opName = `gluecode-${rand}`
 
     const glueCodeOp = <Op>{
-      bind: ['/tmp:/tmp', 'Dockerfile'],
+      bind: ['/tmp:/tmp'],
       description: 'glue code',
       publishDescription: 'glue code',
       mountCwd: false,

@@ -21,11 +21,11 @@
         "console": "integratedTerminal",
         "args": [
           "run",
-          "fancyop",
+          "wf2dec4",
         ],
         "env": {
           "DEBUG": "ops:*",
-          "NODE_ENV": "staging"
+          "NODE_ENV": "development"
         }
       }
     ]

@@ -193,7 +193,7 @@ export class OpService {
   }
 
   setOpImageUrl = (op: Op, config: Config) => {
-    const opIdentifier = op.isPublished ? op.id : op.name
+    const opIdentifier = op.isPublished ? op.opsID : op.name
     const teamName = op.teamName ? op.teamName : config.team.name
     const opImageTag = getOpImageTag(
       teamName,
@@ -201,6 +201,7 @@ export class OpService {
       op.version,
       op.isPublic,
     )
+
     return getOpUrl(OPS_REGISTRY_HOST, opImageTag)
   }
 
