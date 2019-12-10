@@ -8,7 +8,7 @@
 
 import fs from 'fs-extra'
 import path from 'path'
-import { run, signin, signout, sleep } from '../utils/cmd'
+import { run, signin, signout, sleep, cleanup } from '../utils/cmd'
 import {
   DOWN,
   ENTER,
@@ -18,12 +18,12 @@ import {
   SPACE,
   NEW_WORKFLOW_NAME,
   NEW_WORKFLOW_DESCRIPTION,
+  NEW_WORKFLOW_VERSION,
   EXISTING_USER_NAME,
   PUBLIC_TEAM_NAME,
   PUBLIC_COMMAND_NAME,
   GITHUB_ACCESS_TOKEN,
 } from '../utils/constants'
-import { WORKFLOW } from '~/constants/opConfig'
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
 
@@ -177,4 +177,59 @@ test('it should run a public command by exact match', async () => {
   expect(result).toContain(`Running ${PUBLIC_COMMAND_NAME}`)
 
   await sleep(500)
+})
+
+test('it should be able to run a WF with JS as a step', async () => {
+  await signin()
+  await sleep(500)
+
+  console.log('ops init a workflow, and write basic JS as step')
+  await run(
+    ['init'],
+    [
+      DOWN,
+      SPACE,
+      ENTER,
+      NEW_WORKFLOW_NAME,
+      ENTER,
+      NEW_WORKFLOW_DESCRIPTION,
+      ENTER,
+      NEW_WORKFLOW_VERSION,
+      ENTER,
+    ],
+  )
+  const pathToWorkflow = `./${NEW_WORKFLOW_NAME}`
+  const newOpsString = `# for more info visit https://cto.ai/docs/ops-reference
+  version: "1"
+  workflows:
+    - name: # Unique identifier for your workflow (required)
+        t_workflow_e2e_test:0.1.0
+      description: t_workflow_e2e_test description
+      public: false
+      sourceCodeURL: ""
+      remote: true
+      steps:
+        - console.log('Hello World !)
+      env:
+        - "MY_ENV_VAR=$MY_ENV_VAR"
+        - "MY_ACCESS_TOKEN=$MY_ACCESS_TOKEN"`
+
+  fs.writeFileSync(`${pathToWorkflow}/ops.yml`, newOpsString)
+
+  await run(
+    ['publish', NEW_WORKFLOW_NAME],
+    [DOWN, ENTER, ENTER, NEW_WORKFLOW_DESCRIPTION, ENTER],
+  )
+
+  const result = await run(['run', `@existing_user/${NEW_WORKFLOW_NAME}`])
+  expect(result).toContain('Running gluecode')
+  expect(result).toContain(
+    `Workflow ${NEW_WORKFLOW_NAME} completed successfully.`,
+  )
+
+  if (fs.existsSync(pathToWorkflow)) {
+    fs.removeSync(pathToWorkflow)
+    console.log(pathToWorkflow, ' directory deleted successfully.')
+  }
+  await cleanup()
 })

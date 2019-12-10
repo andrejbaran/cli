@@ -41,7 +41,6 @@ export class BuildSteps {
     fs.writeFileSync(
       indexJs,
       `const { ux,sdk } = require('@cto.ai/sdk')
-
     async function main() {
       ${step}
     }
