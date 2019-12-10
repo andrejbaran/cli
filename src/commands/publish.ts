@@ -319,10 +319,6 @@ export default class Publish extends Command {
             let newStep = ''
 
             if (await this.services.buildStepService.isGlueCode(step)) {
-              // const opPath = path.resolve(
-              //   __dirname,
-              //   './../templates/workflowsteps/js/',
-              // )
               newStep = await this.services.buildStepService.buildAndPublishGlueCode(
                 step,
                 this.team.id,
