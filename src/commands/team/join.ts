@@ -1,17 +1,8 @@
-import { ux } from '@cto.ai/sdk'
 import Command from '~/base'
 import { InviteCodeInvalid } from '~/errors/CustomErrors'
 import { asyncPipe } from '~/utils'
 import { Team, Config } from '~/types'
 
-const {
-  white,
-  successGreen,
-  primary,
-  secondary,
-  callOutCyan,
-  errorRed,
-} = ux.colors
 export interface JoinInputs {
   inviteCode: string
   newTeam: Team
@@ -21,19 +12,19 @@ export default class TeamJoin extends Command {
   public static description = 'Accept an invite to join a team.'
 
   inviteCodePrompt = async (): Promise<Pick<JoinInputs, 'inviteCode'>> => {
-    const { inviteCode } = await ux.prompt<{ inviteCode: string }>({
+    const { inviteCode } = await this.ux.prompt<{ inviteCode: string }>({
       type: 'input',
       name: 'inviteCode',
-      message: `Please enter the invite code you received via email to join a team:\n\n🔑  ${white(
+      message: `Please enter the invite code you received via email to join a team:\n\n🔑  ${this.ux.colors.white(
         'Invite code    ',
       )}`,
       validate: (input: string): boolean => !!input,
     })
     return { inviteCode }
   }
-  startSpinner = (inputs: JoinInputs): JoinInputs => {
+  startSpinner = async (inputs: JoinInputs) => {
     this.log('')
-    ux.spinner.start(`${white('Working on it')}`)
+    await this.ux.spinner.start(`${this.ux.colors.white('Working on it')}`)
     return inputs
   }
   joinTeam = async (inputs: JoinInputs): Promise<JoinInputs> => {
@@ -65,15 +56,18 @@ export default class TeamJoin extends Command {
     const {
       newTeam: { name },
     } = inputs
-    ux.spinner.stop(`${successGreen('✔︎')}\n`)
 
     this.log(
-      `${primary("Success! You've been added to team, ")}${callOutCyan(
-        name,
-      )} ${secondary('(Active)')}`,
+      `${this.ux.colors.primary(
+        "Success! You've been added to team, ",
+      )}${this.ux.colors.callOutCyan(name)} ${this.ux.colors.secondary(
+        '(Active)',
+      )}`,
     )
     this.log(
-      `${secondary("You've been automatically switched to this team.")}\n`,
+      `${this.ux.colors.secondary(
+        "You've been automatically switched to this team.",
+      )}\n`,
     )
     this.log(`Try running this command to get started:\n\n$ ops search`)
     return inputs
@@ -101,6 +95,11 @@ export default class TeamJoin extends Command {
     )
   }
 
+  stopSpinner = async (inputs: JoinInputs) => {
+    await this.ux.spinner.stop(`${this.ux.colors.successGreen('Done')}`)
+    return inputs
+  }
+
   async run() {
     this.parse(TeamJoin)
     try {
@@ -110,12 +109,13 @@ export default class TeamJoin extends Command {
         this.startSpinner,
         this.joinTeam,
         this.setActiveTeam,
+        this.stopSpinner,
         this.logMessage,
         this.sendAnalytics(this.state.config),
       )
       await joinPipeline()
     } catch (err) {
-      ux.spinner.stop(`${errorRed('failed')}\n`)
+      this.ux.spinner.stop(`${this.ux.colors.errorRed('Failed')}`)
       this.debug('%O', err)
       this.config.runHook('error', {
         err,

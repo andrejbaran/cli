@@ -189,15 +189,6 @@ export class ImageService {
                 if (errors.length) {
                   return reject(new DockerBuildImageError(errors[0]))
                 }
-                log('\n⚡️ Verifying...')
-                const bar = ux.progress.init()
-                bar.start(100, 0)
-                for (let i = 0; i < all.length; i++) {
-                  bar.update(100 - all.length / i)
-                  await ux.wait(50)
-                }
-                bar.update(100)
-                bar.stop()
                 log(
                   `\n💻 Run ${ux.colors.green('$')} ${ux.colors.italic.dim(
                     'ops run ' + op.name,
@@ -208,6 +199,7 @@ export class ImageService {
                     'ops publish ' + opPath,
                   )} to share your op. \n`,
                 )
+
                 resolve()
               })
           }
