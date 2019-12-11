@@ -102,7 +102,6 @@ export default class Publish extends Command {
     docker,
   }: PublishInputs) => {
     const manifest = await fs
-
       .readFile(path.join(opPath, OP_FILE), 'utf8')
       .catch((err: any) => {
         this.debug('%O', err)

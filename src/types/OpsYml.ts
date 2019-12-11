@@ -11,7 +11,6 @@ export interface OpsYml {
 }
 
 export interface Op extends BaseFields {
-  opsID: string
   type: COMMAND_TYPE | GLUECODE_TYPE
   // OPS.YML
   run: string

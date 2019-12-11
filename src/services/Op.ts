@@ -193,13 +193,7 @@ export class OpService {
   }
 
   setOpImageUrl = (op: Op, config: Config) => {
-    let opIdentifier = ''
-    if (op.type == 'glue_code') {
-      opIdentifier = op.isPublished ? op.opsID : op.name
-    } else {
-      opIdentifier = op.isPublished ? op.id : op.name
-    }
-
+    const opIdentifier = op.isPublished ? op.id : op.name
     const teamName = op.teamName ? op.teamName : config.team.name
     const opImageTag = getOpImageTag(
       teamName,
