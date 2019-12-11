@@ -39,18 +39,6 @@ export default class Search extends Command {
 
   opsAndWorkflows: (Op | Workflow)[] = []
 
-  showSearchMessage = (
-    inputs: Pick<SearchInputs, 'filter'>,
-  ): Pick<SearchInputs, 'filter'> => {
-    const { filter } = inputs
-    this.log(
-      `\n🔍 Searching ${this.ux.colors.callOutCyan(
-        filter || `all ${pluralize(COMMAND)} and ${pluralize(WORKFLOW)}`,
-      )}.`,
-    )
-    return inputs
-  }
-
   getApiOps = async (inputs: SearchInputs): Promise<SearchInputs> => {
     try {
       const findResponse: OpsFindResponse = await this.services.api.find(
@@ -137,21 +125,22 @@ export default class Search extends Command {
   selectOpOrWorkflowPrompt = async (
     inputs: SearchInputs,
   ): Promise<SearchInputs> => {
-    const { reset, multiBlue, multiOrange, white, callOutCyan } = this.ux.colors
-    const commandText = multiBlue('\u2022Command')
-    const workflowText = multiOrange('\u2022Workflow')
+    const commandText = this.ux.colors.multiBlue('\u2022Command')
+    const workflowText = this.ux.colors.multiOrange('\u2022Workflow')
     const { selectedOpOrWorkflow } = await this.ux.prompt<{
       selectedOpOrWorkflow: Op | Workflow
     }>({
       type: 'autocomplete',
       name: 'selectedOpOrWorkflow',
       pageSize: 5,
-      message: `\nSelect a public ${commandText} or ${workflowText} to continue ${reset.green(
+      message: `\nSelect a public ${commandText} or ${workflowText} to continue ${this.ux.colors.reset.green(
         '→',
-      )}\n${reset.dim('🔍 Search:')} `,
+      )}\n${this.ux.colors.reset.dim('🔍 Search:')} `,
       source: this._autocompleteSearch.bind(this),
-      bottomContent: `\n \n${white(
-        `Or, run ${callOutCyan('ops help')} for usage information.`,
+      bottomContent: `\n \n${this.ux.colors.white(
+        `Or, run ${this.ux.colors.callOutCyan(
+          'ops help',
+        )} for usage information.`,
       )}`,
     })
     return { ...inputs, selectedOpOrWorkflow }
@@ -221,38 +210,58 @@ export default class Search extends Command {
   }
 
   private _formatOpOrWorkflowName = (opOrWorkflow: Op | Workflow) => {
-    const { reset, multiOrange, multiBlue } = this.ux.colors
     const teamName = opOrWorkflow.teamName ? `@${opOrWorkflow.teamName}/` : ''
-    const name = `${reset.white(`${teamName}${opOrWorkflow.name}`)} ${reset.dim(
-      `(${opOrWorkflow.version})`,
-    )}`
+    const name = `${this.ux.colors.reset.white(
+      `${teamName}${opOrWorkflow.name}`,
+    )} ${this.ux.colors.reset.dim(`(${opOrWorkflow.version})`)}`
     if (opOrWorkflow.type === WORKFLOW_TYPE) {
-      return `${reset(multiOrange('\u2022'))} ${name}`
+      return `${this.ux.colors.reset(
+        this.ux.colors.multiOrange('\u2022'),
+      )} ${name}`
     } else {
-      return `${reset(multiBlue('\u2022'))} ${name}`
+      return `${this.ux.colors.reset(
+        this.ux.colors.multiBlue('\u2022'),
+      )} ${name}`
     }
+  }
+
+  startSpinner = async (inputs: SearchInputs) => {
+    await this.ux.spinner.start(
+      `🔍 ${this.ux.colors.white('Searching')} ${this.ux.colors.callOutCyan(
+        `all ${pluralize(COMMAND)} and ${pluralize(WORKFLOW)}`,
+      )}`,
+    )
+    return inputs
+  }
+
+  stopSpinner = async (inputs: SearchInputs) => {
+    await this.ux.spinner.stop(`${this.ux.colors.successGreen('Done')}`)
+    return inputs
   }
 
   async run() {
     const {
       args: { filter = '' },
     } = this.parse(Search)
+
     try {
       await this.isLoggedIn()
 
       const searchPipeline = asyncPipe(
-        this.showSearchMessage,
+        this.startSpinner,
         this.getApiOps,
         this.getLocalWorkflows,
         this.filterLocalWorkflows,
         this.resolveLocalAndApi,
         this.checkData,
+        this.stopSpinner,
         this.selectOpOrWorkflowPrompt,
         this.showRunMessage,
         this.sendAnalytics(filter),
       )
       await searchPipeline(filter)
     } catch (err) {
+      await this.ux.spinner.stop(`${this.ux.colors.errorRed('Failed')}`)
       this.debug('%O', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })
     }

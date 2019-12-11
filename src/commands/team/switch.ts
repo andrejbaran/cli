@@ -1,10 +1,7 @@
-import { ux } from '@cto.ai/sdk'
 import Command, { flags } from '~/base'
 import { Config, Team } from '~/types'
 import { asyncPipe } from '~/utils'
 import { ConfigError, APIError } from '~/errors/CustomErrors'
-
-const { white, italic, blue, dim, callOutCyan } = ux.colors
 interface displayTeam extends Team {
   displayName: string
 }
@@ -53,7 +50,9 @@ export default class TeamSwitch extends Command {
       if (activeTeam && t.name === activeTeam.name) {
         return {
           ...t,
-          displayName: `${blue(t.name)} ${dim('[Active]')}`,
+          displayName: `${this.ux.colors.blue(t.name)} ${this.ux.colors.dim(
+            '[Active]',
+          )}`,
         }
       }
       // If the team isn't the user's active team, simply copy the display name from the team name
@@ -67,15 +66,17 @@ export default class TeamSwitch extends Command {
   ): Promise<SwitchInputs> => {
     this.log("Here's the list of your teams:\n")
     const { displayTeams } = inputs
-    const { teamSelected } = await ux.prompt<{ teamSelected: Team }>({
+    const { teamSelected } = await this.ux.prompt<{ teamSelected: Team }>({
       type: 'list',
       name: 'teamSelected',
       message: 'Select a team',
       choices: displayTeams.map(team => {
         return { name: team.displayName, value: team }
       }),
-      bottomContent: `\n \n${white(
-        `Or, run ${italic.dim('ops help')} for usage information.`,
+      bottomContent: `\n \n${this.ux.colors.white(
+        `Or, run ${this.ux.colors.italic.dim(
+          'ops help',
+        )} for usage information.`,
       )}`,
     })
     this.log(`\n⏱  Switching teams`)
@@ -103,7 +104,11 @@ export default class TeamSwitch extends Command {
     const {
       teamSelected: { name },
     } = inputs
-    this.log(`\n🚀 Huzzah! ${callOutCyan(name)} is now the active team.\n`)
+    this.log(
+      `\n🚀 Huzzah! ${this.ux.colors.callOutCyan(
+        name,
+      )} is now the active team.\n`,
+    )
     return inputs
   }
 
@@ -130,23 +135,35 @@ export default class TeamSwitch extends Command {
       this.accessToken,
     )
   }
-
+  startSpinner = async (inputs: SwitchInputs) => {
+    await this.ux.spinner.start(
+      `🔍 ${this.ux.colors.white('Searching for your teams')}`,
+    )
+    return inputs
+  }
+  stopSpinner = async (inputs: SwitchInputs) => {
+    await this.ux.spinner.stop(`${this.ux.colors.successGreen('Done')}`)
+    return inputs
+  }
   async run() {
-    this.parse(TeamSwitch)
-
+    await this.parse(TeamSwitch)
     try {
       await this.isLoggedIn()
       const switchPipeline = asyncPipe(
+        this.startSpinner,
         this.getActiveTeam,
         this.getTeamsFromApi,
         this.setTeamsDisplayName,
+        this.stopSpinner,
         this.getSelectedTeamPrompt,
         this.updateActiveTeam,
         this.logMessage,
         this.sendAnalytics(this.state.config),
       )
+
       await switchPipeline()
     } catch (err) {
+      await this.ux.spinner.stop(`${this.ux.colors.errorRed('Failed')}`)
       this.debug('%O', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })
     }

@@ -4,9 +4,13 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import { Op, Workflow, Answers, Fuzzy, OpsYml, ListInputs } from '~/types'
 import { APIError } from '~/errors/CustomErrors'
-import { WORKFLOW_TYPE, OP_FILE } from '../constants/opConfig'
-import { asyncPipe, parseYaml } from '~/utils'
-
+import {
+  COMMAND,
+  WORKFLOW,
+  WORKFLOW_TYPE,
+  OP_FILE,
+} from '../constants/opConfig'
+import { pluralize, asyncPipe, parseYaml } from '~/utils'
 export default class List extends Command {
   static description = 'Lists the Ops you have in your team.'
 
@@ -27,7 +31,6 @@ export default class List extends Command {
         },
       )
       this.opResults = opResults
-
       return { ...inputs, opResults }
     } catch (err) {
       this.debug('%0', err)
@@ -194,6 +197,19 @@ export default class List extends Command {
     )
     return inputs
   }
+  startSpinner = async (inputs: ListInputs) => {
+    await this.ux.spinner.start(
+      `🔍 ${this.ux.colors.white('Searching for')} ${this.ux.colors.callOutCyan(
+        `all ${pluralize(COMMAND)} and ${pluralize(WORKFLOW)}`,
+      )} ${this.ux.colors.white('on your team')}`,
+    )
+    return inputs
+  }
+
+  stopSpinner = async (inputs: ListInputs) => {
+    await this.ux.spinner.stop(`${this.ux.colors.successGreen('Done')}`)
+    return inputs
+  }
 
   async run() {
     try {
@@ -201,9 +217,11 @@ export default class List extends Command {
       const { config } = this.state
 
       const listPipeline = asyncPipe(
+        this.startSpinner,
         this.getApiOps,
         this.getLocalOps,
         this.filterOutGlueCodes,
+        this.stopSpinner,
         this.promptOps,
         this.sendAnalytics,
         this.showRunMessage,
@@ -211,6 +229,7 @@ export default class List extends Command {
 
       await listPipeline({ config })
     } catch (err) {
+      this.ux.spinner.stop(`${this.ux.colors.errorRed('Failed')}`)
       this.debug('%0', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })
     }

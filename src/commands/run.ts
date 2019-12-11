@@ -1,4 +1,3 @@
-import { ux } from '@cto.ai/sdk'
 import fuzzy from 'fuzzy'
 import * as fs from 'fs-extra'
 import * as path from 'path'
@@ -28,9 +27,6 @@ import { OP_FILE, WORKFLOW_TYPE, COMMAND_TYPE } from '~/constants/opConfig'
 import { OPS_REGISTRY_HOST } from '~/constants/env'
 import { asyncPipe, _trace, parseYaml } from '~/utils'
 import { isValidTeamName, isValidOpName } from '~/utils/validate'
-
-const { multiBlue, multiOrange, green, dim, reset, bold } = ux.colors
-
 export interface RunCommandArgs {
   args: { nameOrPath: string }
   flags: {
@@ -195,18 +191,18 @@ export default class Run extends Command {
   }
 
   formatOpOrWorkflowName = (opOrWorkflow: Op | Workflow) => {
-    const name = reset.white(opOrWorkflow.name)
+    const name = this.ux.colors.reset.white(opOrWorkflow.name)
     if (
       (!opOrWorkflow.isPublished && 'steps' in opOrWorkflow) ||
       (opOrWorkflow.isPublished && opOrWorkflow.type === WORKFLOW_TYPE)
     ) {
-      return `${reset(multiOrange('\u2022'))} ${this.formatOpOrWorkflowEmoji(
-        opOrWorkflow,
-      )} ${name}`
+      return `${this.ux.colors.reset(
+        this.ux.colors.multiOrange('\u2022'),
+      )} ${this.formatOpOrWorkflowEmoji(opOrWorkflow)} ${name}`
     } else {
-      return `${reset(multiBlue('\u2022'))} ${this.formatOpOrWorkflowEmoji(
-        opOrWorkflow,
-      )} ${name}`
+      return `${this.ux.colors.reset(
+        this.ux.colors.multiBlue('\u2022'),
+      )} ${this.formatOpOrWorkflowEmoji(opOrWorkflow)} ${name}`
     }
   }
 
@@ -241,19 +237,23 @@ export default class Run extends Command {
         return { ...inputs, opOrWorkflow: opsAndWorkflows[0] }
       }
       this.opsAndWorkflows = opsAndWorkflows
-      const { opOrWorkflow } = await ux.prompt<{ opOrWorkflow: Op | Workflow }>(
-        {
-          type: 'autocomplete',
-          name: 'opOrWorkflow',
-          pageSize: 5,
-          message: `\nSelect a ${multiBlue('\u2022Command')} or ${multiOrange(
-            '\u2022Workflow',
-          )} to run ${reset(green('→'))}\n${reset(
-            dim('🌎 = Public 🔑 = Private 🖥  = Local  🔍 Search:'),
-          )} `,
-          source: this.autocompleteSearch.bind(this),
-        },
-      )
+      const { opOrWorkflow } = await this.ux.prompt<{
+        opOrWorkflow: Op | Workflow
+      }>({
+        type: 'autocomplete',
+        name: 'opOrWorkflow',
+        pageSize: 5,
+        message: `\nSelect a ${this.ux.colors.multiBlue(
+          '\u2022Command',
+        )} or ${this.ux.colors.multiOrange(
+          '\u2022Workflow',
+        )} to run ${this.ux.colors.reset(
+          this.ux.colors.green('→'),
+        )}\n${this.ux.colors.reset(
+          this.ux.colors.dim('🌎 = Public 🔑 = Private 🖥  = Local  🔍 Search:'),
+        )} `,
+        source: this.autocompleteSearch.bind(this),
+      })
       return { ...inputs, opOrWorkflow }
     } catch (err) {
       this.debug('%O', err)
@@ -271,18 +271,20 @@ export default class Run extends Command {
         case Boolean(op.description):
           this.log(`\n${op.description}`)
         case Boolean(op.help.usage):
-          this.log(`\n${bold('USAGE')}`)
+          this.log(`\n${this.ux.colors.bold('USAGE')}`)
           this.log(`  ${op.help.usage}`)
         case Boolean(op.help.arguments):
-          this.log(`\n${bold('ARGUMENTS')}`)
+          this.log(`\n${this.ux.colors.bold('ARGUMENTS')}`)
           Object.keys(op.help.arguments).forEach(a => {
-            this.log(`  ${a} ${dim(op.help.arguments[a])}`)
+            this.log(`  ${a} ${this.ux.colors.dim(op.help.arguments[a])}`)
           })
         case Boolean(op.help.options):
-          this.log(`\n${bold('OPTIONS')}`)
+          this.log(`\n${this.ux.colors.bold('OPTIONS')}`)
           Object.keys(op.help.options).forEach(o => {
             this.log(
-              `  -${o.substring(0, 1)}, --${o} ${dim(op.help.options[o])}`,
+              `  -${o.substring(0, 1)}, --${o} ${this.ux.colors.dim(
+                op.help.options[o],
+              )}`,
             )
           })
       }
@@ -465,6 +467,7 @@ export default class Run extends Command {
     if (!apiOp) {
       return { ...inputs }
     }
+
     apiOp.isPublished = true
     return {
       ...inputs,
@@ -497,6 +500,15 @@ export default class Run extends Command {
     )
     return inputs
   }
+  startSpinner = async (inputs: RunInputs) => {
+    await this.ux.spinner.start(`${this.ux.colors.white('Starting')}`)
+    return inputs
+  }
+
+  stopSpinner = async (inputs: RunInputs) => {
+    await this.ux.spinner.stop(`${this.ux.colors.successGreen('Done')}`)
+    return inputs
+  }
 
   async run() {
     try {
@@ -511,12 +523,14 @@ export default class Run extends Command {
       if (this.checkPathOpsYmlExists(nameOrPath)) {
         /* The nameOrPath argument is a directory containing an ops.yml */
         const runFsPipeline = asyncPipe(
+          this.startSpinner,
           this.logResolvedLocalMessage,
           this.getOpsAndWorkflowsFromFileSystem(nameOrPath),
           this.addMissingApiFieldsToLocalOps,
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
           this.sendAnalytics,
+          this.stopSpinner,
           this.executeOpOrWorkflowService,
         )
         await runFsPipeline({ parsedArgs, config })
@@ -526,6 +540,7 @@ export default class Run extends Command {
          * directory which does not contain an ops.yml.
          */
         const runApiPipeline = asyncPipe(
+          this.startSpinner,
           this.getOpsAndWorkflowsFromFileSystem(process.cwd()),
           this.addMissingApiFieldsToLocalOps,
           this.filterLocalOps,
@@ -534,11 +549,13 @@ export default class Run extends Command {
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
           this.sendAnalytics,
+          this.stopSpinner,
           this.executeOpOrWorkflowService,
         )
         await runApiPipeline({ parsedArgs, config })
       }
     } catch (err) {
+      await this.ux.spinner.stop(`${this.ux.colors.errorRed('Failed')}`)
       this.debug('%O', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })
     }
