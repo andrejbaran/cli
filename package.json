@@ -107,6 +107,9 @@
       },
       "help": {
         "description": "Display help for ops."
+      },
+      "secrets": {
+        "description": "Manage your secrets."
       }
     }
   },
