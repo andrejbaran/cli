@@ -111,7 +111,7 @@ export default class Remove extends Command {
       message: `\nProvide a description for why ${opOrWorkflow.name}:${
         opOrWorkflow.version
       } is being deleted ${ux.colors.reset.green('→')}\n\n ${ux.colors.white(
-        'Description:',
+        '✍️  Description:',
       )}`,
       afterMessage: ux.colors.reset.green('✓'),
       validate: input => {

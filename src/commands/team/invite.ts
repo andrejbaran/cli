@@ -42,7 +42,7 @@ export default class TeamInvite extends Command {
       )}\n${white(
         'Enter the emails of the team member that you want to invite. (Comma separated)',
       )}
-      \n\n${white('🕐 Invite User')}`,
+      \n\n${white('🎟  Invite User')}`,
       validate: (input: string): string | boolean => !!input,
     })
     return { ...inputs, invitees }

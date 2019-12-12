@@ -44,7 +44,7 @@ export default class TeamCreate extends Command {
       name: 'name',
       message: `\nChoose a display name for your team and share ops ${reset.green(
         '→',
-      )}  \n🏀 ${white('Team Name')} `,
+      )}\n✍️  ${white('Team Name')} `,
       afterMessage: `${reset.green('✓')} Team name    `,
       validate: this.validateTeamName.bind(this),
     })

@@ -15,7 +15,7 @@ export default class TeamJoin extends Command {
     const { inviteCode } = await this.ux.prompt<{ inviteCode: string }>({
       type: 'input',
       name: 'inviteCode',
-      message: `Please enter the invite code you received via email to join a team:\n\n🔑  ${this.ux.colors.white(
+      message: `Please enter the invite code you received via email to join a team:\n\n🎟  ${this.ux.colors.white(
         'Invite code    ',
       )}`,
       validate: (input: string): boolean => !!input,
