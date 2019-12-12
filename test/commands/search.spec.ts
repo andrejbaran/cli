@@ -1,7 +1,12 @@
 import * as Config from '@oclif/config'
 import Search from '~/commands/search'
 import { FeathersClient } from '~/services/Feathers'
-import { Services, Config as ConfigType, Op, SearchInputs } from '~/types'
+import {
+  Services,
+  Config as ConfigType,
+  OpCommand,
+  SearchInputs,
+} from '~/types'
 import { sleep } from '../utils'
 import { AnalyticsService } from '~/services/Analytics'
 import {
@@ -73,7 +78,7 @@ describe('sendAnalytics', () => {
       filter: 'FAKE_FILTER',
       apiOps: [],
       localWorkflows: [],
-      selectedOpOrWorkflow: createMockOp({}) as Op,
+      selectedOpOrWorkflow: createMockOp({}) as OpCommand,
     } as SearchInputs
 
     cmd.readConfig = jest.fn().mockReturnValue({

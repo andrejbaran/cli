@@ -18,14 +18,14 @@ import {
   MissingRequiredArgument,
   NoLocalOpsFound,
 } from '~/errors/CustomErrors'
-import { Config, Container, Op, OpsYml } from '~/types'
+import { Config, Container, OpCommand, OpsYml } from '~/types'
 import { asyncPipe, parseYaml } from '~/utils'
 
 export interface BuildInputs {
   opPath: string
   config: Config
-  ops: Op[]
-  opsToBuild: Op[]
+  ops: OpCommand[]
+  opsToBuild: OpCommand[]
 }
 export default class Build extends Command {
   static description = 'Build your op for sharing.'
@@ -68,7 +68,7 @@ export default class Build extends Command {
     if (ops.length === 1) {
       return { ...inputs, opsToBuild: ops }
     }
-    const { opsToBuild } = await ux.prompt<Container<Op[]>>({
+    const { opsToBuild } = await ux.prompt<Container<OpCommand[]>>({
       type: 'checkbox',
       name: 'opsToBuild',
       message: `\n Which ops would you like to build ${ux.colors.reset.green(

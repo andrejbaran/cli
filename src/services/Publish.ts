@@ -10,7 +10,7 @@ import {
   ImageTagError,
   VersionIsTaken,
 } from '../errors/CustomErrors'
-import { ApiService, Op, RegistryAuth } from '../types'
+import { ApiService, OpCommand, RegistryAuth } from '../types'
 import getDocker from '../utils/get-docker'
 import { getEndpointFromOpType } from '~/constants/opConfig'
 import { RegistryAuthService } from './RegistryAuth'
@@ -21,7 +21,7 @@ const debug = Debug('ops:PublishService')
 
 export class Publish {
   public publishOpToAPI = async (
-    op: Op,
+    op: OpCommand,
     platformVersion: string,
     teamName: string,
     accessToken: string,
@@ -49,7 +49,7 @@ export class Publish {
   }
 
   public publishOpToRegistry = async (
-    apiOp: Op,
+    apiOp: OpCommand,
     registryAuth: RegistryAuth,
     teamName: string,
     accessToken: string,

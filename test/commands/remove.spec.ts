@@ -10,7 +10,7 @@ import {
 import { createMockTeam, createMockConfig } from '../mocks'
 import { ErrorResponse } from '~/errors/ErrorTemplate'
 import { FeathersClient } from '~/services/Feathers'
-import { Op, Services, RemoveInputs } from '~/types'
+import { OpCommand, Services, RemoveInputs } from '~/types'
 import { createMockOp } from '../mocks'
 import { sleep } from '../utils'
 
@@ -78,7 +78,7 @@ describe('getApiOpsOrWorkflows', () => {
     //MOCK OPS
     const mockOp = {
       id: '123123123',
-    } as Op
+    } as OpCommand
     //MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
     mockFeathersService.find = jest.fn().mockReturnValue({

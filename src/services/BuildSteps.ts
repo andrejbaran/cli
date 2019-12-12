@@ -1,6 +1,6 @@
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import { Op, User, Config, Workflow } from '../types'
+import { OpCommand, User, Config, OpWorkflow } from '../types'
 import { FeathersClient } from './Feathers'
 import { Publish } from './Publish'
 import { OpService } from './../services/Op'
@@ -54,7 +54,7 @@ export class BuildSteps {
       .substring(7)
     const opName = `gluecode-${rand}`
 
-    const glueCodeOp = <Op>{
+    const glueCodeOp = <OpCommand>{
       bind: ['/tmp:/tmp', 'Dockerfile'],
       description: 'glue code',
       publishDescription: 'glue code',
@@ -69,7 +69,7 @@ export class BuildSteps {
       type: GLUECODE_TYPE,
     }
 
-    const glueCodeClone: Op = JSON.parse(JSON.stringify(glueCodeOp))
+    const glueCodeClone: OpCommand = JSON.parse(JSON.stringify(glueCodeOp))
     await opService.opsBuildLoop(
       [glueCodeClone],
       path.resolve(__dirname, '../templates/workflowsteps/js'),

@@ -8,11 +8,11 @@
  *
  */
 
-import { Op, Workflow } from './OpsYml'
+import { OpCommand, OpWorkflow } from './OpsYml'
 
 export interface Fuzzy {
   original: {
-    value: Op | Workflow
+    value: OpCommand | OpWorkflow
     name: string
   }
 }

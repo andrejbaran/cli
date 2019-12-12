@@ -1,17 +1,17 @@
 import { ux } from '@cto.ai/sdk'
-import { OpsYml, Workflow, Op } from '~/types'
+import { OpsYml, OpWorkflow, OpCommand } from '~/types'
 import * as yaml from 'yaml'
 import { IncompleteOpsYml } from '~/errors/CustomErrors'
 import { WORKFLOW_TYPE, COMMAND_TYPE, COMMAND } from '../constants/opConfig'
 
 const { white, callOutCyan } = ux.colors
-const checkCommandNecessryFields = (commandContents: Op) => {
+const checkCommandNecessryFields = (commandContents: OpCommand) => {
   if (!commandContents.run || typeof commandContents.run !== 'string') {
     throw new IncompleteOpsYml('The run command must be included as a string')
   }
 }
 
-const checkWorkflowNecessryFields = (workflowContents: Workflow) => {
+const checkWorkflowNecessryFields = (workflowContents: OpWorkflow) => {
   if (!workflowContents.steps || !workflowContents.steps.length) {
     throw new IncompleteOpsYml('The run command must be included as a string')
   }
@@ -22,7 +22,7 @@ const checkWorkflowNecessryFields = (workflowContents: Workflow) => {
   })
 }
 
-const checkOpNecessaryFields = (opContents: Op | Workflow) => {
+const checkOpNecessaryFields = (opContents: OpCommand | OpWorkflow) => {
   if (!opContents.name || typeof opContents.name !== 'string') {
     throw new IncompleteOpsYml('Op name must be a non-empty string')
   }
@@ -40,7 +40,9 @@ const checkOpNecessaryFields = (opContents: Op | Workflow) => {
   return true
 }
 
-const _splitOpNameAndVersion = (op: Op | Workflow): [string, string] => {
+const _splitOpNameAndVersion = (
+  op: OpCommand | OpWorkflow,
+): [string, string] => {
   const splits = op.name.split(':')
   return [splits[0], splits[1]]
 }
@@ -72,6 +74,7 @@ export const parseYaml = (manifest: string): OpsYml => {
     })
     yamlContents.ops = [...yamlContents.ops, ...parsedOps]
   }
+
   if (commands.length > 0) {
     const parsedCommands = commands.map(op => {
       const newCommand = formatRequiredFields(op, COMMAND_TYPE)
@@ -90,6 +93,7 @@ export const parseYaml = (manifest: string): OpsYml => {
       return newWf
     })
   }
+
   return yamlContents
 }
 

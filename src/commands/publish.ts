@@ -28,10 +28,10 @@ import {
 } from '../errors/CustomErrors'
 import {
   Container,
-  Op,
+  OpCommand,
   OpsYml,
   SourceResult,
-  Workflow,
+  OpWorkflow,
   RegistryAuth,
 } from '../types'
 import { asyncPipe, getOpImageTag, parseYaml } from '../utils'
@@ -42,10 +42,10 @@ import { ErrorTemplate } from '~/errors/ErrorTemplate'
 export interface PublishInputs {
   opPath: string
   docker: Docker
-  opsAndWorkflows: string
+  commandsAndWorkflows: string
   version: string
-  ops: Op[]
-  workflows: Workflow[]
+  opCommands: OpCommand[]
+  opWorkflows: OpWorkflow[]
 }
 
 export default class Publish extends Command {
@@ -93,12 +93,12 @@ export default class Publish extends Command {
       ],
       afterMessage: `${ux.colors.reset.green('✓')}`,
     })
-    return { ...inputs, opsAndWorkflows }
+    return { ...inputs, commandsAndWorkflows: opsAndWorkflows }
   }
 
   getOpsAndWorkFlows = async ({
     opPath,
-    opsAndWorkflows,
+    commandsAndWorkflows,
     docker,
   }: PublishInputs) => {
     const manifest = await fs
@@ -110,44 +110,63 @@ export default class Publish extends Command {
 
     if (!manifest) throw new NoLocalOpsFound()
     const { ops, version, workflows }: OpsYml = parseYaml(manifest)
-    if (!ops && (opsAndWorkflows === COMMAND || opsAndWorkflows === 'Both')) {
+    if (
+      !ops &&
+      (commandsAndWorkflows === COMMAND || commandsAndWorkflows === 'Both')
+    ) {
       throw new NoLocalOpsFound()
     }
     if (
       !workflows &&
-      (opsAndWorkflows === WORKFLOW || opsAndWorkflows === 'Both')
+      (commandsAndWorkflows === WORKFLOW || commandsAndWorkflows === 'Both')
     ) {
       throw new NoWorkflowsFound()
     }
-    return { ops, workflows, docker, version, opsAndWorkflows }
+
+    return {
+      opCommands: ops,
+      workflows,
+      docker,
+      version,
+      commandsAndWorkflows: commandsAndWorkflows,
+    }
   }
 
   selectOpsAndWorkFlows = async ({
-    ops,
-    workflows,
+    opCommands,
+    opWorkflows,
     version,
     docker,
-    opsAndWorkflows,
+    commandsAndWorkflows,
   }: PublishInputs) => {
-    switch (opsAndWorkflows) {
+    switch (commandsAndWorkflows) {
       case COMMAND:
-        ops = await this.selectOps(ops)
+        opCommands = await this.selectOps(opCommands)
         break
       case WORKFLOW:
-        workflows = await this.selectWorkflows(workflows)
+        opWorkflows = await this.selectWorkflows(opWorkflows)
         break
       default:
-        ops = await this.selectOps(ops)
-        workflows = await this.selectWorkflows(workflows)
+        opCommands = await this.selectOps(opCommands)
+
+        opWorkflows = await this.selectWorkflows(opWorkflows)
+        console.log('selected op workflows', opWorkflows)
     }
-    return { ops, workflows, version, docker, opsAndWorkflows }
+    console.log('e5')
+    return {
+      opCommands: opCommands,
+      opWorkflows: opWorkflows,
+      version,
+      docker,
+      commandsAndWorkflows: commandsAndWorkflows,
+    }
   }
 
-  selectOps = async (ops: Op[]) => {
+  selectOps = async (ops: OpCommand[]) => {
     if (ops.length <= 1) {
       return ops
     }
-    const answers = await ux.prompt<Container<Op[]>>({
+    const answers = await ux.prompt<Container<OpCommand[]>>({
       type: 'checkbox',
       name: 'ops',
       message: `\n Which ops would you like to publish ${ux.colors.reset.green(
@@ -164,11 +183,12 @@ export default class Publish extends Command {
     return answers.ops
   }
 
-  selectWorkflows = async (workflows: Workflow[]) => {
+  selectWorkflows = async (workflows: OpWorkflow[]) => {
+    console.log('selectWorkflows', workflows)
     if (workflows.length <= 1) {
       return workflows
     }
-    const answers = await ux.prompt<Container<Workflow[]>>({
+    const answers = await ux.prompt<Container<OpWorkflow[]>>({
       type: 'checkbox',
       name: 'workflows',
       message: `\n Which workflows would you like to publish ${ux.colors.reset.green(
@@ -206,7 +226,7 @@ export default class Publish extends Command {
   }
 
   publishOpsAndWorkflows = async (inputs: PublishInputs) => {
-    switch (inputs.opsAndWorkflows) {
+    switch (inputs.commandsAndWorkflows) {
       case COMMAND:
         await this.opsPublishLoop(inputs)
         break
@@ -219,9 +239,9 @@ export default class Publish extends Command {
     }
   }
 
-  opsPublishLoop = async ({ ops, version }: PublishInputs) => {
+  opsPublishLoop = async ({ opCommands, version }: PublishInputs) => {
     try {
-      for (const op of ops) {
+      for (const op of opCommands) {
         if (!isValidOpName(op.name)) {
           throw new InvalidInputCharacter('Op Name')
         }
@@ -258,7 +278,9 @@ export default class Publish extends Command {
           op.type = COMMAND_TYPE
           const {
             data: apiOp,
-          }: { data: Op } = await this.services.publishService.publishOpToAPI(
+          }: {
+            data: OpCommand
+          } = await this.services.publishService.publishOpToAPI(
             op,
             version,
             this.team.name,
@@ -290,9 +312,9 @@ export default class Publish extends Command {
     }
   }
 
-  workflowsPublishLoop = async ({ workflows, version }: PublishInputs) => {
+  workflowsPublishLoop = async ({ opWorkflows, version }: PublishInputs) => {
     try {
-      for (const workflow of workflows) {
+      for (const workflow of opWorkflows) {
         if (!isValidOpName(workflow.name)) {
           throw new InvalidInputCharacter('Workflow Name')
         }
@@ -358,7 +380,7 @@ export default class Publish extends Command {
         try {
           const {
             data: apiWorkflow,
-          }: { data: Op } = await this.services.api.create(
+          }: { data: OpCommand } = await this.services.api.create(
             `/teams/${this.team.name}/ops`,
             { ...workflow, platformVersion: version, type: 'workflow' },
             {
@@ -404,7 +426,10 @@ export default class Publish extends Command {
     }
   }
 
-  sendAnalytics = (publishType: string, opOrWorkflow: Op | Workflow) => {
+  sendAnalytics = (
+    publishType: string,
+    opOrWorkflow: OpCommand | OpWorkflow,
+  ) => {
     this.services.analytics.track({
       userId: this.user.email,
       teamId: this.team.id,

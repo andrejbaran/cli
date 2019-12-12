@@ -1,6 +1,12 @@
 import * as Config from '@oclif/config'
 import Whoami from '~/commands/whoami'
-import { Services, OpsYml, Op, Config as ConfigType, Team } from '~/types'
+import {
+  Services,
+  OpsYml,
+  OpCommand,
+  Config as ConfigType,
+  Team,
+} from '~/types'
 import { sleep } from '../utils'
 import { AnalyticsService } from '~/services/Analytics'
 import {

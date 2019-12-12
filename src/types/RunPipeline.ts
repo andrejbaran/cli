@@ -1,5 +1,5 @@
 import Docker from 'dockerode'
-import { Config, Op } from '.'
+import { Config, OpCommand } from '.'
 
 export type RunCommandArgs = {
   args: { nameOrPath: string }
@@ -13,7 +13,7 @@ export type RunCommandArgs = {
 export type RunPipeline = {
   config: Config
   isPublished: boolean
-  op: Op
+  op: OpCommand
   options: Docker.ContainerCreateOptions
   parsedArgs: RunCommandArgs
 }

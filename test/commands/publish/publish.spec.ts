@@ -5,8 +5,8 @@ import { BuildSteps } from '~/services/BuildSteps'
 import { FeathersClient } from '~/services/Feathers'
 import { RegistryAuthService } from '~/services/RegistryAuth'
 import { ImageService } from '~/services/Image'
-import { Op, RegistryAuth, User } from '~/types'
-import { Workflow } from '~/types/OpsYml'
+import { OpCommand, RegistryAuth, User } from '~/types'
+import { OpWorkflow } from '~/types/OpsYml'
 import { Services } from '~/types'
 import { Publish as PublishService } from '~/services/Publish'
 import { createMockWorkflow } from './../../../test//mocks'
@@ -15,7 +15,7 @@ let cmd: Publish
 
 describe('BuildStep', () => {
   it('should validate all steps for remote workflow', async () => {
-    const workflowArray: Workflow[] = [
+    const workflowArray: OpWorkflow[] = [
       createMockWorkflow({
         name: 'mockWorkflow',
         version: 'latest',
@@ -32,12 +32,14 @@ describe('BuildStep', () => {
     ]
 
     const inputs: PublishInputs = {
-      workflows: workflowArray,
+      opWorkflows: workflowArray,
     } as PublishInputs
 
     // MOCK FEATHERS
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.create = jest.fn().mockReturnValue({ data: {} as Op })
+    mockFeathersService.create = jest
+      .fn()
+      .mockReturnValue({ data: {} as OpCommand })
 
     // SPY ON BUILD STEPS
     const mockBuildStepService = new BuildSteps()
@@ -108,7 +110,7 @@ describe('BuildStep', () => {
   })
 
   it('should replace all glue code steps with ops run', async () => {
-    const workflowArray: Workflow[] = [
+    const workflowArray: OpWorkflow[] = [
       createMockWorkflow({
         name: 'mockWorkflow',
         version: 'latest',
@@ -126,13 +128,15 @@ describe('BuildStep', () => {
     ]
 
     const inputs: PublishInputs = {
-      workflows: workflowArray,
+      opWorkflows: workflowArray,
       version: '1',
     } as PublishInputs
 
     // SPY ON FEATHERS CREATE
     const mockFeathersService = new FeathersClient()
-    mockFeathersService.create = jest.fn().mockReturnValue({ data: {} as Op })
+    mockFeathersService.create = jest
+      .fn()
+      .mockReturnValue({ data: {} as OpCommand })
 
     // MOCK BUILD STEP SERVICE
     const mockBuildStepService = new BuildSteps()
@@ -228,7 +232,7 @@ it('should publish ops in a loop', async () => {
   mockPublishService.publishOpToRegistry = jest.fn().mockReturnValue({
     data: {
       name: 'mock-op',
-    } as Op,
+    } as OpCommand,
   })
 
   const mockRegistryAuthService = new RegistryAuthService()
@@ -249,10 +253,10 @@ it('should publish ops in a loop', async () => {
 
   const inputs: PublishInputs = {
     version: 'mockVersion',
-    ops: [
+    opCommands: [
       {
         name: 'mock-op',
-      } as Op,
+      } as OpCommand,
     ],
   } as PublishInputs
 

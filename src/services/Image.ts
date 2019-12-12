@@ -8,7 +8,7 @@ import * as fs from 'fs-extra'
 
 import { DockerBuildImageError, ImagePullError } from '~/errors/CustomErrors'
 import { ErrorService } from '~/services/Error'
-import { Op } from '~/types'
+import { OpCommand } from '~/types'
 import getDocker from '~/utils/get-docker'
 
 const debug = Debug('ops:ImageService')
@@ -34,7 +34,7 @@ export class ImageService {
     return RepoTags.find((repoTag: string) => repoTag.includes(repo))
   }
 
-  pull = async (op: Op, authconfig: AuthConfig): Promise<void> => {
+  pull = async (op: OpCommand, authconfig: AuthConfig): Promise<void> => {
     const docker = await getDocker(console, 'ImageServicePull')
     const stream = await docker
       .pull(op.image || '', { authconfig })
@@ -55,8 +55,8 @@ export class ImageService {
   }
 
   setParser = (
-    op: Op,
-    getFn: (status: string, op: Op) => { speed: string },
+    op: OpCommand,
+    getFn: (status: string, op: OpCommand) => { speed: string },
   ) => {
     const bar = ux.progress.init({
       format: ux.colors.callOutCyan('{bar} {percentage}% | Status: {speed} '),
@@ -87,7 +87,7 @@ export class ImageService {
     return { parser, bar }
   }
 
-  getProgressBarText = (status: string, { name }: Op) => {
+  getProgressBarText = (status: string, { name }: OpCommand) => {
     const mapping = {
       [`Pulling from ${name}`]: `✅ Pulling from ${name}...`,
       'Already exists': '✅ Already exists!',
@@ -129,7 +129,7 @@ export class ImageService {
     return fs.existsSync(pathToDockerfile)
   }
 
-  build = async (tag: string, opPath: string, op: Op) => {
+  build = async (tag: string, opPath: string, op: OpCommand) => {
     try {
       const dockerfileExists = this.checkIfDockerfileExists(opPath)
 

@@ -20,7 +20,14 @@ import {
 } from '~/errors/CustomErrors'
 import { isValidOpFullName } from '~/utils/validate'
 import { asyncPipe } from '~/utils'
-import { Answers, Fuzzy, Op, OpsFindResponse, Workflow, Config } from '../types'
+import {
+  Answers,
+  Fuzzy,
+  OpCommand,
+  OpsFindResponse,
+  OpWorkflow,
+  Config,
+} from '../types'
 import { WORKFLOW_TYPE } from '../constants/opConfig'
 import { GLUECODE_TYPE } from '../constants/opConfig'
 
@@ -33,7 +40,7 @@ type OpFilter = {
 interface AddInputs {
   opName: string
   config: Config
-  ops: (Op | Workflow)[]
+  ops: (OpCommand | OpWorkflow)[]
   opFilter: OpFilter
   addedOpID: number
 }
@@ -53,7 +60,7 @@ export default class Add extends Command {
     },
   ]
 
-  ops: (Op | Workflow)[] = []
+  ops: (OpCommand | OpWorkflow)[] = []
 
   promptFilter = async (inputs: AddInputs): Promise<AddInputs> => {
     if (inputs.opName) return inputs
@@ -73,7 +80,7 @@ export default class Add extends Command {
   }
 
   isOpAlreadyInTeam = (
-    opResults: (Op | Workflow)[],
+    opResults: (OpCommand | OpWorkflow)[],
     opName: string,
     opTeamName: string,
     opVersionName: string,
@@ -94,7 +101,7 @@ export default class Add extends Command {
     try {
       const {
         data: opResults,
-      }: { data: (Op | Workflow)[] } = await this.services.api.find(
+      }: { data: (OpCommand | OpWorkflow)[] } = await this.services.api.find(
         `teams/${config.team.name}/ops`,
         {
           headers: {
@@ -155,7 +162,7 @@ export default class Add extends Command {
     return { list, options }
   }
 
-  _formatOpOrWorkflowName = (op: Op | Workflow) => {
+  _formatOpOrWorkflowName = (op: OpCommand | OpWorkflow) => {
     const { reset, multiOrange, multiBlue } = this.ux.colors
     const teamName = op.teamName ? `@${op.teamName}/` : ''
     const opVersion = op.version ? `(${op.version})` : ''
