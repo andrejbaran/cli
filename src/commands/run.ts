@@ -527,10 +527,10 @@ export default class Run extends Command {
           this.logResolvedLocalMessage,
           this.getOpsAndWorkflowsFromFileSystem(nameOrPath),
           this.addMissingApiFieldsToLocalOps,
+          this.stopSpinner,
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
           this.sendAnalytics,
-          this.stopSpinner,
           this.executeOpOrWorkflowService,
         )
         await runFsPipeline({ parsedArgs, config })
@@ -546,10 +546,10 @@ export default class Run extends Command {
           this.filterLocalOps,
           this.parseTeamOpNameVersion,
           this.getApiOps,
+          this.stopSpinner,
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
           this.sendAnalytics,
-          this.stopSpinner,
           this.executeOpOrWorkflowService,
         )
         await runApiPipeline({ parsedArgs, config })
