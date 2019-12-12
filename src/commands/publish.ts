@@ -125,7 +125,7 @@ export default class Publish extends Command {
 
     return {
       opCommands: ops,
-      workflows,
+      opWorkflows: workflows,
       docker,
       version,
       commandsAndWorkflows: commandsAndWorkflows,
@@ -148,11 +148,8 @@ export default class Publish extends Command {
         break
       default:
         opCommands = await this.selectOps(opCommands)
-
         opWorkflows = await this.selectWorkflows(opWorkflows)
-        console.log('selected op workflows', opWorkflows)
     }
-    console.log('e5')
     return {
       opCommands: opCommands,
       opWorkflows: opWorkflows,
@@ -184,7 +181,6 @@ export default class Publish extends Command {
   }
 
   selectWorkflows = async (workflows: OpWorkflow[]) => {
-    console.log('selectWorkflows', workflows)
     if (workflows.length <= 1) {
       return workflows
     }
