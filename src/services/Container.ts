@@ -2,7 +2,7 @@ import { ux } from '@cto.ai/sdk'
 import Docker from 'dockerode'
 import Debug from 'debug'
 
-import { Op } from '~/types'
+import { OpCommand } from '~/types'
 import getDocker from '~/utils/get-docker'
 
 const debug = Debug('ops:ContainerService')
@@ -11,7 +11,7 @@ export class ContainerService {
   log = console.log
   container
   create = async (
-    op: Op,
+    op: OpCommand,
     options: Docker.ContainerCreateOptions,
   ): Promise<Docker.Container> => {
     const docker = await getDocker(console, 'ContainerService')

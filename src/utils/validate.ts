@@ -1,4 +1,4 @@
-import { Op, Workflow } from '../types'
+import { OpCommand, OpWorkflow } from '../types'
 
 export const validChars = /^[a-zA-Z0-9-_]+$/
 export const validCharsTeamName = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/
@@ -12,7 +12,9 @@ export const isValidOpName = (opName: string) => {
 export const isValidTeamName = (teamName: string) =>
   typeof teamName === 'string' && validCharsTeamName.test(teamName)
 
-export const isValidOpVersion = ({ version }: Op | Workflow): boolean => {
+export const isValidOpVersion = ({
+  version,
+}: OpCommand | OpWorkflow): boolean => {
   return typeof version === 'string' && validVersionChars.test(version)
 }
 

@@ -1,7 +1,7 @@
-import { Op, Workflow, Config } from '.'
+import { OpCommand, OpWorkflow, Config } from '.'
 
 export interface ListInputs {
-  opResults: (Op | Workflow)[]
-  selectedOp: Op | Workflow
+  opResults: (OpCommand | OpWorkflow)[]
+  selectedOp: OpCommand | OpWorkflow
   config: Config
 }

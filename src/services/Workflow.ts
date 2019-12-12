@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import {
-  Workflow,
+  OpWorkflow,
   Config,
   WorkflowPipelineError,
   ChildProcessError,
@@ -23,7 +23,7 @@ const { callOutCyan, whiteBright, bold, redBright } = ux.colors
 
 export class WorkflowService {
   async run(
-    workflow: Workflow,
+    workflow: OpWorkflow,
     opParams: string[],
     config: Config,
   ): Promise<void> {
@@ -76,7 +76,7 @@ export class WorkflowService {
     }
   }
 }
-const getRunEnv = (workflow: Workflow, config: Config): Workflow => {
+const getRunEnv = (workflow: OpWorkflow, config: Config): OpWorkflow => {
   const runId: string = uuid()
   workflow.runId = runId
   const opsHome = `${process.env.HOME ||
@@ -99,7 +99,7 @@ const getRunEnv = (workflow: Workflow, config: Config): Workflow => {
   return workflow
 }
 // TODO this should be refactored so with the opService setEnv to make it dry
-const setRunEnv = (workflow: Workflow, config: Config): void => {
+const setRunEnv = (workflow: OpWorkflow, config: Config): void => {
   const defaultEnv: Container<string> = {
     STATE_DIR: workflow.stateDir,
     CONFIG_DIR: workflow.configDir,
@@ -133,7 +133,7 @@ const overrideEnvWithProcessEnv = (
 ) => ([key, val]: [string, string]) => [key, processEnv[key] || val]
 
 const interpolateRunCmd = (
-  { steps, runId, name }: Pick<Workflow, 'steps' | 'runId' | 'name'>,
+  { steps, runId, name }: Pick<OpWorkflow, 'steps' | 'runId' | 'name'>,
   teamName: string,
 ): string[] => {
   if (!steps.length) {

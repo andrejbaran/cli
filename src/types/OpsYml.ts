@@ -6,11 +6,11 @@ import {
 
 export interface OpsYml {
   version: string
-  ops: Op[]
-  workflows: Workflow[]
+  ops: OpCommand[]
+  workflows: OpWorkflow[]
 }
 
-export interface Op extends BaseFields {
+export interface OpCommand extends BaseFields {
   type: COMMAND_TYPE | GLUECODE_TYPE
   // OPS.YML
   run: string
@@ -25,7 +25,7 @@ export interface Op extends BaseFields {
   image: string | void
 }
 
-export interface Workflow extends BaseFields {
+export interface OpWorkflow extends BaseFields {
   type: WORKFLOW_TYPE
   remote: boolean
   steps: string[]

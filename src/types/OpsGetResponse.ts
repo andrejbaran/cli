@@ -1,6 +1,6 @@
-import { Op } from './OpsYml'
+import { OpCommand } from './OpsYml'
 
 export type OpsGetResponse = {
-  data: Op
+  data: OpCommand
   error: object[] | null
 }

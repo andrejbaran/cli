@@ -25,14 +25,14 @@ import { AnalyticsService } from '~/services/Analytics'
 import { ContainerService } from '~/services/Container'
 import { ImageService } from '~/services/Image'
 import { RegistryAuthService } from '~/services/RegistryAuth'
-import { Config, Container, Op } from '~/types'
+import { Config, Container, OpCommand } from '~/types'
 import { asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
 import { isValidOpName, isValidOpVersion } from '~/utils/validate'
 
 const debug = Debug('ops:OpService')
 
 export interface OpRunInputs {
-  op: Op
+  op: OpCommand
   config: Config
   parsedArgs: RunCommandArgs
   options: ContainerCreateOptions
@@ -47,7 +47,11 @@ export class OpService {
     protected analytics = new AnalyticsService(OPS_SEGMENT_KEY),
   ) {}
 
-  public opsBuildLoop = async (ops: Op[], opPath: string, config: Config) => {
+  public opsBuildLoop = async (
+    ops: OpCommand[],
+    opPath: string,
+    config: Config,
+  ) => {
     const {
       team: { name: teamName },
       user,
@@ -97,7 +101,7 @@ export class OpService {
   }
 
   async run(
-    op: Op,
+    op: OpCommand,
     parsedArgs: RunCommandArgs,
     config: Config,
     version: string,
@@ -170,7 +174,11 @@ export class OpService {
       throw new Error('Unable to find image for this op')
     }
   }
-  pullImageFromRegistry = async (op: Op, config: Config, version: string) => {
+  pullImageFromRegistry = async (
+    op: OpCommand,
+    config: Config,
+    version: string,
+  ) => {
     const { authconfig, robotID } = await this.registryAuthService.create(
       config.tokens.accessToken,
       op.teamName,
@@ -192,7 +200,7 @@ export class OpService {
     )
   }
 
-  setOpImageUrl = (op: Op, config: Config) => {
+  setOpImageUrl = (op: OpCommand, config: Config) => {
     const opIdentifier = op.isPublished ? op.id : op.name
     const teamName = op.teamName ? op.teamName : config.team.name
     const opImageTag = getOpImageTag(

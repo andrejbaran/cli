@@ -6,10 +6,10 @@ import Command, { flags } from '~/base'
 
 import {
   Answers,
-  Op,
+  OpCommand,
   Fuzzy,
   Config,
-  Workflow,
+  OpWorkflow,
   RunCommandArgs,
   OpsYml,
 } from '~/types'
@@ -42,8 +42,8 @@ export interface RunInputs {
   opName: string
   opVersion: string
   config: Config
-  opsAndWorkflows: (Op | Workflow)[]
-  opOrWorkflow: Op | Workflow
+  opsAndWorkflows: (OpCommand | OpWorkflow)[]
+  opOrWorkflow: OpCommand | OpWorkflow
 }
 
 export default class Run extends Command {
@@ -72,7 +72,7 @@ export default class Run extends Command {
     },
   ]
 
-  opsAndWorkflows: (Op | Workflow)[] = []
+  opsAndWorkflows: (OpCommand | OpWorkflow)[] = []
 
   customParse = (options: typeof Run, argv: string[]) => {
     const { args, flags } = require('@oclif/parser').parse(argv, {
@@ -147,8 +147,8 @@ export default class Run extends Command {
   ): Promise<RunInputs> => {
     const { opsAndWorkflows, config } = inputs
     const updatedOpsAndWorkflows = opsAndWorkflows.map((opOrWorkflow):
-      | Op
-      | Workflow => {
+      | OpCommand
+      | OpWorkflow => {
       let newOpOrWorkflow = { ...opOrWorkflow }
       newOpOrWorkflow.teamName = config.team.name
       newOpOrWorkflow.type =
@@ -170,7 +170,7 @@ export default class Run extends Command {
       },
     } = inputs
 
-    const keepOnlyMatchingNames = ({ name }: Op | Workflow) => {
+    const keepOnlyMatchingNames = ({ name }: OpCommand | OpWorkflow) => {
       return name.indexOf(nameOrPath) >= 0
     }
 
@@ -180,7 +180,7 @@ export default class Run extends Command {
     }
   }
 
-  formatOpOrWorkflowEmoji = (opOrWorkflow: Workflow | Op): string => {
+  formatOpOrWorkflowEmoji = (opOrWorkflow: OpWorkflow | OpCommand): string => {
     if (!opOrWorkflow.isPublished) {
       return '🖥  '
     } else if (opOrWorkflow.isPublic) {
@@ -190,7 +190,7 @@ export default class Run extends Command {
     }
   }
 
-  formatOpOrWorkflowName = (opOrWorkflow: Op | Workflow) => {
+  formatOpOrWorkflowName = (opOrWorkflow: OpCommand | OpWorkflow) => {
     const name = this.ux.colors.reset.white(opOrWorkflow.name)
     if (
       (!opOrWorkflow.isPublished && 'steps' in opOrWorkflow) ||
@@ -238,7 +238,7 @@ export default class Run extends Command {
       }
       this.opsAndWorkflows = opsAndWorkflows
       const { opOrWorkflow } = await this.ux.prompt<{
-        opOrWorkflow: Op | Workflow
+        opOrWorkflow: OpCommand | OpWorkflow
       }>({
         type: 'autocomplete',
         name: 'opOrWorkflow',
@@ -261,7 +261,7 @@ export default class Run extends Command {
     }
   }
 
-  printCustomHelp = (op: Op) => {
+  printCustomHelp = (op: OpCommand) => {
     try {
       if (!op.help) {
         throw new Error('Custom help message can be defined in the ops.yml\n')
@@ -424,7 +424,7 @@ export default class Run extends Command {
       opsAndWorkflows: previousOpsAndWorkflows = [],
       opVersion,
     } = inputs
-    let apiOp: Op | Workflow
+    let apiOp: OpCommand | OpWorkflow
     try {
       if (!opName) return { ...inputs }
       teamName = teamName ? teamName : config.team.name

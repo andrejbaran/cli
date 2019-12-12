@@ -13,7 +13,12 @@ import * as Config from '@oclif/config'
 import Add from '~/commands/add'
 import { isValidOpFullName } from '~/utils/validate'
 import { FeathersClient } from '~/services/Feathers'
-import { Services, Config as ConfigType, Op, SearchInputs } from '~/types'
+import {
+  Services,
+  Config as ConfigType,
+  OpCommand,
+  SearchInputs,
+} from '~/types'
 import { sleep } from '../utils'
 import { AnalyticsService } from '~/services/Analytics'
 import {

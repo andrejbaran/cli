@@ -1,8 +1,8 @@
-import { Op, Workflow } from './OpsYml'
+import { OpCommand, OpWorkflow } from './OpsYml'
 
 // TODO: Add type for error
 export type OpsFindResponse = {
-  data: (Op | Workflow)[]
+  data: (OpCommand | OpWorkflow)[]
   error: object[] | null
 }
 
@@ -13,7 +13,7 @@ export type OpsFindQuery = {
 }
 
 export type WorkflowsFindResponse = {
-  data: Workflow[]
+  data: OpWorkflow[]
   error: object[] | null
 }
 

@@ -1,8 +1,8 @@
-import { Op, Workflow } from '.'
+import { OpCommand, OpWorkflow } from '.'
 
 export interface SearchInputs {
   filter: string
-  apiOps: (Op | Workflow)[]
-  localWorkflows: Workflow[]
-  selectedOpOrWorkflow: Op | Workflow
+  apiOps: (OpCommand | OpWorkflow)[]
+  localWorkflows: OpWorkflow[]
+  selectedOpOrWorkflow: OpCommand | OpWorkflow
 }

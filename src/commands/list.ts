@@ -2,7 +2,14 @@ import fuzzy from 'fuzzy'
 import Command, { flags } from '../base'
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import { Op, Workflow, Answers, Fuzzy, OpsYml, ListInputs } from '~/types'
+import {
+  OpCommand,
+  OpWorkflow,
+  Answers,
+  Fuzzy,
+  OpsYml,
+  ListInputs,
+} from '~/types'
 import { APIError } from '~/errors/CustomErrors'
 import {
   COMMAND,
@@ -18,7 +25,7 @@ export default class List extends Command {
     help: flags.help({ char: 'h' }),
   }
 
-  opResults: (Op | Workflow)[] = []
+  opResults: (OpCommand | OpWorkflow)[] = []
 
   getApiOps = async (inputs: ListInputs): Promise<ListInputs> => {
     try {
@@ -98,7 +105,9 @@ export default class List extends Command {
     const subHeader = reset.dim(
       '🌎 = Public 🔑 = Private 🖥  = Local  🔍 Search:',
     )
-    const { selectedOp } = await this.ux.prompt<{ selectedOp: Op | Workflow }>({
+    const { selectedOp } = await this.ux.prompt<{
+      selectedOp: OpCommand | OpWorkflow
+    }>({
       type: 'autocomplete',
       name: 'selectedOp',
       pageSize: 5,
@@ -134,7 +143,7 @@ export default class List extends Command {
     return { list, options }
   }
 
-  _formatOpOrWorkflowName = (op: Op | Workflow) => {
+  _formatOpOrWorkflowName = (op: OpCommand | OpWorkflow) => {
     const { reset, multiOrange, multiBlue } = this.ux.colors
     const teamName = op.teamName ? `@${op.teamName}/` : ''
     const opVersion = op.version ? `(${op.version})` : ''
@@ -152,7 +161,7 @@ export default class List extends Command {
     }
   }
 
-  _formatOpOrWorkflowEmoji = (opOrWorkflow: Workflow | Op): string => {
+  _formatOpOrWorkflowEmoji = (opOrWorkflow: OpWorkflow | OpCommand): string => {
     if (opOrWorkflow.local) {
       return '🖥  '
     } else if (opOrWorkflow.isPublic == false) {

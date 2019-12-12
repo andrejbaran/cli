@@ -1,10 +1,10 @@
 import { OpService, OpRunInputs } from '~/services/Op'
-import { Op, Config } from '~/types'
+import { OpCommand, Config } from '~/types'
 import { ContainerCreateOptions, Container } from 'dockerode'
 import { RunCommandArgs } from '~/commands/run'
 import { YamlPortError } from '~/errors/CustomErrors'
 
-const baseOp: Op = {
+const baseOp: OpCommand = {
   name: '',
   description: '',
   env: [''],
@@ -30,7 +30,7 @@ const baseOp: Op = {
 }
 
 let opRunInputs: OpRunInputs = {
-  op: {} as Op,
+  op: {} as OpCommand,
   config: {} as Config,
   parsedArgs: {} as RunCommandArgs,
   options: {} as ContainerCreateOptions,

@@ -9,7 +9,7 @@ import {
   InvalidRemoveOpFormat,
 } from '../errors/CustomErrors'
 import { ErrorTemplate } from '~/errors/ErrorTemplate'
-import { Op, Workflow, RemoveInputs } from '~/types'
+import { OpCommand, OpWorkflow, RemoveInputs } from '~/types'
 
 export default class Remove extends Command {
   static description = 'Remove an Op from your team.'
@@ -71,7 +71,7 @@ export default class Remove extends Command {
 
       const {
         data: opOrWorkflow,
-      }: { data: Op | Workflow } = await this.services.api
+      }: { data: OpCommand | OpWorkflow } = await this.services.api
         .find(`teams/${opTeamName}/ops/${opName}/versions/${opVersion}`, {
           headers: {
             Authorization: accessToken,

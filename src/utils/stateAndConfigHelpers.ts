@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { Op, Workflow, Config } from '~/types'
+import { OpCommand, OpWorkflow, Config } from '~/types'
 
 export const createStateDirEnv = (
   teamName: string,

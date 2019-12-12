@@ -5,9 +5,9 @@ import * as yaml from 'yaml'
 import Command, { flags } from '../base'
 import {
   Answers,
-  Op,
+  OpCommand,
   Fuzzy,
-  Workflow,
+  OpWorkflow,
   OpsYml,
   SearchInputs,
   OpsFindResponse,
@@ -37,7 +37,7 @@ export default class Search extends Command {
     help: flags.help({ char: 'h' }),
   }
 
-  opsAndWorkflows: (Op | Workflow)[] = []
+  opsAndWorkflows: (OpCommand | OpWorkflow)[] = []
 
   getApiOps = async (inputs: SearchInputs): Promise<SearchInputs> => {
     try {
@@ -78,7 +78,7 @@ export default class Search extends Command {
   }
 
   _removeIfNameOrDescriptionDontContainQuery = (filter: string) => (
-    workflow: Workflow,
+    workflow: OpWorkflow,
   ): boolean => {
     return (
       workflow.name.includes(filter) || workflow.description.includes(filter)
@@ -95,7 +95,7 @@ export default class Search extends Command {
 
     return { ...inputs, localWorkflows }
   }
-  _removeIfLocalExists = (workflows: Workflow[]) => (apiOp: Op) => {
+  _removeIfLocalExists = (workflows: OpWorkflow[]) => (apiOp: OpCommand) => {
     const match = workflows.find(workflow => workflow.name === apiOp.name)
     return !match
   }
@@ -128,7 +128,7 @@ export default class Search extends Command {
     const commandText = this.ux.colors.multiBlue('\u2022Command')
     const workflowText = this.ux.colors.multiOrange('\u2022Workflow')
     const { selectedOpOrWorkflow } = await this.ux.prompt<{
-      selectedOpOrWorkflow: Op | Workflow
+      selectedOpOrWorkflow: OpCommand | OpWorkflow
     }>({
       type: 'autocomplete',
       name: 'selectedOpOrWorkflow',
@@ -209,7 +209,7 @@ export default class Search extends Command {
     return { list, options }
   }
 
-  private _formatOpOrWorkflowName = (opOrWorkflow: Op | Workflow) => {
+  private _formatOpOrWorkflowName = (opOrWorkflow: OpCommand | OpWorkflow) => {
     const teamName = opOrWorkflow.teamName ? `@${opOrWorkflow.teamName}/` : ''
     const name = `${this.ux.colors.reset.white(
       `${teamName}${opOrWorkflow.name}`,
