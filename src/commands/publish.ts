@@ -233,7 +233,9 @@ export default class Publish extends Command {
           name: 'publishDescription',
           message: `\nProvide a changelog of what's new for ${op.name}:${
             op.version
-          } ${ux.colors.reset.green('→')}\n\n ${ux.colors.white('Changelog:')}`,
+          } ${ux.colors.reset.green('→')}\n\n ${ux.colors.white(
+            '✍️  Changelog:',
+          )}`,
           afterMessage: ux.colors.reset.green('✓'),
           afterMessageAppend: ux.colors.reset(' added!'),
           validate: this._validateDescription,

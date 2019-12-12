@@ -50,7 +50,7 @@ export default class Init extends Command {
       name: appendSuffix(COMMAND, 'Description'),
       message: `\nProvide a description ${this.ux.colors.reset.green(
         '→',
-      )}  \n📝 ${this.ux.colors.white('Description:')}`,
+      )}  \n✍️  ${this.ux.colors.white('Description:')}`,
       afterMessage: this.ux.colors.reset.green('✓'),
       afterMessageAppend: this.ux.colors.reset(' added!'),
       validate: this._validateDescription,
@@ -60,7 +60,7 @@ export default class Init extends Command {
       name: appendSuffix(COMMAND, 'Version'),
       message: `\nProvide a version ${this.ux.colors.reset.green(
         '→',
-      )}  \n📝 ${this.ux.colors.white('Version:')}`,
+      )}  \n✍️  ${this.ux.colors.white('Version:')}`,
       afterMessage: this.ux.colors.reset.green('✓'),
       afterMessageAppend: this.ux.colors.reset(' added!'),
       validate: this._validateVersion,
@@ -85,7 +85,7 @@ export default class Init extends Command {
       name: appendSuffix(WORKFLOW, 'Description'),
       message: `\nProvide a description ${this.ux.colors.reset.green(
         '→',
-      )}\n\n📝 ${this.ux.colors.white('Description:')}`,
+      )}\n\n✍️  ${this.ux.colors.white('Description:')}`,
       afterMessage: this.ux.colors.reset.green('✓'),
       afterMessageAppend: this.ux.colors.reset(' added!'),
       validate: this._validateDescription,
@@ -95,7 +95,7 @@ export default class Init extends Command {
       name: appendSuffix(WORKFLOW, 'Version'),
       message: `\nProvide a version ${this.ux.colors.reset.green(
         '→',
-      )}\n\n📝 ${this.ux.colors.white('Version:')}`,
+      )}\n\n✍️  ${this.ux.colors.white('Version:')}`,
       afterMessage: this.ux.colors.reset.green('✓'),
       afterMessageAppend: this.ux.colors.reset(' added!'),
       validate: this._validateVersion,
