@@ -22,7 +22,8 @@ test(`it should be able to show the list of all public commands and workflows`, 
   console.log(`ops search`)
 
   const result = await run(['search'])
-  expect(result).toContain(`Searching all commands and workflows`)
+  expect(result).toContain('Select a public')
+  expect(result).toContain('to continue')
 })
 
 test(`it asserts that op version is never undefined`, async () => {
