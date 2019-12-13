@@ -3,7 +3,12 @@ import Debug from 'debug'
 import { ux } from '@cto.ai/sdk'
 import { Answers, Fuzzy, SecretListInputs, Config, ApiService } from '~/types'
 import { asyncPipe } from '~/utils/asyncPipe'
-import { APIError, NoSecretsProviderFound } from '~/errors/CustomErrors'
+import {
+  APIError,
+  NoSecretsProviderFound,
+  NoTeamFound,
+  TeamUnauthorized,
+} from '~/errors/CustomErrors'
 
 const debug = Debug('ops:SecretService')
 
@@ -13,9 +18,8 @@ export class SecretService {
   getApiSecretsList = async (
     inputs: SecretListInputs,
   ): Promise<SecretListInputs> => {
+    const { team, tokens } = inputs.config
     try {
-      const { team, tokens } = inputs.config
-
       const { api } = inputs
       const findResponse = await api.find(`/teams/${team.name}/secrets`, {
         headers: {
@@ -26,9 +30,19 @@ export class SecretService {
       return { ...inputs, secrets }
     } catch (err) {
       debug('error: %O', err)
-      if (err.error[0].message === 'no secrets provider registered') {
+      const { code, message } = err.error[0]
+      if (code === 403 && message === 'no secrets provider registered') {
         throw new NoSecretsProviderFound(err)
       }
+      if (code === 401) {
+        throw new TeamUnauthorized(
+          'Team not authorized when fetching the secrets list',
+        )
+      }
+      if (code === 404 && message === 'team not found') {
+        throw new NoTeamFound(team.name)
+      }
+
       throw new APIError(err)
     }
   }
@@ -69,6 +83,24 @@ export class SecretService {
       source: this._autocompleteSearchList.bind(this),
     })
     return { ...inputs, selectedSecret }
+  }
+
+  checkForSecretProviderErrors = async (
+    api: ApiService,
+    config: Config,
+  ): Promise<undefined | Error> => {
+    try {
+      await this.getApiSecretsList({
+        api,
+        config,
+        secrets: [],
+        selectedSecret: '',
+      })
+    } catch (err) {
+      return err
+    }
+
+    return undefined
   }
 
   _autocompleteSearchList = async (_: Answers, searchQuery = '') => {

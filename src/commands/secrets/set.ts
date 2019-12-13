@@ -8,6 +8,7 @@ import {
   SecretsValuesNotEqual,
   SecretsFlagsRequired,
   NoSecretsProviderFound,
+  APIError,
 } from '~/errors/CustomErrors'
 import { flags } from '@oclif/parser'
 
@@ -166,6 +167,13 @@ export default class SecretsSet extends Command {
 
     try {
       await this.isLoggedIn()
+      const secretProviderErr = await this.services.secretService.checkForSecretProviderErrors(
+        this.services.api,
+        this.state.config,
+      )
+      if (secretProviderErr instanceof Error) {
+        throw secretProviderErr
+      }
 
       this.validateFlags(key, value)
 

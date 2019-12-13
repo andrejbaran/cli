@@ -685,6 +685,18 @@ export class NoTeamFound extends ErrorTemplate {
   }
 }
 
+export class TeamUnauthorized extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(
+        '🤚 Your team lacks the permission for that action. Please try again.',
+      ),
+      err,
+      expectedSource,
+    )
+  }
+}
+
 export class RegisterSecretsProvider extends ErrorTemplate {
   constructor(err) {
     super(
