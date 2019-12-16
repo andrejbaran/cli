@@ -1,0 +1,59 @@
+import { ENTER, SPACE, DOWN, Y } from '../../utils/constants'
+import { run, signin, signout, sleep } from '../../utils/cmd'
+
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
+
+beforeEach(async () => {
+  await signout()
+})
+
+afterAll(async () => {
+  // avoid jest open handle error
+  await sleep(500)
+})
+
+test('It should register a secret and be able to unregister', async () => {
+  await signin()
+  await sleep(500)
+
+  console.log('ops register a secret')
+
+  const secretStorageURL = 'https://testvault.cto.ai:8200/cicd'
+  const accessToken = 's.DkHBkCXeKA7pykyRbSfaof7a'
+
+  const registerRes = await run(
+    ['secrets:register'],
+    [secretStorageURL, ENTER, accessToken, ENTER],
+    3000,
+  )
+
+  expect(registerRes.toLowerCase()).toContain('secrets registration complete')
+
+  console.log('ops unregister a secret')
+
+  const unRegisterRes = await run(['secrets:unregister'], [Y, ENTER])
+
+  expect(unRegisterRes.toLowerCase()).toContain(
+    'the secret provider has been deleted from the team existing_user',
+  )
+})
+
+test('If an invalid vault location is given it should throw an error', async () => {
+  await signin()
+  await sleep(500)
+
+  console.log('ops register an invalid secret URL')
+
+  const secretStorageURL = 'invalidURL'
+  const accessToken = 'invalidToken'
+
+  const registerRes = await run(
+    ['secrets:register'],
+    [secretStorageURL, ENTER, accessToken, ENTER],
+    3000,
+  )
+
+  expect(registerRes).toContain(
+    ' 😅 Oops!, we were not able to register the secrets provider',
+  )
+})
