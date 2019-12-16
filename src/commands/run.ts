@@ -500,15 +500,6 @@ export default class Run extends Command {
     )
     return inputs
   }
-  startSpinner = async (inputs: RunInputs) => {
-    await this.ux.spinner.start(`${this.ux.colors.white('Starting')}`)
-    return inputs
-  }
-
-  stopSpinner = async (inputs: RunInputs) => {
-    await this.ux.spinner.stop(`${this.ux.colors.successGreen('Done')}`)
-    return inputs
-  }
 
   async run() {
     try {
@@ -523,11 +514,9 @@ export default class Run extends Command {
       if (this.checkPathOpsYmlExists(nameOrPath)) {
         /* The nameOrPath argument is a directory containing an ops.yml */
         const runFsPipeline = asyncPipe(
-          this.startSpinner,
           this.logResolvedLocalMessage,
           this.getOpsAndWorkflowsFromFileSystem(nameOrPath),
           this.addMissingApiFieldsToLocalOps,
-          this.stopSpinner,
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
           this.sendAnalytics,
@@ -540,13 +529,11 @@ export default class Run extends Command {
          * directory which does not contain an ops.yml.
          */
         const runApiPipeline = asyncPipe(
-          this.startSpinner,
           this.getOpsAndWorkflowsFromFileSystem(process.cwd()),
           this.addMissingApiFieldsToLocalOps,
           this.filterLocalOps,
           this.parseTeamOpNameVersion,
           this.getApiOps,
-          this.stopSpinner,
           this.selectOpOrWorkflowToRun,
           this.checkForHelpMessage,
           this.sendAnalytics,
@@ -555,7 +542,6 @@ export default class Run extends Command {
         await runApiPipeline({ parsedArgs, config })
       }
     } catch (err) {
-      await this.ux.spinner.stop(`${this.ux.colors.errorRed('Failed')}`)
       this.debug('%O', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })
     }
