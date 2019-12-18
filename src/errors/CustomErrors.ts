@@ -707,6 +707,19 @@ export class RegisterSecretsProvider extends ErrorTemplate {
   }
 }
 
+export class SecretsProviderFound extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        `😅 It looks like you already got a secrets provider for this team. You can unregister a secrets provider using  ${terminalText(
+          'ops secrets:unregister',
+        )}.`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
 export class NoSecretsProviderFound extends ErrorTemplate {
   constructor(err) {
     super(

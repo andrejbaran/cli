@@ -7,6 +7,8 @@ import {
   RegisterSecretsProvider,
   NoTeamFound,
   UserUnauthorized,
+  SecretsProviderFound,
+  NoSecretsProviderFound,
 } from '~/errors/CustomErrors'
 
 const { white, reset } = ux.colors
@@ -119,6 +121,18 @@ export default class SecretsRegister extends Command {
   async run() {
     try {
       await this.isLoggedIn()
+      const secretProviderErr = await this.services.secretService.checkForSecretProviderErrors(
+        this.services.api,
+        this.state.config,
+      )
+
+      if (!(secretProviderErr instanceof NoSecretsProviderFound)) {
+        if (secretProviderErr instanceof Error) {
+          throw secretProviderErr
+        }
+
+        throw new SecretsProviderFound()
+      }
 
       const switchPipeline = asyncPipe(
         this.promptForSecretsProviderCredentials,
