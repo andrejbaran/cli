@@ -33,32 +33,43 @@ USAGE
 # Commands
 
 <!-- commands -->
-* [`ops account:reset`](#ops-accountreset)
-* [`ops account:signin`](#ops-accountsignin)
-* [`ops account:signout`](#ops-accountsignout)
-* [`ops account:signup`](#ops-accountsignup)
-* [`ops account:support`](#ops-accountsupport)
-* [`ops add [OPNAME]`](#ops-add-opname)
-* [`ops build [PATH]`](#ops-build-path)
-* [`ops cleanup [OPNAME]`](#ops-cleanup-opname)
-* [`ops help [COMMAND]`](#ops-help-command)
-* [`ops init`](#ops-init)
-* [`ops list`](#ops-list)
-* [`ops publish PATH`](#ops-publish-path)
-* [`ops remove OP`](#ops-remove-op)
-* [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
-* [`ops search [FILTER]`](#ops-search-filter)
-* [`ops secrets:delete`](#ops-secretsdelete)
-* [`ops secrets:list`](#ops-secretslist)
-* [`ops secrets:register`](#ops-secretsregister)
-* [`ops secrets:set`](#ops-secretsset)
-* [`ops secrets:unregister`](#ops-secretsunregister)
-* [`ops team:create`](#ops-teamcreate)
-* [`ops team:invite`](#ops-teaminvite)
-* [`ops team:join`](#ops-teamjoin)
-* [`ops team:switch`](#ops-teamswitch)
-* [`ops update`](#ops-update)
-* [`ops whoami`](#ops-whoami)
+- [ops](#ops)
+- [Usage](#usage)
+- [Commands](#commands)
+  - [ops account:reset](#ops-accountreset)
+  - [ops account:signin](#ops-accountsignin)
+  - [ops account:signout](#ops-accountsignout)
+  - [ops account:signup](#ops-accountsignup)
+  - [ops account:support](#ops-accountsupport)
+  - [ops add [OPNAME]](#ops-add-opname)
+  - [ops build [PATH]](#ops-build-path)
+  - [ops cleanup [OPNAME]](#ops-cleanup-opname)
+  - [ops help [COMMAND]](#ops-help-command)
+  - [ops init](#ops-init)
+  - [ops list](#ops-list)
+  - [ops publish PATH](#ops-publish-path)
+  - [ops remove OP](#ops-remove-op)
+  - [ops run [NAMEORPATH]](#ops-run-nameorpath)
+  - [ops search [FILTER]](#ops-search-filter)
+  - [ops secrets:delete](#ops-secretsdelete)
+  - [ops secrets:list](#ops-secretslist)
+  - [ops secrets:register](#ops-secretsregister)
+  - [ops secrets:set](#ops-secretsset)
+  - [ops secrets:unregister](#ops-secretsunregister)
+  - [ops team:create](#ops-teamcreate)
+  - [ops team:invite](#ops-teaminvite)
+  - [ops team:join](#ops-teamjoin)
+  - [ops team:switch](#ops-teamswitch)
+  - [ops update](#ops-update)
+  - [ops whoami](#ops-whoami)
+    - [OClif Source Repo](#oclif-source-repo)
+- [Testing](#testing)
+  - [Unit Tests (test directory)](#unit-tests-test-directory)
+    - [How to run Unit Tests](#how-to-run-unit-tests)
+    - [Tips](#tips)
+  - [E2E Tests (test_e2e directory)](#e2e-tests-teste2e-directory)
+    - [How to run E2E tests locally](#how-to-run-e2e-tests-locally)
+    - [Tips](#tips-1)
 
 ## `ops account:reset`
 
@@ -439,11 +450,36 @@ Run tests against staging:
 
 Run tests against Minikube:
 
-  1. Run `npm run configdev` to point the ops binary at the development Typescript app (instead of the production Javascript bundle)
-  2. Ensure you have a `.env.test` file (you can generate one by running scripts/make-env.sh)
-  3. Modify the vars in `.env.test` to match your minikube IP
-  4. Set your `NODE_ENV` to 'test':  `export NODE_ENV=test`
-  5. `npm run test:e2e`
+  1. Create a user in Keycloak with the following credentials:
+
+```
+- username: 'existing_user'
+- email: 'e2e_existing_user1@cto.ai'
+- password: 'password'
+```
+
+  2. Change the userID in `test_e2e/utils/constants.ts EXISTING_USER_ID` to Step 1's userID
+  3. Create `existing_user` team in Database if haven't already
+  4. Change the teamID in `teste2e/utils/constants.ts EXISTING_TEAM_ID` to step 3's teamID
+  5. Create a `cto.ai` team in Database if haven't already
+  6. Publish this following command:
+
+```
+- Team: ‘cto.ai’
+- name: ‘github’
+- version: ‘latest’
+- public: true
+```
+
+  7. Publish the `write_a_file_op` command found in `test_e2e/sample_ops/write_a_file_op`
+  8. Publish the `echo_message_workflow` workflow found in `test_e2e/sample_ops/echo_message_workflow`
+  9. Add the `ops-cli-confidential` client to Keycloak. The `ops-cli-confidential.json` file can be found in Keybase
+  10. Run `npm run configdev` to point the ops binary at the development Typescript app (instead of the production Javascript bundle)
+  11. Ensure you have a `.env.test` file (you can generate one by running scripts/make-env.sh)
+  12. Modify the vars in `.env.test` to match your minikube IP
+  13. Update `OPS_CLIENT_SECRET` in the `.env.test` to be the `secret value` found under the `credentials` tab in the `ops-cli-confidential` client
+  14. Set your `NODE_ENV` to 'test':  `export NODE_ENV=test`
+  15. `npm run test:e2e`
 
 ### Tips
 
