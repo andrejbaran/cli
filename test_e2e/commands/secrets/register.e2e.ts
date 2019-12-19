@@ -5,6 +5,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
 
 beforeEach(async () => {
   await signout()
+  await run(['secrets:unregister'], [Y, ENTER]) // To avoid making all tests fail if one of them is unable to unregister for some reason
 })
 
 afterAll(async () => {
@@ -28,6 +29,40 @@ test('It should register a secret and be able to unregister', async () => {
   )
 
   expect(registerRes.toLowerCase()).toContain('secrets registration complete')
+
+  console.log('ops unregister a secret')
+
+  const unRegisterRes = await run(['secrets:unregister'], [Y, ENTER])
+
+  expect(unRegisterRes.toLowerCase()).toContain(
+    'the secret provider has been deleted from the team existing_user',
+  )
+})
+
+test('It should be unable to register a secret twice and be able to unregister', async () => {
+  await signin()
+  await sleep(500)
+
+  console.log('ops register a secret')
+
+  const secretStorageURL = 'https://testvault.cto.ai:8200/cicd'
+  const accessToken = 's.DkHBkCXeKA7pykyRbSfaof7a'
+
+  const registerRes = await run(
+    ['secrets:register'],
+    [secretStorageURL, ENTER, accessToken, ENTER],
+    3000,
+  )
+
+  expect(registerRes.toLowerCase()).toContain('secrets registration complete')
+
+  console.log('ops double register a secret provider error')
+
+  const doubleRegisterRes = await run(['secrets:register'], undefined, 3000)
+
+  expect(doubleRegisterRes.toLowerCase()).toContain(
+    'looks like you already got a secrets provider for this team',
+  )
 
   console.log('ops unregister a secret')
 
