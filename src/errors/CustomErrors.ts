@@ -612,9 +612,7 @@ export class InvalidRemoveOpFormat extends ErrorTemplate {
   constructor() {
     super(
       white(
-        `❗ Sorry, please provide op you want to remove in a valid format. E.g. \n  ${terminalText(
-          'ops remove @team-name/my-command:0.1.0',
-        )} - for added ops \n  ${terminalText(
+        `❗ Sorry, please provide op you want to remove in a valid format. E.g. \n ${terminalText(
           'ops remove my-command:0.1.0',
         )} - for your own ops \n `,
       ),
@@ -623,6 +621,7 @@ export class InvalidRemoveOpFormat extends ErrorTemplate {
     )
   }
 }
+
 export class OpAlreadyBelongsToTeam extends ErrorTemplate {
   constructor() {
     super(

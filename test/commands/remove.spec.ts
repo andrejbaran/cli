@@ -35,10 +35,10 @@ describe('validateOpNameAndVersion', () => {
       team: createMockTeam({ id: 'test-id', name: 'test-team-name' }),
     })
     const output1 = cmd.validateOpNameAndVersion({
-      op: '@teamname/opName:versionName',
+      op: '@test-team-name/opName:versionName',
       config: mockConfig,
     })
-    expect(output1.opTeamName).toBe('teamname')
+    expect(output1.opTeamName).toBe('test-team-name')
     expect(output1.opName).toBe('opName')
     expect(output1.opVersion).toBe('versionName')
 
@@ -50,7 +50,7 @@ describe('validateOpNameAndVersion', () => {
     expect(output2.opName).toBe('opName')
     expect(output2.opVersion).toBe('versionName')
 
-    const input3 = { op: '@teamname/opName', config: mockConfig }
+    const input3 = { op: '@test-team-name/opName', config: mockConfig }
     try {
       cmd.validateOpNameAndVersion(input3)
     } catch (err) {
