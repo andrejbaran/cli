@@ -22,7 +22,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.6.3 darwin-x64 node-v11.14.0
+@cto.ai/ops/1.6.4 darwin-x64 node-v11.14.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -33,43 +33,32 @@ USAGE
 # Commands
 
 <!-- commands -->
-- [ops](#ops)
-- [Usage](#usage)
-- [Commands](#commands)
-  - [ops account:reset](#ops-accountreset)
-  - [ops account:signin](#ops-accountsignin)
-  - [ops account:signout](#ops-accountsignout)
-  - [ops account:signup](#ops-accountsignup)
-  - [ops account:support](#ops-accountsupport)
-  - [ops add [OPNAME]](#ops-add-opname)
-  - [ops build [PATH]](#ops-build-path)
-  - [ops cleanup [OPNAME]](#ops-cleanup-opname)
-  - [ops help [COMMAND]](#ops-help-command)
-  - [ops init](#ops-init)
-  - [ops list](#ops-list)
-  - [ops publish PATH](#ops-publish-path)
-  - [ops remove OP](#ops-remove-op)
-  - [ops run [NAMEORPATH]](#ops-run-nameorpath)
-  - [ops search [FILTER]](#ops-search-filter)
-  - [ops secrets:delete](#ops-secretsdelete)
-  - [ops secrets:list](#ops-secretslist)
-  - [ops secrets:register](#ops-secretsregister)
-  - [ops secrets:set](#ops-secretsset)
-  - [ops secrets:unregister](#ops-secretsunregister)
-  - [ops team:create](#ops-teamcreate)
-  - [ops team:invite](#ops-teaminvite)
-  - [ops team:join](#ops-teamjoin)
-  - [ops team:switch](#ops-teamswitch)
-  - [ops update](#ops-update)
-  - [ops whoami](#ops-whoami)
-    - [OClif Source Repo](#oclif-source-repo)
-- [Testing](#testing)
-  - [Unit Tests (test directory)](#unit-tests-test-directory)
-    - [How to run Unit Tests](#how-to-run-unit-tests)
-    - [Tips](#tips)
-  - [E2E Tests (test_e2e directory)](#e2e-tests-teste2e-directory)
-    - [How to run E2E tests locally](#how-to-run-e2e-tests-locally)
-    - [Tips](#tips-1)
+* [`ops account:reset`](#ops-accountreset)
+* [`ops account:signin`](#ops-accountsignin)
+* [`ops account:signout`](#ops-accountsignout)
+* [`ops account:signup`](#ops-accountsignup)
+* [`ops account:support`](#ops-accountsupport)
+* [`ops add [OPNAME]`](#ops-add-opname)
+* [`ops build [PATH]`](#ops-build-path)
+* [`ops cleanup [OPNAME]`](#ops-cleanup-opname)
+* [`ops help [COMMAND]`](#ops-help-command)
+* [`ops init`](#ops-init)
+* [`ops list`](#ops-list)
+* [`ops publish PATH`](#ops-publish-path)
+* [`ops remove OP`](#ops-remove-op)
+* [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
+* [`ops search [FILTER]`](#ops-search-filter)
+* [`ops secrets:delete`](#ops-secretsdelete)
+* [`ops secrets:list`](#ops-secretslist)
+* [`ops secrets:register`](#ops-secretsregister)
+* [`ops secrets:set`](#ops-secretsset)
+* [`ops secrets:unregister`](#ops-secretsunregister)
+* [`ops team:create`](#ops-teamcreate)
+* [`ops team:invite`](#ops-teaminvite)
+* [`ops team:join`](#ops-teamjoin)
+* [`ops team:switch`](#ops-teamswitch)
+* [`ops update`](#ops-update)
+* [`ops whoami`](#ops-whoami)
 
 ## `ops account:reset`
 
