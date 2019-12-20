@@ -32,7 +32,7 @@ test('It should register a secret and be able to unregister', async () => {
 
   console.log('ops unregister a secret')
 
-  const unRegisterRes = await run(['secrets:unregister'], [Y, ENTER])
+  const unRegisterRes = await run(['secrets:unregister'], [Y, ENTER], 3000)
 
   expect(unRegisterRes.toLowerCase()).toContain(
     'the secret provider has been deleted from the team existing_user',
@@ -66,7 +66,7 @@ test('It should be unable to register a secret twice and be able to unregister',
 
   console.log('ops unregister a secret')
 
-  const unRegisterRes = await run(['secrets:unregister'], [Y, ENTER])
+  const unRegisterRes = await run(['secrets:unregister'], [Y, ENTER], 3000)
 
   expect(unRegisterRes.toLowerCase()).toContain(
     'the secret provider has been deleted from the team existing_user',
