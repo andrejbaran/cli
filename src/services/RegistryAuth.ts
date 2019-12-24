@@ -18,7 +18,7 @@ export class RegistryAuthService {
   ): Promise<RegistryAuth> {
     try {
       const response: RegistryCreateResponse = await this.api.create(
-        'registry/token',
+        '/private/registry/token',
         {
           teamName: teamname,
           opName,
@@ -66,7 +66,7 @@ export class RegistryAuthService {
     opVersion: string,
   ) {
     try {
-      await this.api.remove(`registry/token/`, id.toString(), {
+      await this.api.remove(`/private/registry/token/`, id.toString(), {
         query: {
           teamName,
           opName,

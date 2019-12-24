@@ -175,7 +175,7 @@ abstract class CTOCommand extends Command {
     }
 
     const { data: teams }: { data: Team[] } = await this.services.api
-      .find('teams', {
+      .find('/private/teams', {
         query: {
           userId: sub,
         },
@@ -249,10 +249,14 @@ abstract class CTOCommand extends Command {
     return config
   }
 
-  async validateUniqueField(query: ValidationFields): Promise<boolean> {
+  async validateUniqueField(
+    query: ValidationFields,
+    accessToken: string,
+  ): Promise<boolean> {
     const response = await this.services.api
-      .find('validate', {
+      .find('/private/validate', {
         query,
+        headers: { Authorization: accessToken },
       })
       .catch(err => {
         throw new APIError(err)

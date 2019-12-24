@@ -37,7 +37,7 @@ describe('create', () => {
       mockPushAccess,
     )
     expect(mockFeathersService.create).toHaveBeenCalledWith(
-      'registry/token',
+      '/private/registry/token',
       {
         teamName: mockTeamName,
         opName: mockOpName,
@@ -103,7 +103,7 @@ describe('delete', () => {
       mockOpVersion,
     )
     expect(mockFeathersService.remove).toHaveBeenCalledWith(
-      'registry/token/',
+      '/private/registry/token/',
       mockID.toString(),
       {
         query: {

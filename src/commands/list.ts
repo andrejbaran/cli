@@ -30,7 +30,7 @@ export default class List extends Command {
   getApiOps = async (inputs: ListInputs): Promise<ListInputs> => {
     try {
       const { data: opResults } = await this.services.api.find(
-        `teams/${inputs.config.team.name}/ops`,
+        `/private/teams/${inputs.config.team.name}/ops`,
         {
           headers: {
             Authorization: this.accessToken,

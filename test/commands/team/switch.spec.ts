@@ -43,7 +43,7 @@ describe('getTeamsFromApi', () => {
     cmd.accessToken = mockToken
     const res = await cmd.getTeamsFromApi({} as SwitchInputs)
     expect(res.teams[0]).toBe(mockTeam)
-    expect(mockFeathersService.find).toBeCalledWith('teams', {
+    expect(mockFeathersService.find).toBeCalledWith('/private/teams', {
       headers: {
         Authorization: mockToken,
       },
@@ -59,7 +59,7 @@ describe('getTeamsFromApi', () => {
     await expect(cmd.getTeamsFromApi({} as SwitchInputs)).rejects.toThrowError(
       new APIError(null),
     )
-    expect(mockFeathersService.find).toBeCalledWith('teams', {
+    expect(mockFeathersService.find).toBeCalledWith('/private/teams', {
       headers: {
         Authorization: mockToken,
       },

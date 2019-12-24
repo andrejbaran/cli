@@ -33,7 +33,7 @@ export default class TeamSwitch extends Command {
 
   getTeamsFromApi = async (inputs: SwitchInputs): Promise<SwitchInputs> => {
     try {
-      const { data: teams } = await this.services.api.find('teams', {
+      const { data: teams } = await this.services.api.find('/private/teams', {
         headers: { Authorization: this.accessToken },
       })
       return { ...inputs, teams }

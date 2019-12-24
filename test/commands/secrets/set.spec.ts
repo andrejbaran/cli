@@ -39,7 +39,7 @@ describe('set secrets', () => {
     await cmd.setSecret(inputs as SetSecretInputs)
 
     expect(mockFeathersService.create).toBeCalledWith(
-      `teams/my-team/secrets`,
+      `/private/teams/my-team/secrets`,
       {
         secrets: {
           'my-key': 'my-value',

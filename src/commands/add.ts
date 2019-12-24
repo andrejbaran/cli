@@ -102,7 +102,7 @@ export default class Add extends Command {
       const {
         data: opResults,
       }: { data: (OpCommand | OpWorkflow)[] } = await this.services.api.find(
-        `teams/${config.team.name}/ops`,
+        `private/teams/${config.team.name}/ops`,
         {
           headers: {
             Authorization: config.tokens.accessToken,
@@ -120,7 +120,7 @@ export default class Add extends Command {
     if (inputs.opName) return inputs
     try {
       const findResponse: OpsFindResponse = await this.services.api.find(
-        `/ops`,
+        `/private/ops`,
         {
           headers: {
             Authorization: inputs.config.tokens.accessToken,
@@ -240,7 +240,7 @@ export default class Add extends Command {
     }
     try {
       const { data: result } = await this.services.api.create(
-        `teams/${inputs.config.team.name}/ops/refs`,
+        `/private/teams/${inputs.config.team.name}/ops/refs`,
         { opName, opTeamName, versionName: opVersionName },
         {
           headers: {

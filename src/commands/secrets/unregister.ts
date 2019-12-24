@@ -33,7 +33,7 @@ export default class UnregisterSecret extends Command {
       if (!inputs.confirmDelete) return inputs
       this.log('\n🗑  Removing secret provider...')
       await this.services.api.remove(
-        `/teams/${this.state.config.team.name}/secrets`,
+        `/private/teams/${this.state.config.team.name}/secrets`,
         'unregister',
         {
           headers: {

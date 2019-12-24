@@ -35,7 +35,7 @@ describe('register secrets', () => {
     const res = await cmd.registerSecretsProvider(inputs as RegisterInputs)
 
     expect(mockFeathersService.create).toBeCalledWith(
-      `teams/${inputs.activeTeam.name}/secrets/register`,
+      `/private/teams/${inputs.activeTeam.name}/secrets/register`,
       {
         token: inputs.token,
         url: inputs.url,

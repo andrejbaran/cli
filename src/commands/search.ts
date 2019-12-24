@@ -42,7 +42,7 @@ export default class Search extends Command {
   getApiOps = async (inputs: SearchInputs): Promise<SearchInputs> => {
     try {
       const findResponse: OpsFindResponse = await this.services.api.find(
-        `/ops`,
+        `/private/ops`,
         {
           headers: {
             Authorization: this.accessToken,

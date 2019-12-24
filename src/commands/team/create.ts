@@ -55,7 +55,7 @@ export default class TeamCreate extends Command {
     try {
       const { name } = inputs
       const res: { data: Team } = await this.services.api.create(
-        'teams',
+        '/private/teams',
         { name },
         { headers: { Authorization: this.accessToken } },
       )
@@ -103,7 +103,10 @@ export default class TeamCreate extends Command {
       if (!validCharsTeamName.test(name)) {
         return `Invalid team name. May contain only letters (case-sensitive), numbers, dashes (-), and underscores (_).`
       }
-      const unique = await this.validateUniqueField({ username: name })
+      const unique = await this.validateUniqueField(
+        { username: name },
+        this.accessToken,
+      )
       if (!unique) {
         return `😞 Sorry this name has already been taken. Try again with a different name.`
       }

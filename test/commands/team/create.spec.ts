@@ -47,7 +47,7 @@ describe('createTeam', () => {
     cmd.accessToken = fakeToken
     const res = await cmd.createTeam(inputs as CreateInputs)
     expect(mockFeathersService.create).toBeCalledWith(
-      'teams',
+      '/private/teams',
       { name },
       { headers: { Authorization: fakeToken } },
     )
@@ -99,16 +99,19 @@ describe('validateTeamName', () => {
 
   test('should return an Error if anything goes wrong', async () => {
     const name = 'acceptable-format'
+    const accessToken = 'token'
     const mockFeathersService = new FeathersClient()
     mockFeathersService.find = jest.fn().mockReturnValue(new Error())
     cmd = new TeamCreate([], config, { api: mockFeathersService } as Services)
+    cmd.accessToken = accessToken
     await expect(cmd.validateTeamName(name)).rejects.toThrowError(
       new InvalidTeamNameFormat(null),
     )
-    expect(mockFeathersService.find).toBeCalledWith('validate', {
+    expect(mockFeathersService.find).toBeCalledWith('/private/validate', {
       query: {
         username: name,
       },
+      headers: { Authorization: accessToken },
     })
   })
 })

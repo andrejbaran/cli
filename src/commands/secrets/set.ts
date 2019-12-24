@@ -94,7 +94,7 @@ export default class SecretsSet extends Command {
   setSecret = async (inputs: SetSecretInputs) => {
     try {
       await this.services.api.create(
-        `teams/${inputs.state.config.team.name}/secrets`,
+        `/private/teams/${inputs.state.config.team.name}/secrets`,
         {
           secrets: {
             [inputs.key]: inputs.value,

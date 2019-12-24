@@ -28,7 +28,7 @@ describe('joinTeam', () => {
     cmd.accessToken = fakeToken
     await cmd.joinTeam(inputs)
     expect(mockFeathersService.create).toHaveBeenCalledWith(
-      `teams/accept`,
+      `/private/teams/accept`,
       {
         inviteCode: mockInviteCode,
       },
@@ -59,7 +59,7 @@ describe('joinTeam', () => {
       new InviteCodeInvalid(null),
     )
     expect(mockFeathersService.create).toHaveBeenCalledWith(
-      `teams/accept`,
+      `/private/teams/accept`,
       {
         inviteCode: mockInviteCode,
       },
@@ -90,7 +90,7 @@ describe('joinTeam', () => {
       new InviteCodeInvalid(null),
     )
     expect(mockFeathersService.create).toHaveBeenCalledWith(
-      `teams/accept`,
+      `/private/teams/accept`,
       {
         inviteCode: mockInviteCode,
       },

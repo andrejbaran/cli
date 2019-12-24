@@ -431,7 +431,7 @@ export default class Run extends Command {
 
       if (opVersion) {
         ;({ data: apiOp } = await this.services.api.find(
-          `teams/${teamName}/ops/${opName}/versions/${opVersion}`,
+          `/private/teams/${teamName}/ops/${opName}/versions/${opVersion}`,
           {
             headers: {
               Authorization: this.accessToken,
@@ -440,7 +440,7 @@ export default class Run extends Command {
         ))
       } else {
         ;({ data: apiOp } = await this.services.api.find(
-          `teams/${teamName}/ops/${opName}`,
+          `/private/teams/${teamName}/ops/${opName}`,
           {
             headers: {
               Authorization: this.accessToken,
