@@ -198,7 +198,7 @@ describe('BuildStep', () => {
     await cmd.workflowsPublishLoop(inputs)
 
     expect(mockFeathersService.create).toHaveBeenCalledWith(
-      `/teams/${teamName}/ops`,
+      `/private/teams/${teamName}/ops`,
       createMockWorkflow({
         name: 'mockWorkflow',
         remote: true,

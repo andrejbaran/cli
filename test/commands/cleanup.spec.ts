@@ -19,7 +19,7 @@ describe('cleanup', () => {
     const api = new FeathersClient()
     await getOps(opName, teamId, accessToken, api)
     expect(api.find).toHaveBeenCalledTimes(1)
-    expect(api.find).toHaveBeenCalledWith('ops', {
+    expect(api.find).toHaveBeenCalledWith('/private/ops', {
       query: {
         name: opName,
         team_id: teamId,

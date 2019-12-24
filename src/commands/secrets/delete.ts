@@ -47,7 +47,7 @@ export default class SecretsDelete extends Command {
       if (!inputs.confirmDelete) return inputs
       this.log('\n 🗑  Removing secret...')
       await this.services.api.remove(
-        `/teams/${this.state.config.team.name}/secret`,
+        `/private/teams/${this.state.config.team.name}/secret`,
         inputs.selectedSecret,
         {
           headers: {

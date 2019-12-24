@@ -297,7 +297,7 @@ describe('getApiOps', () => {
     cmd.accessToken = fakeToken
     await cmd.getApiOps(inputs)
     expect(mockFeathersService.find).toHaveBeenCalledWith(
-      `teams/${fakeOpTeamName}/ops/${fakeOpName}`,
+      `/private/teams/${fakeOpTeamName}/ops/${fakeOpName}`,
       {
         headers: {
           Authorization: fakeToken,
@@ -341,7 +341,7 @@ describe('getApiOps', () => {
     cmd.accessToken = fakeToken
     await cmd.getApiOps(inputs)
     expect(mockFeathersService.find).toHaveBeenCalledWith(
-      `teams/${fakeOpTeamName}/ops/${fakeOpName}`,
+      `/private/teams/${fakeOpTeamName}/ops/${fakeOpName}`,
       {
         headers: {
           Authorization: fakeToken,

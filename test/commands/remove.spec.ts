@@ -107,7 +107,7 @@ describe('getApiOpsOrWorkflows', () => {
     cmd = new Remove([], config, { api: mockFeathersService } as Services)
     await cmd.getApiOpsOrWorkflows(inputs)
     expect(mockFeathersService.find).toHaveBeenCalledWith(
-      `teams/${fakeTeamName}/ops/${fakeOpName}/versions/${fakeOpVersion}`,
+      `/private/teams/${fakeTeamName}/ops/${fakeOpName}/versions/${fakeOpVersion}`,
       {
         headers: {
           Authorization: fakeToken,
@@ -171,7 +171,7 @@ describe('removeApiOpOrWorkflow', () => {
 
     await cmd.removeApiOpOrWorkflow(inputs)
     expect(mockFeathersService.remove).toHaveBeenCalledWith(
-      `teams/${mockTeamName}/ops/${mockOpName}/versions`,
+      `/private/teams/${mockTeamName}/ops/${mockOpName}/versions`,
       mockOpVersion,
       {
         query: {

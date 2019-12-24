@@ -30,7 +30,7 @@ export class Publish {
   ) => {
     try {
       const res = await api.create(
-        `/teams/${teamName}/ops`,
+        `/private/teams/${teamName}/ops`,
         { ...op, platformVersion, isGlueCode, isPublic: op.isPublic },
         {
           headers: {
@@ -180,7 +180,7 @@ export class Publish {
       // remove the record from the api database and the harbor registry but
       // no record in the harbor registry will exist
       await api
-        .remove(getEndpointFromOpType(apiOp.type), apiOp.id, {
+        .remove(`/private/${getEndpointFromOpType(apiOp.type)}`, apiOp.id, {
           headers: { Authorization: accessToken },
         })
         .catch(error => {

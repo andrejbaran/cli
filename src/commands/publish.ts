@@ -377,7 +377,7 @@ export default class Publish extends Command {
           const {
             data: apiWorkflow,
           }: { data: OpCommand } = await this.services.api.create(
-            `/teams/${this.team.name}/ops`,
+            `/private/teams/${this.team.name}/ops`,
             { ...workflow, platformVersion: version, type: 'workflow' },
             {
               headers: {

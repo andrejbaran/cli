@@ -51,7 +51,7 @@ export class AnalyticsService {
     if (accessToken) {
       this.api
         .create(
-          '/log/event',
+          '/private/log/event',
           { metadata: payload, tags: ['track'] },
           {
             headers: {

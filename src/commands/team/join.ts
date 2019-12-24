@@ -31,7 +31,7 @@ export default class TeamJoin extends Command {
     try {
       const { inviteCode } = inputs
       const { data: newTeam } = await this.services.api.create(
-        'teams/accept',
+        '/private/teams/accept',
         { inviteCode },
         { headers: { Authorization: this.accessToken } },
       )

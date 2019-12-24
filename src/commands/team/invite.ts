@@ -81,7 +81,7 @@ export default class TeamInvite extends Command {
       const {
         data: inviteResponses,
       }: { data: Invite[] } = await this.services.api.create(
-        `teams/${id}/invites`,
+        `/private/teams/${id}/invites`,
         { UserOrEmail: filteredInviteesArray },
         { headers: { Authorization: this.accessToken } },
       )

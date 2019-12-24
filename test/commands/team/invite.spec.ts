@@ -32,7 +32,7 @@ describe('inviteUserToTeam', () => {
     cmd.accessToken = fakeToken
     await cmd.inviteUserToTeam(inputs)
     expect(mockFeathersService.create).toHaveBeenCalledWith(
-      `teams/${mockTeam.id}/invites`,
+      `/private/teams/${mockTeam.id}/invites`,
       {
         UserOrEmail: inputs.inviteesArray,
       },
@@ -88,7 +88,7 @@ describe('inviteUserToTeam', () => {
     cmd = new TeamInvite([], config, { api: mockFeathersService } as Services)
     await cmd.inviteUserToTeam(inputs)
     expect(mockFeathersService.create).toHaveBeenCalledWith(
-      `teams/${mockTeam.id}/invites`,
+      `/private/teams/${mockTeam.id}/invites`,
       {
         UserOrEmail: [fakeValidEmail],
       },

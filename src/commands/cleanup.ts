@@ -16,7 +16,7 @@ export const getOps = async (
   accessToken: string,
   api: FeathersClient,
 ): Promise<OpsFindResponse> => {
-  return api.find('ops', {
+  return api.find('/private/ops', {
     query: {
       name: opName,
       team_id: teamId,

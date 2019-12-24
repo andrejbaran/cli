@@ -73,11 +73,14 @@ export default class Remove extends Command {
       const {
         data: opOrWorkflow,
       }: { data: OpCommand | OpWorkflow } = await this.services.api
-        .find(`teams/${opTeamName}/ops/${opName}/versions/${opVersion}`, {
-          headers: {
-            Authorization: accessToken,
+        .find(
+          `/private/teams/${opTeamName}/ops/${opName}/versions/${opVersion}`,
+          {
+            headers: {
+              Authorization: accessToken,
+            },
           },
-        })
+        )
         .catch(err => {
           if (err.error[0].code === 404) {
             throw new NoOpsFound(`${opName}:${opVersion}`, opTeamName)
@@ -160,7 +163,7 @@ export default class Remove extends Command {
 
       if (teamName === inputs.config.team.name) {
         await this.services.api.remove(
-          `teams/${teamName}/ops/${name}/versions`,
+          `/private/teams/${teamName}/ops/${name}/versions`,
           version,
           {
             query: { deleteDescription },
@@ -170,10 +173,14 @@ export default class Remove extends Command {
         return inputs
       }
       // remove added op
-      await this.services.api.remove(`teams/${ownTeamName}/ops/refs`, null, {
-        query: { opTeamName: teamName, opName: name, versionName: version },
-        headers: { Authorization: accessToken },
-      })
+      await this.services.api.remove(
+        `/private/teams/${ownTeamName}/ops/refs`,
+        null,
+        {
+          query: { opTeamName: teamName, opName: name, versionName: version },
+          headers: { Authorization: accessToken },
+        },
+      )
       return inputs
     } catch (err) {
       this.debug('%O', err)

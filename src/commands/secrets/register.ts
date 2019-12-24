@@ -71,7 +71,7 @@ export default class SecretsRegister extends Command {
   registerSecretsProvider = async (inputs: RegisterInputs) => {
     try {
       await this.services.api.create(
-        `teams/${inputs.activeTeam.name}/secrets/register`,
+        `/private/teams/${inputs.activeTeam.name}/secrets/register`,
         {
           token: inputs.token,
           url: inputs.url,

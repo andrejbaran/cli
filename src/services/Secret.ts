@@ -21,11 +21,14 @@ export class SecretService {
     const { team, tokens } = inputs.config
     try {
       const { api } = inputs
-      const findResponse = await api.find(`/teams/${team.name}/secrets`, {
-        headers: {
-          Authorization: tokens.accessToken,
+      const findResponse = await api.find(
+        `/private/teams/${team.name}/secrets`,
+        {
+          headers: {
+            Authorization: tokens.accessToken,
+          },
         },
-      })
+      )
       let { data: secrets } = findResponse
       return { ...inputs, secrets }
     } catch (err) {
