@@ -33,17 +33,19 @@ export class SecretService {
       return { ...inputs, secrets }
     } catch (err) {
       debug('error: %O', err)
-      const { code, message } = err.error[0]
-      if (code === 403 && message === 'no secrets provider registered') {
-        throw new NoSecretsProviderFound(err)
-      }
-      if (code === 401) {
-        throw new TeamUnauthorized(
-          'Team not authorized when fetching the secrets list',
-        )
-      }
-      if (code === 404 && message === 'team not found') {
-        throw new NoTeamFound(team.name)
+      if (err.error) {
+        const { code, message } = err.error[0]
+        if (code === 403 && message === 'no secrets provider registered') {
+          throw new NoSecretsProviderFound(err)
+        }
+        if (code === 401) {
+          throw new TeamUnauthorized(
+            'Team not authorized when fetching the secrets list',
+          )
+        }
+        if (code === 404 && message === 'team not found') {
+          throw new NoTeamFound(team.name)
+        }
       }
 
       throw new APIError(err)
