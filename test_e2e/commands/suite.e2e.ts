@@ -189,7 +189,10 @@ test('it should ops add, ops list, ops remove added_op, ops list', async () => {
   await sleep(500)
 
   console.log('ops remove addedOp')
-  const removeRes = await run(['remove', `${OP_TO_ADD}:latest`], [Y, ENTER])
+  const removeRes = await run(
+    ['remove', `${OP_TO_ADD}:latest`],
+    [NEW_COMMAND_REMOVE_DESCRIPTION, ENTER, Y, ENTER],
+  )
   expect(removeRes).toContain(`has been successfully removed`)
   await sleep(500)
 
