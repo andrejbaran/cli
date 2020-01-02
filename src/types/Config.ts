@@ -13,4 +13,5 @@ export interface Config {
   team: Team
   user: User
   ignoreMountWarnings?: boolean
+  lastUpdateCheckAt?: Date
 }

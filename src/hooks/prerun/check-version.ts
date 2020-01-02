@@ -1,11 +1,25 @@
 import { Hook } from '@oclif/config'
 import { ux } from '@cto.ai/sdk'
 
-import getLatestVersion from '../../utils/get-latest-version'
+import { readConfig, writeConfig, getLatestVersion } from '~/utils'
 
 const hook: Hook<'prerun'> = async function(opts) {
   try {
     if (opts.Command.id === 'update') return
+    const config = await readConfig(this.config.configDir)
+    const today = new Date()
+    if (
+      config.lastUpdateCheckAt &&
+      today.getTime() - new Date(config.lastUpdateCheckAt).getTime() <
+        24 * 60 * 60 * 1000
+    ) {
+      return
+    }
+    await writeConfig(
+      config,
+      { lastUpdateCheckAt: today },
+      this.config.configDir,
+    )
     const latest = await getLatestVersion()
     if (latest !== this.config.version) {
       this.log(
