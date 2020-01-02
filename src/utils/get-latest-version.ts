@@ -11,7 +11,7 @@
 import axios from 'axios'
 import { CouldNotGetLatestVersion } from '../errors/CustomErrors'
 
-export default async function getLatestVersion(): Promise<string | undefined> {
+export const getLatestVersion = async (): Promise<string | undefined> => {
   try {
     const { data } = await axios({
       method: 'GET',

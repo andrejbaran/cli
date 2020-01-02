@@ -5,7 +5,7 @@
  * @lastModifiedTime: Friday, 13th September 2019 1:13:17 pm
  * @copyright (c) 2019 CTO.ai
  */
-
+export { getLatestVersion } from './get-latest-version'
 export { parseYaml } from './yamlParser'
 export { asyncPipe, _trace } from './asyncPipe'
 export {
