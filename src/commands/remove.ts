@@ -37,13 +37,12 @@ export default class Remove extends Command {
 
     if (op.charAt(0) === '@' && op.includes('/')) {
       const [field1, field2] = op.split('/')
-      let opTeamName = field1 ? field1.substring(1) : undefined
+      let opTeamName = field1 ? field1.substring(1) : inputs.config.team.name
       const [opName, opVersion] = field2
         ? field2.split(':')
         : [undefined, undefined]
 
-      const configTeamName = inputs.config.team.name
-      if (opTeamName !== configTeamName || !opName || !opVersion) {
+      if (!opName || !opVersion) {
         throw new InvalidRemoveOpFormat()
       }
       return { ...inputs, opTeamName, opName, opVersion }
