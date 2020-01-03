@@ -20,7 +20,7 @@ test('It should register a secret and be able to unregister', async () => {
   console.log('ops register a secret')
 
   const secretStorageURL = 'https://testvault.cto.ai:8200/cicd'
-  const accessToken = 's.DkHBkCXeKA7pykyRbSfaof7a'
+  const accessToken = 's.VI2VPSg75nBtJMieFdCQ6F3A'
 
   const registerRes = await run(
     ['secrets:register'],
@@ -46,7 +46,7 @@ test('It should be unable to register a secret twice and be able to unregister',
   console.log('ops register a secret')
 
   const secretStorageURL = 'https://testvault.cto.ai:8200/cicd'
-  const accessToken = 's.DkHBkCXeKA7pykyRbSfaof7a'
+  const accessToken = 's.VI2VPSg75nBtJMieFdCQ6F3A'
 
   const registerRes = await run(
     ['secrets:register'],
