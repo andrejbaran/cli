@@ -6,8 +6,12 @@ import { asyncPipe } from '~/utils/asyncPipe'
 import {
   APIError,
   NoSecretsProviderFound,
+  NoSecretsOnTeam,
   NoTeamFound,
   TeamUnauthorized,
+  InvalidSecretVault,
+  InvalidSecretToken,
+  RegisterSecretsProvider,
 } from '~/errors/CustomErrors'
 
 const debug = Debug('ops:SecretService')
@@ -33,22 +37,26 @@ export class SecretService {
       return { ...inputs, secrets }
     } catch (err) {
       debug('error: %O', err)
-      if (err.error) {
-        const { code, message } = err.error[0]
-        if (code === 403 && message === 'no secrets provider registered') {
-          throw new NoSecretsProviderFound(err)
-        }
-        if (code === 401) {
+      switch (err.error[0].code) {
+        case 204:
+          throw new NoSecretsOnTeam(err)
+        case 400:
+          throw new InvalidSecretVault(err)
+        case 401:
           throw new TeamUnauthorized(
             'Team not authorized when fetching the secrets list',
           )
-        }
-        if (code === 404 && message === 'team not found') {
+        case 403:
+          if (err.error[0].message.includes('invalid secret token')) {
+            throw new InvalidSecretToken(err)
+          } else {
+            throw new NoSecretsProviderFound(err)
+          }
+        case 404:
           throw new NoTeamFound(team.name)
-        }
+        default:
+          throw new NoSecretsProviderFound(err)
       }
-
-      throw new APIError(err)
     }
   }
 

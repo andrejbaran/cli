@@ -9,6 +9,10 @@ import {
   SecretsFlagsRequired,
   NoSecretsProviderFound,
   APIError,
+  InvalidSecretVault,
+  UserUnauthorized,
+  InvalidSecretToken,
+  RegisterSecretsProvider,
 } from '~/errors/CustomErrors'
 import { flags } from '@oclif/parser'
 
@@ -110,10 +114,20 @@ export default class SecretsSet extends Command {
       return inputs
     } catch (err) {
       this.debug('%O', err)
-      if (err.error[0].message === 'no secrets provider registered') {
-        throw new NoSecretsProviderFound(err)
+      switch (err.error[0].code) {
+        case 400:
+          throw new InvalidSecretVault(err)
+        case 401:
+          throw new UserUnauthorized(err)
+        case 403:
+          if (err.error[0].message.includes('invalid secret token')) {
+            throw new InvalidSecretToken(err)
+          } else {
+            throw new NoSecretsProviderFound(err)
+          }
+        default:
+          throw new SetSecretsProvider(err)
       }
-      throw new SetSecretsProvider(err)
     }
   }
 

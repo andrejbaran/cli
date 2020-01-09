@@ -6,6 +6,11 @@ import {
   AnalyticsError,
   NoSecretsProviderFound,
   NoSecretFound,
+  UserUnauthorized,
+  InvalidSecretToken,
+  RegisterSecretsProvider,
+  InvalidSecretVault,
+  SecretNotFound,
 } from '~/errors/CustomErrors'
 
 interface SecretDeleteInput {
@@ -57,10 +62,22 @@ export default class SecretsDelete extends Command {
       )
       return inputs
     } catch (err) {
-      if (err.error[0].message === 'no secrets provider registered') {
-        throw new NoSecretsProviderFound(err)
+      switch (err.error[0].code) {
+        case 400:
+          throw new InvalidSecretVault(err)
+        case 401:
+          throw new UserUnauthorized(err)
+        case 403:
+          if (err.error[0].message.includes('invalid secret token')) {
+            throw new InvalidSecretToken(err)
+          } else {
+            throw new NoSecretsProviderFound(err)
+          }
+        case 404:
+          throw new SecretNotFound(err)
+        default:
+          throw new NoSecretsProviderFound(err)
       }
-      throw new APIError(err)
     }
   }
 

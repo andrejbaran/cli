@@ -662,7 +662,7 @@ export class VersionIsTaken extends ErrorTemplate {
   constructor() {
     super(
       white(
-        `🤔  It seems like the version of the op that you are trying to publish is already taken. Please try again with a different version name.`,
+        `🤔 It seems like the version of the op that you are trying to publish is already taken. Please try again with a different version name.`,
       ),
       undefined,
       expectedSource,
@@ -699,7 +699,41 @@ export class TeamUnauthorized extends ErrorTemplate {
 export class RegisterSecretsProvider extends ErrorTemplate {
   constructor(err) {
     super(
-      white('😅 Oops!, we were not able to register the secrets provider'),
+      white('😅 Oops! We were not able to register the secrets provider'),
+      err,
+      expectedSource,
+    )
+  }
+}
+
+export class InvalidSecretToken extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(
+        `😅 It looks like this token is not valid with the specified vault`,
+      ),
+      err,
+      expectedSource,
+    )
+  }
+}
+
+export class InvalidSecretVault extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(`🤔 It appears the vault URL that was specified is invalid`),
+      err,
+      expectedSource,
+    )
+  }
+}
+
+export class SecretNotFound extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(
+        `🤔 It appears the secret you are trying to delete cannot be found`,
+      ),
       err,
       expectedSource,
     )
@@ -725,9 +759,21 @@ export class NoSecretsProviderFound extends ErrorTemplate {
   constructor(err) {
     super(
       white(
-        `😅 Oops!, We are not able to find a secrets provider for this team. You can register a secrets provider using  ${terminalText(
+        `😅 Oops! We are not able to find a secrets provider for this team. You can register a secrets provider using ${terminalText(
           'ops secrets:register',
         )}.`,
+      ),
+      err,
+      expectedSource,
+    )
+  }
+}
+
+export class NoSecretsOnTeam extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(
+        `🤔 There does not appear to be any secrets stored for your current team`,
       ),
       err,
       expectedSource,
@@ -738,7 +784,7 @@ export class NoSecretsProviderFound extends ErrorTemplate {
 export class SetSecretsProvider extends ErrorTemplate {
   constructor(err) {
     super(
-      white('😅 Oops!, we were not able to successfully set the secret'),
+      white('😅 Oops! we were not able to successfully set the secret'),
       err,
       expectedSource,
     )
@@ -758,7 +804,7 @@ export class SecretsValuesNotEqual extends ErrorTemplate {
 export class SecretsFlagsRequired extends ErrorTemplate {
   constructor() {
     super(
-      white('😅 Oops!, it appears that either flag -k or -v is missing'),
+      white('😅 Oops! it appears that either flag -k or -v is missing'),
       undefined,
       expectedSource,
     )
@@ -769,7 +815,7 @@ export class NoSecretFound extends ErrorTemplate {
   constructor() {
     super(
       white(
-        `😞  Sorry, we weren't able to select the secret key. ${tryAgainOrContact}`,
+        `😞 Sorry, we weren't able to select the secret key. ${tryAgainOrContact}`,
       ),
       undefined,
       expectedSource,
