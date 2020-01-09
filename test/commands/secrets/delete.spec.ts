@@ -85,7 +85,9 @@ describe('ops secrets:delete', () => {
     } as Services)
     cmd.state = createMockState({ config: mockConfig })
 
-    await expect(cmd.deleteSecretAPI(inputs)).rejects.toThrow(new APIError(''))
+    await expect(cmd.deleteSecretAPI(inputs)).rejects.toThrow(
+      new NoSecretsProviderFound(''),
+    )
   })
   test('should return the SecretDeleteInput is a 200 message from the backend when deleting the secret', async () => {
     const mockFeathersService = new FeathersClient()

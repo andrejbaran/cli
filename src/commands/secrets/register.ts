@@ -9,6 +9,8 @@ import {
   UserUnauthorized,
   SecretsProviderFound,
   NoSecretsProviderFound,
+  InvalidSecretToken,
+  InvalidSecretVault,
 } from '~/errors/CustomErrors'
 
 const { white, reset } = ux.colors
@@ -86,16 +88,19 @@ export default class SecretsRegister extends Command {
       return inputs
     } catch (err) {
       this.debug('%O', err)
-      if (err.error[0].message === 'team not found') {
-        throw new NoTeamFound(inputs.activeTeam.name)
+
+      switch (err.error[0].code) {
+        case 400:
+          throw new InvalidSecretVault(err)
+        case 401:
+          throw new UserUnauthorized(err)
+        case 403:
+          throw new InvalidSecretToken(err)
+        case 404:
+          throw new NoTeamFound(inputs.activeTeam.name)
+        default:
+          throw new RegisterSecretsProvider(err)
       }
-      if (
-        err.error[0].code === 403 ||
-        err.error[0].message === 'team not authorized'
-      ) {
-        throw new UserUnauthorized(err)
-      }
-      throw new RegisterSecretsProvider(err)
     }
   }
 

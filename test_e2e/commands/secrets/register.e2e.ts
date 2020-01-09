@@ -89,6 +89,26 @@ test('If an invalid vault location is given it should throw an error', async () 
   )
 
   expect(registerRes).toContain(
-    ' 😅 Oops!, we were not able to register the secrets provider',
+    ' It appears the vault URL that was specified is invalid',
+  )
+})
+
+test('If an invalid token is given it should throw an error', async () => {
+  await signin()
+  await sleep(500)
+
+  console.log('ops register an invalid vault token')
+
+  const secretStorageURL = 'https://testvault.cto.ai:8200/cicd'
+  const accessToken = 'invalidToken'
+
+  const registerRes = await run(
+    ['secrets:register'],
+    [secretStorageURL, ENTER, accessToken, ENTER],
+    3000,
+  )
+
+  expect(registerRes).toContain(
+    'It looks like this token is not valid with the specified vault',
   )
 })
