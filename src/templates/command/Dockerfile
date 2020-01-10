@@ -1,7 +1,7 @@
 ############################
 # Build container
 ############################
-FROM node:10-alpine AS dep
+FROM node:12-stretch-slim AS dep
 
 WORKDIR /ops
 
