@@ -6,7 +6,6 @@ FROM node:12-stretch-slim AS dep
 # This is enforced because otherwise the code wouldn't get detected by the CLI
 WORKDIR /ops
 
-RUN apk add python make
 ADD package.json .
 RUN npm install
 
