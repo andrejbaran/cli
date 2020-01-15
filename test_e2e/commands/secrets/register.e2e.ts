@@ -4,8 +4,8 @@ import { run, signin, signout, sleep } from '../../utils/cmd'
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
 
 beforeEach(async () => {
-  await signout()
   await run(['secrets:unregister'], [ENTER], 3000) // To avoid making all tests fail if one of them is unable to unregister for some reason
+  await signout()
 })
 
 afterAll(async () => {
