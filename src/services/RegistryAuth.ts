@@ -57,26 +57,4 @@ export class RegistryAuthService {
       throw new UserUnauthorized(err)
     }
   }
-
-  async delete(
-    accessToken: string,
-    id: number,
-    teamName: string,
-    opName: string,
-    opVersion: string,
-  ) {
-    try {
-      await this.api.remove(`/private/registry/token/`, id.toString(), {
-        query: {
-          teamName,
-          opName,
-          opVersion,
-        },
-        headers: { Authorization: accessToken },
-      })
-    } catch (err) {
-      debug('%0', err)
-      throw new UserUnauthorized(err)
-    }
-  }
 }

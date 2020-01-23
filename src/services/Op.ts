@@ -179,7 +179,7 @@ export class OpService {
     config: Config,
     version: string,
   ) => {
-    const { authconfig, robotID } = await this.registryAuthService.create(
+    const { authconfig } = await this.registryAuthService.create(
       config.tokens.accessToken,
       op.teamName,
       op.name,
@@ -189,15 +189,6 @@ export class OpService {
     )
     // pull image
     await this.imageService.pull(op, authconfig)
-
-    // delete token
-    await this.registryAuthService.delete(
-      config.tokens.accessToken,
-      robotID,
-      op.teamName,
-      op.name,
-      version,
-    )
   }
 
   setOpImageUrl = (op: OpCommand, config: Config) => {

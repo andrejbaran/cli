@@ -164,13 +164,6 @@ export class Publish {
                 )}\n`,
               )
 
-              await registryAuthService.delete(
-                accessToken,
-                registryAuth.robotID,
-                teamName,
-                apiOp.name,
-                version,
-              )
               resolve()
             })
         }
