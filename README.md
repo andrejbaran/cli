@@ -33,7 +33,134 @@ USAGE
 # Commands
 
 <!-- commands -->
+* [`ops account:reset`](#ops-accountreset)
+* [`ops account:signin`](#ops-accountsignin)
+* [`ops account:signout`](#ops-accountsignout)
+* [`ops account:signup`](#ops-accountsignup)
+* [`ops account:support`](#ops-accountsupport)
+* [`ops add [OPNAME]`](#ops-add-opname)
+* [`ops build [PATH]`](#ops-build-path)
+* [`ops cleanup [OPNAME]`](#ops-cleanup-opname)
 * [`ops help [COMMAND]`](#ops-help-command)
+* [`ops init`](#ops-init)
+* [`ops list`](#ops-list)
+* [`ops publish PATH`](#ops-publish-path)
+* [`ops remove OP`](#ops-remove-op)
+* [`ops run [NAMEORPATH]`](#ops-run-nameorpath)
+* [`ops search [FILTER]`](#ops-search-filter)
+* [`ops secrets:delete`](#ops-secretsdelete)
+* [`ops secrets:list`](#ops-secretslist)
+* [`ops secrets:register`](#ops-secretsregister)
+* [`ops secrets:set`](#ops-secretsset)
+* [`ops secrets:unregister`](#ops-secretsunregister)
+* [`ops team:create`](#ops-teamcreate)
+* [`ops team:invite`](#ops-teaminvite)
+* [`ops team:join`](#ops-teamjoin)
+* [`ops team:switch`](#ops-teamswitch)
+* [`ops update`](#ops-update)
+* [`ops whoami`](#ops-whoami)
+
+## `ops account:reset`
+
+Reset your password.
+
+```
+USAGE
+  $ ops account:reset
+```
+
+## `ops account:signin`
+
+Log in to your account.
+
+```
+USAGE
+  $ ops account:signin
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops account:signout`
+
+Log out from your account.
+
+```
+USAGE
+  $ ops account:signout
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops account:signup`
+
+Creates an account to use with ops CLI.
+
+```
+USAGE
+  $ ops account:signup
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops account:support`
+
+Contact our support team with questions.
+
+```
+USAGE
+  $ ops account:support
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops add [OPNAME]`
+
+Add an op to your team.
+
+```
+USAGE
+  $ ops add [OPNAME]
+
+ARGUMENTS
+  OPNAME  Name of the public op to be added to your team. It should be of the format - @teamname/opName:versionName
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops build [PATH]`
+
+Build your op for sharing.
+
+```
+USAGE
+  $ ops build [PATH]
+
+ARGUMENTS
+  PATH  Path to the op you want to build.
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops cleanup [OPNAME]`
+
+Clean up locally cached docker images.
+
+```
+USAGE
+  $ ops cleanup [OPNAME]
+
+ARGUMENTS
+  OPNAME  Name of the op to be cleaned up
+
+OPTIONS
+  -h, --help  show CLI help
+```
 
 ## `ops help [COMMAND]`
 
@@ -51,6 +178,220 @@ OPTIONS
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.1.6/src/commands/help.ts)_
+
+## `ops init`
+
+Easily create a new Op.
+
+```
+USAGE
+  $ ops init
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops list`
+
+Lists the Ops you have in your team.
+
+```
+USAGE
+  $ ops list
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops publish PATH`
+
+Publish an Op to your team.
+
+```
+USAGE
+  $ ops publish PATH
+
+ARGUMENTS
+  PATH  Path to the op you want to publish.
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops remove OP`
+
+Remove an Op from your team.
+
+```
+USAGE
+  $ ops remove OP
+
+ARGUMENTS
+  OP  The name and version of the command or workflow you want to remove. E.g. my-command:0.1.0
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops run [NAMEORPATH]`
+
+Run an Op from your team or the registry.
+
+```
+USAGE
+  $ ops run [NAMEORPATH]
+
+ARGUMENTS
+  NAMEORPATH  Name or path of the command or workflow you want to run.
+
+OPTIONS
+  -b, --build  Builds the op before running. Must provide a path to the op.
+  -h, --help   show CLI help
+```
+
+## `ops search [FILTER]`
+
+Search for ops in your workspaces.
+
+```
+USAGE
+  $ ops search [FILTER]
+
+ARGUMENTS
+  FILTER  Filters Op results which include filter text in Op name or description.
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops secrets:delete`
+
+Delete a secret stored for the active team
+
+```
+USAGE
+  $ ops secrets:delete
+
+OPTIONS
+  -h, --help     show CLI help
+  -k, --key=key  Secret Key Name
+```
+
+## `ops secrets:list`
+
+List all the keys that are stored for the active team
+
+```
+USAGE
+  $ ops secrets:list
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops secrets:register`
+
+Register a secrets provider for a team
+
+```
+USAGE
+  $ ops secrets:register
+```
+
+## `ops secrets:set`
+
+Add a key & value
+
+```
+USAGE
+  $ ops secrets:set
+
+OPTIONS
+  -k, --key=key
+  -v, --value=value
+```
+
+## `ops secrets:unregister`
+
+Unregister a secrets provider for a team
+
+```
+USAGE
+  $ ops secrets:unregister
+```
+
+## `ops team:create`
+
+Create your team.
+
+```
+USAGE
+  $ ops team:create
+
+OPTIONS
+  -h, --help       show CLI help
+  -n, --name=name
+```
+
+## `ops team:invite`
+
+Invite your team members.
+
+```
+USAGE
+  $ ops team:invite
+
+OPTIONS
+  -h, --help               show CLI help
+
+  -i, --invitees=invitees  A comma-separated string of usernames/emails we want to invite. E.g. ("user1,
+                           user2@gmail.com, user3@something")
+```
+
+## `ops team:join`
+
+Accept an invite to join a team.
+
+```
+USAGE
+  $ ops team:join
+```
+
+## `ops team:switch`
+
+Shows the list of your teams.
+
+```
+USAGE
+  $ ops team:switch
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops update`
+
+Update the Ops CLI.
+
+```
+USAGE
+  $ ops update
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops whoami`
+
+Display your user information
+
+```
+USAGE
+  $ ops whoami
+
+OPTIONS
+  -h, --help  show CLI help
+```
 <!-- commandsstop -->
 
 
