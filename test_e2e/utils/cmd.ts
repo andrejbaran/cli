@@ -99,7 +99,7 @@ const sendInput = function(
 const cleanup = async () => {
   try {
     // we are using the Go API here directly because the Feathers API (www) does not have a pass-through method for cleanup
-    await axios.get(`${defaultEnv.OPS_GO_API_HOST}api/v1/cleanup`)
+    await axios.get(`${defaultEnv.OPS_GO_API_HOST}api/v1/public/cleanup`)
     console.log('cleanup endpoint hit successfully')
   } catch (error) {
     console.error({ error })
@@ -119,7 +119,7 @@ const cleanupAddedOp = async opFullName => {
 
     const teamName = EXISTING_USER_NAME
     await axios.delete(
-      `${defaultEnv.OPS_GO_API_HOST}api/v1/teams/${teamName}/ops/refs`,
+      `${defaultEnv.OPS_GO_API_HOST}api/v1/private/teams/${teamName}/ops/refs`,
       {
         headers: { Authorization: token },
         params: {
