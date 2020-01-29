@@ -5,6 +5,7 @@ commands:
     public: false
     description: Your first hello-world op
     run: node /ops/index.js
+    remote: true
     sdk: "2"
     sourceCodeURL: ""
     env:
