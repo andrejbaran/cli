@@ -40,7 +40,7 @@ export default class TeamInvite extends Command {
       )} ${callOutCyan('and start sharing your Ops')} ${reset.green(
         '→',
       )}\n${white(
-        'Enter the emails of the team member that you want to invite. (Comma separated)',
+        'Enter the emails of the team member(s) that you want to invite as a comma-separated list.',
       )}
       \n\n${white('🎟  Invite User')}`,
       validate: (input: string): string | boolean => !!input,
