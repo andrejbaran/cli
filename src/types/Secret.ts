@@ -6,4 +6,5 @@ export interface SecretListInputs {
   config: Config
   secrets: string[]
   selectedSecret: string
+  storageEngine: string
 }

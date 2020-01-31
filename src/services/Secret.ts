@@ -2,7 +2,7 @@ import fuzzy from 'fuzzy'
 import Debug from 'debug'
 import { ux } from '@cto.ai/sdk'
 import { Answers, Fuzzy, SecretListInputs, Config, ApiService } from '~/types'
-import { asyncPipe } from '~/utils/asyncPipe'
+import { asyncPipe, terminalText } from '~/utils'
 import {
   APIError,
   NoSecretsProviderFound,
@@ -16,25 +16,24 @@ import {
 
 const debug = Debug('ops:SecretService')
 
+const { bold, callOutCyan, multiBlue, reset, whiteBright } = ux.colors
+
 export class SecretService {
   secrets: string[] = []
 
   getApiSecretsList = async (
-    inputs: SecretListInputs,
+    inputs: Omit<SecretListInputs, 'storageEngine'>,
   ): Promise<SecretListInputs> => {
     const { team, tokens } = inputs.config
     try {
       const { api } = inputs
-      const findResponse = await api.find(
-        `/private/teams/${team.name}/secrets`,
-        {
-          headers: {
-            Authorization: tokens.accessToken,
-          },
+      const { data } = await api.find(`/private/teams/${team.name}/secrets`, {
+        headers: {
+          Authorization: tokens.accessToken,
         },
-      )
-      let { data: secrets } = findResponse
-      return { ...inputs, secrets }
+      })
+      let { secrets, storageEngine } = data[0]
+      return { ...inputs, secrets, storageEngine }
     } catch (err) {
       debug('error: %O', err)
       switch (err.error[0].code) {
@@ -61,10 +60,20 @@ export class SecretService {
   }
 
   checkDataList = async (inputs: SecretListInputs) => {
-    if (inputs.secrets) return inputs
+    if (inputs.secrets.length !== 0) return inputs
+    const {
+      config: {
+        team: { name },
+      },
+      storageEngine,
+    } = inputs
     console.log(
-      ux.colors.whiteBright(
-        `\n😞 No secrets found in your team. Try again or run ${ux.colors.callOutCyan(
+      whiteBright(
+        `\n😞 No secrets found for team ${multiBlue(
+          name,
+        )} stored with ${multiBlue(
+          storageEngine,
+        )}.\n   Try again or run ${terminalText(
           'ops team:switch',
         )} to switch your current team. \n`,
       ),
@@ -75,11 +84,16 @@ export class SecretService {
   secretKeyListSelectorPrompt = async (
     inputs: SecretListInputs,
   ): Promise<SecretListInputs> => {
-    const { team } = inputs.config
+    const {
+      config: { team },
+      storageEngine,
+    } = inputs
     console.log(
-      ux.colors.bold(
-        ux.colors.callOutCyan(
-          `Secrets stored for team ${ux.colors.multiBlue(team.name)}:`,
+      bold(
+        callOutCyan(
+          ` Listing all secrets for team ${multiBlue(
+            team.name,
+          )} stored with ${multiBlue(storageEngine)} ${reset.green('→')}`,
         ),
       ),
     )

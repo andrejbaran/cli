@@ -113,23 +113,27 @@ describe('SecretService', () => {
   test('Should return 0 secrets', async () => {
     service = new SecretService()
 
-    const mockSecrets = undefined
-    mockFeathersService.find = jest.fn().mockReturnValue({ data: mockSecrets })
+    const mockSecret = { storageEngine: 'default storage', secrets: [] }
+    mockFeathersService.find = jest.fn().mockReturnValue({ data: [mockSecret] })
     const mockInputs = {
       api: mockFeathersService,
       config: { team: mockTeam, tokens: mockToken },
     }
 
     const res = await service.getApiSecretsList(mockInputs as SecretListInputs)
-
-    expect(res.secrets).toBeUndefined()
+    expect(res.secrets.length).toBe(0)
   })
 
   test('Should return 4 secrets', async () => {
     service = new SecretService()
 
-    const mockSecrets = ['key1', 'key2', 'key3', 'key4']
-    mockFeathersService.find = jest.fn().mockReturnValue({ data: mockSecrets })
+    const mockSecrets = {
+      storageEngine: 'default storage',
+      secrets: ['key1', 'key2', 'key3', 'key4'],
+    }
+    mockFeathersService.find = jest
+      .fn()
+      .mockReturnValue({ data: [mockSecrets] })
     const mockInputs = {
       api: mockFeathersService,
       config: { team: mockTeam, tokens: mockToken },
@@ -138,7 +142,7 @@ describe('SecretService', () => {
     const res = await service.getApiSecretsList(mockInputs as SecretListInputs)
 
     expect(res.secrets.length).toEqual(4)
-    expect(res.secrets).toEqual(mockSecrets)
+    expect(res.secrets).toEqual(mockSecrets.secrets)
   })
 
   test('Should return secrets', async () => {
