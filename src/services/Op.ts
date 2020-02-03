@@ -88,9 +88,13 @@ export class OpService {
           cliEvent: 'Ops CLI Build',
           event: 'Ops CLI Build',
           properties: {
+            name: op.name,
+            team: teamName,
+            namespace: `@${teamName}/${op.name}`,
+            runtime: 'CLI',
             email: user.email,
             username: user.username,
-            name: op.name,
+
             description: op.description,
             image: `${OPS_REGISTRY_HOST}/${op.name}:${op.version}`,
           },
