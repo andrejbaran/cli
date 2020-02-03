@@ -172,7 +172,10 @@ export class ImageService {
 
         if (docker) {
           const stream = await docker
-            .buildImage({ context: opPath, src: op.src }, { t: tag })
+            .buildImage(
+              { context: opPath, src: op.src },
+              { t: tag, pull: true },
+            )
             .catch(err => {
               debug('%O', err)
               throw new DockerBuildImageError(err)
