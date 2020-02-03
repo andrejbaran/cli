@@ -432,10 +432,12 @@ export default class Publish extends Command {
       cliEvent: 'Ops CLI Publish',
       event: 'Ops CLI Publish',
       properties: {
+        name: opOrWorkflow.name,
+        team: this.team.name,
+        namespace: `@${this.team.name}/${opOrWorkflow.name}`,
         email: this.user.email,
         username: this.user.username,
         type: publishType,
-        name: opOrWorkflow.name,
         description: opOrWorkflow.description,
         image: `${OPS_REGISTRY_HOST}/${opOrWorkflow.id.toLowerCase()}:${
           opOrWorkflow.version
