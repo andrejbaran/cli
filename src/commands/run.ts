@@ -69,6 +69,9 @@ export default class Run extends Command {
     {
       name: 'nameOrPath',
       description: 'Name or path of the command or workflow you want to run.',
+      parse: (input: string): string => {
+        return input.toLowerCase()
+      },
     },
   ]
 

@@ -186,7 +186,6 @@ export default class AccountSignin extends Command {
     )
 
   async run() {
-    this.parse(AccountSignin)
     try {
       const { flags } = this.parse(AccountSignin)
       await this.services.keycloakService.init()
