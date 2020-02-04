@@ -101,8 +101,8 @@ const getRunEnv = (workflow: OpWorkflow, config: Config): OpWorkflow => {
 // TODO this should be refactored so with the opService setEnv to make it dry
 const setRunEnv = (workflow: OpWorkflow, config: Config): void => {
   const defaultEnv: Container<string> = {
-    STATE_DIR: workflow.stateDir,
-    CONFIG_DIR: workflow.configDir,
+    SDK_STATE_DIR: workflow.stateDir,
+    SDK_CONFIG_DIR: workflow.configDir,
     RUN_ID: workflow.runId,
     OPS_OP_NAME: workflow.name,
     OPS_TEAM_NAME: config.team.name,
