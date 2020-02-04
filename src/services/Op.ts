@@ -211,8 +211,8 @@ export class OpService {
     const { config, op } = inputs
     const defaultEnv: Container<string> = {
       OPS_HOME: path.resolve(sdk.homeDir() + '/.config/@cto.ai/ops'),
-      CONFIG_DIR: `/${config.team.name}/${op.name}`,
-      STATE_DIR: `/${config.team.name}/${op.name}/${op.runId}`,
+      SDK_CONFIG_DIR: `/${config.team.name}/${op.name}`,
+      SDK_STATE_DIR: `/${config.team.name}/${op.name}/${op.runId}`,
       NODE_ENV: 'production',
       LOGGER_PLUGINS_STDOUT_ENABLED: 'true',
       RUN_ID: op.runId,
