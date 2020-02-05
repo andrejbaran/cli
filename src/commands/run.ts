@@ -483,13 +483,13 @@ export default class Run extends Command {
       opOrWorkflow: { id, name, description, version },
       parsedArgs: { opParams },
       config: {
-        user: { username, id: userId },
+        user: { username, email },
         team: { name: teamName, id: teamId },
       },
     } = inputs
     this.services.analytics.track(
       {
-        userId,
+        userId: email,
         teamId,
         cliEvent: 'Ops CLI Run',
         event: 'Ops CLI Run',
@@ -503,6 +503,7 @@ export default class Run extends Command {
           description,
           image: `${OPS_REGISTRY_HOST}/${name}:${version}`,
           argments: opParams.length,
+          cliVersion: this.config.version,
         },
       },
       this.accessToken,
