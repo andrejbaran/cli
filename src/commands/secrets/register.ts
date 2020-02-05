@@ -1,7 +1,7 @@
 import { ux } from '@cto.ai/sdk'
 import Command from '~/base'
 import { Team, State } from '~/types'
-import { asyncPipe } from '~/utils'
+import { asyncPipe, terminalText } from '~/utils'
 import {
   InvalidTeamNameFormat,
   RegisterSecretsProvider,
@@ -46,11 +46,13 @@ export default class SecretsRegister extends Command {
           `${team.name}`,
         )}    \n${reset.grey('Enter your secret storage')} ${reset.blue(
           'url',
-        )} ${reset.grey('and')} ${reset.blue('access token')} ${reset.grey(
-          '. Change the team to with which \nthe secret storage will be registered by running',
-        )} ${reset.blue('ops team:switch')}${reset.grey('.')} \n${white(
-          'Link your secret storage to your team',
-        )} ${reset.green('→')}`,
+        )} ${reset.grey('and')} ${reset.blue('access token.')}\n${reset.grey(
+          `Run ${terminalText('ops team:switch')}`,
+        )} ${reset.grey('to change the team for')} ${reset.grey(
+          'the secret storage registration.',
+        )}\n${white('Link your secret storage to your team')} ${reset.green(
+          '→',
+        )}`,
         afterMessage: `${reset.green('✓')} URL    `,
         validate: this.validateRegisterInput.bind(this),
       },
