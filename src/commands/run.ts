@@ -496,6 +496,7 @@ export default class Run extends Command {
         properties: {
           name,
           team: teamName,
+          email,
           username,
           namespace: `@${teamName}/${name}`,
           runtime: 'CLI',
