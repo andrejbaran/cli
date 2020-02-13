@@ -27,14 +27,6 @@ import { OP_FILE, WORKFLOW_TYPE, COMMAND_TYPE } from '~/constants/opConfig'
 import { OPS_REGISTRY_HOST } from '~/constants/env'
 import { asyncPipe, _trace, parseYaml } from '~/utils'
 import { isValidTeamName, isValidOpName } from '~/utils/validate'
-export interface RunCommandArgs {
-  args: { nameOrPath: string }
-  flags: {
-    build?: boolean
-    help?: boolean
-  }
-  opParams: string[]
-}
 
 export interface RunInputs {
   parsedArgs: RunCommandArgs
