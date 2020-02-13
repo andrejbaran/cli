@@ -5,7 +5,6 @@ import * as fs from 'fs-extra'
 import * as os from 'os'
 import * as path from 'path'
 import { v4 as uuid } from 'uuid'
-import { RunCommandArgs } from '~/commands/run'
 import {
   HOME,
   OPS_API_HOST,
@@ -25,7 +24,7 @@ import { AnalyticsService } from '~/services/Analytics'
 import { ContainerService } from '~/services/Container'
 import { ImageService } from '~/services/Image'
 import { RegistryAuthService } from '~/services/RegistryAuth'
-import { Config, Container, OpCommand } from '~/types'
+import { Config, Container, OpCommand, RunCommandArgs } from '~/types'
 import { asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
 import { isValidOpName, isValidOpVersion } from '~/utils/validate'
 
@@ -234,7 +233,7 @@ export class OpService {
 
     const opsYamlEnv: Container<string> = op.env
       ? op.env.reduce(this.convertEnvStringsToObject, {})
-      : []
+      : {}
 
     op.env = Object.entries({ ...defaultEnv, ...opsYamlEnv })
       .map(this.overrideEnvWithProcessEnv(process.env))

@@ -110,7 +110,7 @@ const setRunEnv = (workflow: OpWorkflow, config: Config): void => {
   }
   const opsYamlEnv: Container<string> = workflow.env
     ? workflow.env.reduce(convertEnvStringsToObject, {})
-    : []
+    : {}
 
   workflow.env = Object.entries({ ...defaultEnv, ...opsYamlEnv })
     .map(overrideEnvWithProcessEnv(process.env))
