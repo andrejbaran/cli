@@ -8,8 +8,8 @@ import {
   COMMAND,
   OP_FILE,
   WORKFLOW,
-  WORKFLOW_ENDPOINT,
   COMMAND_TYPE,
+  WORKFLOW_TYPE,
 } from '../constants/opConfig'
 import {
   CouldNotCreateWorkflow,
@@ -32,9 +32,13 @@ import {
   OpWorkflow,
   RegistryAuth,
 } from '../types'
-import { asyncPipe, getOpImageTag, parseYaml } from '../utils'
+import { asyncPipe, getOpImageTag, parseYaml, getOpUrl } from '../utils'
 import getDocker from '../utils/get-docker'
-import { isValidOpName, isValidOpVersion } from '../utils/validate'
+import {
+  isValidOpName,
+  isValidOpVersion,
+  validVersionChars,
+} from '../utils/validate'
 import { ErrorTemplate } from '~/errors/ErrorTemplate'
 
 export interface PublishInputs {
@@ -44,6 +48,7 @@ export interface PublishInputs {
   version: string
   opCommands: OpCommand[]
   opWorkflows: OpWorkflow[]
+  existingVersions: (OpCommand | OpWorkflow)[]
 }
 
 export default class Publish extends Command {
@@ -75,7 +80,8 @@ export default class Publish extends Command {
     return { opPath, docker }
   }
 
-  getOpsAndWorkFlows = async ({ opPath, docker }: PublishInputs) => {
+  getOpsAndWorkFlows = async (inputs: PublishInputs) => {
+    const { opPath } = inputs
     const manifest = await fs
       .readFile(path.join(opPath, OP_FILE), 'utf8')
       .catch((err: any) => {
@@ -90,9 +96,9 @@ export default class Publish extends Command {
     }
 
     return {
+      ...inputs,
       opCommands: ops,
       opWorkflows: workflows,
-      docker,
       version,
     }
   }
@@ -124,13 +130,8 @@ export default class Publish extends Command {
     return { ...inputs, commandsAndWorkflows: opsAndWorkflows }
   }
 
-  selectOpsAndWorkFlows = async ({
-    opCommands,
-    opWorkflows,
-    version,
-    docker,
-    commandsAndWorkflows,
-  }: PublishInputs) => {
+  selectOpsAndWorkFlows = async (inputs: PublishInputs) => {
+    let { commandsAndWorkflows, opCommands, opWorkflows } = inputs
     switch (commandsAndWorkflows) {
       case COMMAND:
         opCommands = await this.selectOps(opCommands)
@@ -143,11 +144,10 @@ export default class Publish extends Command {
         opWorkflows = await this.selectWorkflows(opWorkflows)
     }
     return {
-      opCommands: opCommands,
-      opWorkflows: opWorkflows,
-      version,
-      docker,
-      commandsAndWorkflows: commandsAndWorkflows,
+      ...inputs,
+      opCommands,
+      opWorkflows,
+      commandsAndWorkflows,
     }
   }
 
@@ -191,6 +191,122 @@ export default class Publish extends Command {
       validate: input => input.length > 0,
     })
     return answers.workflows
+  }
+
+  findOpsWhereVersionAlreadyExists = async (inputs: PublishInputs) => {
+    const {
+      existingVersions: existingCommandVersions,
+      filteredOps: opCommands,
+    } = await this.filterExistingOps(inputs.opCommands)
+    const {
+      existingVersions: existingWorkflowVersions,
+      filteredOps: opWorkflows,
+    } = await this.filterExistingOps(inputs.opWorkflows)
+    return {
+      ...inputs,
+      opCommands,
+      opWorkflows,
+      existingVersions: [
+        ...existingCommandVersions,
+        ...existingWorkflowVersions,
+      ],
+    }
+  }
+
+  filterExistingOps = async ops => {
+    let filteredOps: (OpCommand | OpWorkflow)[] = []
+    let existingVersions: (OpCommand | OpWorkflow)[] = []
+    for (const op of ops) {
+      try {
+        await this.services.api.find(
+          `/private/teams/${this.team.name}/ops/${op.name}/versions/${op.version}`,
+          {
+            headers: {
+              Authorization: this.accessToken,
+            },
+          },
+        )
+
+        existingVersions = existingVersions.concat(op)
+      } catch (err) {
+        if (err.error[0].code === 404) {
+          filteredOps = filteredOps.concat(op)
+        }
+        throw new APIError(err)
+      }
+    }
+
+    return { existingVersions, filteredOps }
+  }
+
+  getNewVersion = async (inputs: PublishInputs) => {
+    if (inputs.existingVersions.length === 0) return inputs
+
+    let manifest = await fs.readFile(path.join(inputs.opPath, OP_FILE), 'utf8')
+    this.log(
+      '\n 🤔 It seems like the version of the op that you are trying to publish already taken. \n   Add a new version indicator in order to publish',
+    )
+    for (let existingOp of inputs.existingVersions) {
+      this.log(
+        `${this.ux.colors.callOutCyan(
+          `Current version for ${existingOp.name}:`,
+        )} ${this.ux.colors.white(existingOp.version)}`,
+      )
+      const { newVersion } = await this.ux.prompt({
+        type: 'input',
+        name: 'newVersion',
+        message: '\n✍️  Update version:',
+        transformer: input => {
+          return this.ux.colors.white(input)
+        },
+        validate: async input => {
+          try {
+            if (input === '') return 'Please enter a version'
+            if (!validVersionChars.test(input)) {
+              return '❗ Sorry, version is required and can only contain letters, digits, underscores, \n    periods and dashes and must start and end with a letter or a digit'
+            }
+            await this.services.api.find(
+              `/private/teams/${this.team.name}/ops/${existingOp.name}/versions/${input}`,
+              {
+                headers: {
+                  Authorization: this.accessToken,
+                },
+              },
+            )
+            return 'That version is already taken'
+          } catch (err) {
+            if (err.error[0].code === 404) {
+              return true
+            }
+            throw new APIError(err)
+          }
+        },
+      })
+      manifest = manifest.replace(
+        `name: ${existingOp.name}:${existingOp.version}`,
+        `name: ${existingOp.name}:${newVersion}`,
+      )
+      existingOp.version = newVersion
+      if (existingOp.type === COMMAND_TYPE) {
+        inputs.opCommands = inputs.opCommands.concat(existingOp)
+        const opImageTag = getOpImageTag(
+          this.team.name,
+          existingOp.name,
+          existingOp.version,
+          existingOp.isPublic,
+        )
+        const image = getOpUrl(OPS_REGISTRY_HOST, opImageTag)
+        await this.services.imageService.build(
+          image,
+          path.resolve(process.cwd(), inputs.opPath),
+          existingOp,
+        )
+      } else if (existingOp.type === WORKFLOW_TYPE) {
+        inputs.opWorkflows = inputs.opWorkflows.concat(existingOp)
+      }
+    }
+    fs.writeFileSync(path.join(inputs.opPath, OP_FILE), manifest)
+    return { ...inputs }
   }
 
   getRegistryAuth = async (
@@ -434,7 +550,7 @@ export default class Publish extends Command {
         image: `${OPS_REGISTRY_HOST}/${opOrWorkflow.id.toLowerCase()}:${
           opOrWorkflow.version
         }`,
-        tag: 'latest',
+        tag: opOrWorkflow.version,
       },
     })
   }
@@ -456,6 +572,8 @@ export default class Publish extends Command {
         this.getOpsAndWorkFlows,
         this.determineQuestions,
         this.selectOpsAndWorkFlows,
+        this.findOpsWhereVersionAlreadyExists,
+        this.getNewVersion,
         this.publishOpsAndWorkflows,
       )
       await publishPipeline(args.path)
