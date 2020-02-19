@@ -28,7 +28,6 @@ import {
   MissingRequiredArgument,
   NoResultsFoundForDeletion,
   NoLocalOpsFound,
-  NoWorkflowsFound,
   NoStepsFound,
   InvalidStepsFound,
   ImageNotFoundError,
@@ -40,6 +39,7 @@ import {
   ImagePushError,
   AlreadySignedOut,
   SignOutError,
+  NoLocalOpsOrWorkflowsFound,
 } from '~/errors/CustomErrors'
 import { errorSource } from '~/constants/errorSource'
 
@@ -342,23 +342,23 @@ describe('Custom Errors', () => {
     )
   })
 
+  it('NoLocalOpsOrWorkflowsFound', () => {
+    const err = new NoLocalOpsOrWorkflowsFound()
+    expect(err).toBeInstanceOf(NoLocalOpsOrWorkflowsFound)
+    expect(ErrorTemplate).toHaveBeenCalledTimes(1)
+    expect(ErrorTemplate).toHaveBeenCalledWith(
+      white(`💩 We couldn't find any ops or workflows in the ops.yml!`),
+      undefined,
+      expectedSource,
+    )
+  })
+
   it('NoLocalOpsFound', () => {
     const err = new NoLocalOpsFound()
     expect(err).toBeInstanceOf(NoLocalOpsFound)
     expect(ErrorTemplate).toHaveBeenCalledTimes(1)
     expect(ErrorTemplate).toHaveBeenCalledWith(
       white(`💩 We couldn't find any ops in the ops.yml!`),
-      undefined,
-      expectedSource,
-    )
-  })
-
-  it('NoWorkflowsFound', () => {
-    const err = new NoWorkflowsFound()
-    expect(err).toBeInstanceOf(NoWorkflowsFound)
-    expect(ErrorTemplate).toHaveBeenCalledTimes(1)
-    expect(ErrorTemplate).toHaveBeenCalledWith(
-      white(`💩 We couldn't find any workflows in the ops.yml!`),
       undefined,
       expectedSource,
     )

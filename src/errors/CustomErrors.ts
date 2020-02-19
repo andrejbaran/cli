@@ -316,6 +316,16 @@ export class DockerPublishNoImageFound extends ErrorTemplate {
   }
 }
 
+export class NoLocalOpsOrWorkflowsFound extends ErrorTemplate {
+  constructor() {
+    super(
+      white(`💩 We couldn't find any ops or workflows in the ops.yml!`),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
 export class NoLocalOpsFound extends ErrorTemplate {
   constructor() {
     super(
@@ -335,15 +345,6 @@ export class NoOpsFound extends ErrorTemplate {
       message += ` in the team ${ux.colors.cyan(teamName)}.`
     }
     super(white(message), undefined, expectedSource)
-  }
-}
-export class NoWorkflowsFound extends ErrorTemplate {
-  constructor() {
-    super(
-      white(`💩 We couldn't find any workflows in the ops.yml!`),
-      undefined,
-      expectedSource,
-    )
   }
 }
 
