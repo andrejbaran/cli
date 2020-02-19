@@ -1,5 +1,6 @@
+import fuzzy from 'fuzzy'
 import Command, { flags } from '~/base'
-import { Config, Team } from '~/types'
+import { Config, Team, Fuzzy, Answers } from '~/types'
 import { asyncPipe } from '~/utils'
 import { ConfigError, APIError } from '~/errors/CustomErrors'
 interface displayTeam extends Team {
@@ -19,6 +20,8 @@ export default class TeamSwitch extends Command {
   static flags = {
     help: flags.help({ char: 'h' }),
   }
+
+  displayTeams = [{ name: '' }]
 
   getActiveTeam = async (): Promise<Pick<SwitchInputs, 'activeTeam'>> => {
     try {
@@ -61,18 +64,34 @@ export default class TeamSwitch extends Command {
     return { ...inputs, displayTeams }
   }
 
+  _autocompleteSearch = async (_: Answers, input = '') => {
+    const { list, options } = this.fuzzyFilterParams()
+    const fuzzyResult: Fuzzy[] = fuzzy.filter(input, list, options)
+    return fuzzyResult.map(result => result.original)
+  }
+
+  private fuzzyFilterParams = () => {
+    const list = this.displayTeams.map(team => {
+      return {
+        name: `${team.name}`,
+        value: team,
+      }
+    })
+    const options = { extract: el => el.name }
+    return { list, options }
+  }
+
   getSelectedTeamPrompt = async (
     inputs: SwitchInputs,
   ): Promise<SwitchInputs> => {
     this.log("Here's the list of your teams:\n")
     const { displayTeams } = inputs
+    this.displayTeams = displayTeams
     const { teamSelected } = await this.ux.prompt<{ teamSelected: Team }>({
-      type: 'list',
+      type: 'autocomplete',
       name: 'teamSelected',
       message: 'Select a team',
-      choices: displayTeams.map(team => {
-        return { name: team.displayName, value: team }
-      }),
+      source: this._autocompleteSearch.bind(this),
       bottomContent: `\n \n${this.ux.colors.white(
         `Or, run ${this.ux.colors.italic.dim(
           'ops help',
