@@ -2,7 +2,6 @@ import { ux } from '@cto.ai/sdk'
 import Docker from 'dockerode'
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import * as yaml from 'yaml'
 import Command, { flags } from '../base'
 import { OPS_REGISTRY_HOST, OPS_API_HOST } from '../constants/env'
 import {
@@ -18,19 +17,18 @@ import {
   InvalidInputCharacter,
   InvalidStepsFound,
   NoLocalOpsFound,
-  NoWorkflowsFound,
   DockerPublishNoImageFound,
   CouldNotGetRegistryToken,
   InvalidWorkflowStep,
   InvalidOpVersionFormat,
   VersionIsTaken,
   APIError,
+  NoLocalOpsOrWorkflowsFound,
 } from '../errors/CustomErrors'
 import {
   Container,
   OpCommand,
   OpsYml,
-  SourceResult,
   OpWorkflow,
   RegistryAuth,
 } from '../types'
@@ -77,30 +75,7 @@ export default class Publish extends Command {
     return { opPath, docker }
   }
 
-  determineQuestions = async (inputs: PublishInputs) => {
-    const { opsAndWorkflows } = await ux.prompt<{
-      opsAndWorkflows: SourceResult
-    }>({
-      type: 'list',
-      name: 'opsAndWorkflows',
-      message: `\n Which would you like to publish ${ux.colors.reset.green(
-        '→',
-      )}`,
-      choices: [
-        { name: 'Commands', value: COMMAND },
-        { name: 'Workflows', value: WORKFLOW },
-        'Both',
-      ],
-      afterMessage: `${ux.colors.reset.green('✓')}`,
-    })
-    return { ...inputs, commandsAndWorkflows: opsAndWorkflows }
-  }
-
-  getOpsAndWorkFlows = async ({
-    opPath,
-    commandsAndWorkflows,
-    docker,
-  }: PublishInputs) => {
+  getOpsAndWorkFlows = async ({ opPath, docker }: PublishInputs) => {
     const manifest = await fs
       .readFile(path.join(opPath, OP_FILE), 'utf8')
       .catch((err: any) => {
@@ -110,17 +85,8 @@ export default class Publish extends Command {
 
     if (!manifest) throw new NoLocalOpsFound()
     const { ops, version, workflows }: OpsYml = parseYaml(manifest)
-    if (
-      !ops &&
-      (commandsAndWorkflows === COMMAND || commandsAndWorkflows === 'Both')
-    ) {
-      throw new NoLocalOpsFound()
-    }
-    if (
-      !workflows &&
-      (commandsAndWorkflows === WORKFLOW || commandsAndWorkflows === 'Both')
-    ) {
-      throw new NoWorkflowsFound()
+    if (!ops && !workflows) {
+      throw new NoLocalOpsOrWorkflowsFound()
     }
 
     return {
@@ -128,8 +94,34 @@ export default class Publish extends Command {
       opWorkflows: workflows,
       docker,
       version,
-      commandsAndWorkflows: commandsAndWorkflows,
     }
+  }
+
+  determineQuestions = async (inputs: PublishInputs) => {
+    const { opCommands, opWorkflows } = inputs
+    let opsAndWorkflows: string
+    if (opCommands && opCommands.length && opWorkflows && opWorkflows.length) {
+      ;({ opsAndWorkflows } = await ux.prompt<{
+        opsAndWorkflows: string
+      }>({
+        type: 'list',
+        name: 'opsAndWorkflows',
+        message: `\n Which would you like to publish ${ux.colors.reset.green(
+          '→',
+        )}`,
+        choices: [
+          { name: 'Commands', value: COMMAND },
+          { name: 'Workflows', value: WORKFLOW },
+          'Both',
+        ],
+        afterMessage: `${ux.colors.reset.green('✓')}`,
+      }))
+    } else if (!opCommands || !opCommands.length) {
+      opsAndWorkflows = WORKFLOW
+    } else {
+      opsAndWorkflows = COMMAND
+    }
+    return { ...inputs, commandsAndWorkflows: opsAndWorkflows }
   }
 
   selectOpsAndWorkFlows = async ({
@@ -461,8 +453,8 @@ export default class Publish extends Command {
       const publishPipeline = asyncPipe(
         this.resolvePath,
         this.checkDocker,
-        this.determineQuestions,
         this.getOpsAndWorkFlows,
+        this.determineQuestions,
         this.selectOpsAndWorkFlows,
         this.publishOpsAndWorkflows,
       )
