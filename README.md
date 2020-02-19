@@ -54,6 +54,7 @@ USAGE
 * [`ops secrets:set`](#ops-secretsset)
 * [`ops secrets:unregister`](#ops-secretsunregister)
 * [`ops team:create`](#ops-teamcreate)
+* [`ops team:info`](#ops-teaminfo)
 * [`ops team:invite`](#ops-teaminvite)
 * [`ops team:join`](#ops-teamjoin)
 * [`ops team:switch`](#ops-teamswitch)
@@ -331,6 +332,18 @@ USAGE
 OPTIONS
   -h, --help       show CLI help
   -n, --name=name
+```
+
+## `ops team:info`
+
+Shows basic team information for the team you are currently on.
+
+```
+USAGE
+  $ ops team:info
+
+OPTIONS
+  -h, --help  show CLI help
 ```
 
 ## `ops team:invite`
