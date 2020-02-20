@@ -12,10 +12,11 @@ export interface SwitchInputs {
   teams: Team[]
   displayTeams: displayTeam[]
   teamSelected: Team
+  configs: Config
 }
 
 export default class TeamSwitch extends Command {
-  static description = 'Shows the list of your teams.'
+  static description = 'Switch your currently active team.'
 
   static flags = {
     help: flags.help({ char: 'h' }),
@@ -23,11 +24,10 @@ export default class TeamSwitch extends Command {
 
   displayTeams = [{ name: '' }]
 
-  getActiveTeam = async (): Promise<Pick<SwitchInputs, 'activeTeam'>> => {
+  getActiveTeam = async (inputs: SwitchInputs): Promise<SwitchInputs> => {
     try {
-      const { team: activeTeam } = await this.readConfig()
-      if (!activeTeam) throw new Error()
-      return { activeTeam }
+      if (!inputs.configs.team) throw new Error()
+      return { ...inputs, activeTeam: inputs.configs.team }
     } catch (err) {
       this.debug('%O', err)
       throw new ConfigError(err)
@@ -37,7 +37,7 @@ export default class TeamSwitch extends Command {
   getTeamsFromApi = async (inputs: SwitchInputs): Promise<SwitchInputs> => {
     try {
       const { data: teams } = await this.services.api.find('/private/teams', {
-        headers: { Authorization: this.accessToken },
+        headers: { Authorization: inputs.configs.tokens.accessToken },
       })
       return { ...inputs, teams }
     } catch (err) {
@@ -107,8 +107,7 @@ export default class TeamSwitch extends Command {
       const {
         teamSelected: { name, id },
       } = inputs
-      const configData = await this.readConfig()
-      await this.writeConfig(configData, {
+      await this.writeConfig(inputs.configs, {
         team: { name, id },
       })
     } catch (err) {
@@ -131,10 +130,10 @@ export default class TeamSwitch extends Command {
     return inputs
   }
 
-  sendAnalytics = (config: Config) => (inputs: SwitchInputs) => {
+  sendAnalytics = (inputs: SwitchInputs) => {
     const {
       user: { email, username },
-    } = config
+    } = inputs.configs
     const {
       activeTeam: { id: oldTeamId },
       teamSelected: { id: newTeamId },
@@ -151,7 +150,7 @@ export default class TeamSwitch extends Command {
           newTeamId,
         },
       },
-      this.accessToken,
+      inputs.configs.tokens.accessToken,
     )
   }
   startSpinner = async (inputs: SwitchInputs) => {
@@ -166,8 +165,8 @@ export default class TeamSwitch extends Command {
   }
   async run() {
     await this.parse(TeamSwitch)
+    const configs = await this.isLoggedIn()
     try {
-      await this.isLoggedIn()
       const switchPipeline = asyncPipe(
         this.startSpinner,
         this.getActiveTeam,
@@ -177,14 +176,17 @@ export default class TeamSwitch extends Command {
         this.getSelectedTeamPrompt,
         this.updateActiveTeam,
         this.logMessage,
-        this.sendAnalytics(this.state.config),
+        this.sendAnalytics,
       )
 
-      await switchPipeline()
+      await switchPipeline({ configs })
     } catch (err) {
       await this.ux.spinner.stop(`${this.ux.colors.errorRed('Failed')}`)
       this.debug('%O', err)
-      this.config.runHook('error', { err, accessToken: this.accessToken })
+      this.config.runHook('error', {
+        err,
+        accessToken: configs.tokens.accessToken,
+      })
     }
   }
 }
