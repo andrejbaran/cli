@@ -6,28 +6,28 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-import { cleanup, run, signin, sleep } from '../../utils/cmd'
-import { EXISTING_USER_NAME } from '../../utils/constants'
+import { cleanup, run, signin, signout } from '../../utils/cmd'
+import {
+  EXISTING_USER_NAME,
+  DEFAULT_TIMEOUT_INTERVAL,
+} from '../../utils/constants'
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
+jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_INTERVAL
 
 beforeEach(async () => {
-  await run(['account:signout'])
+  await signin()
+})
+
+afterEach(async () => {
+  await signout()
 })
 
 afterAll(async () => {
-  // avoid jest open handle error
-  await sleep(500)
+  await cleanup()
 })
 
 test('it should signin, team:switch', async () => {
-  console.log('it should signin, team:switch')
-  await signin()
-  await sleep(500)
-
   const teamSwitchRes = await run(['team:switch'])
-
   expect(teamSwitchRes).toContain(`Here's the list of your teams`)
   expect(teamSwitchRes).toContain(EXISTING_USER_NAME)
-  await sleep(500)
 })
