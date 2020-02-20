@@ -57,6 +57,7 @@ USAGE
 * [`ops team:info`](#ops-teaminfo)
 * [`ops team:invite`](#ops-teaminvite)
 * [`ops team:join`](#ops-teamjoin)
+* [`ops team:list`](#ops-teamlist)
 * [`ops team:switch`](#ops-teamswitch)
 * [`ops update`](#ops-update)
 * [`ops whoami`](#ops-whoami)
@@ -370,9 +371,21 @@ USAGE
   $ ops team:join
 ```
 
-## `ops team:switch`
+## `ops team:list`
 
 Shows the list of your teams.
+
+```
+USAGE
+  $ ops team:list
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops team:switch`
+
+Switch your currently active team.
 
 ```
 USAGE
