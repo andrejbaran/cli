@@ -1,4 +1,4 @@
-import { run, signin, signout, sleep } from '../utils/cmd'
+import { run, signin, signout, cleanup } from '../utils/cmd'
 import {
   ENTER,
   SPACE,
@@ -6,27 +6,31 @@ import {
   NEW_WORKFLOW_NAME,
   NEW_WORKFLOW_DESCRIPTION,
   NEW_WORKFLOW_VERSION,
+  DEFAULT_TIMEOUT_INTERVAL,
 } from '../utils/constants'
-import { COMMAND, WORKFLOW } from '~/constants/opConfig'
+import { WORKFLOW } from '~/constants/opConfig'
 import fs from 'fs-extra'
-import * as yaml from 'yaml'
-import path from 'path'
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
+jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_INTERVAL
+
+const pathToWorkflow = `./${NEW_WORKFLOW_NAME}`
 
 beforeEach(async () => {
-  await signout()
+  await signin()
 })
 
 afterEach(async () => {
-  await sleep(500)
+  await signout()
+  if (fs.existsSync(pathToWorkflow)) {
+    fs.removeSync(pathToWorkflow)
+  }
+})
+
+afterAll(async () => {
+  await cleanup()
 })
 
 test('init should create a directory with the command name', async () => {
-  await signin()
-  await sleep(500)
-
-  console.log('ops init a workflow, check if directory is created')
   const initRes = await run(
     ['init'],
     [
@@ -47,10 +51,8 @@ test('init should create a directory with the command name', async () => {
   expect(initRes).toContain(`🚀 To test your ${WORKFLOW} run:`)
   expect(newFileExists).toBeTruthy()
 
-  const pathToWorkflow = `./${NEW_WORKFLOW_NAME}`
   const packageObj = fs.readFileSync(`${pathToWorkflow}/ops.yml`, 'utf8')
 
-  console.log('check if correct version was assigned')
   const WF_VERSIONS = (
     NEW_WORKFLOW_NAME +
     ':' +
@@ -58,9 +60,4 @@ test('init should create a directory with the command name', async () => {
   ).toLowerCase()
 
   expect(packageObj).toContain(WF_VERSIONS)
-
-  if (fs.existsSync(pathToWorkflow)) {
-    fs.removeSync(pathToWorkflow)
-    console.log(pathToWorkflow, ' directory deleted successfully.')
-  }
 })

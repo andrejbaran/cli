@@ -1,49 +1,41 @@
 import fs from 'fs-extra'
 import * as yaml from 'yaml'
-import { run, signin, sleep } from '../utils/cmd'
+import { run, signin, cleanup, signout } from '../utils/cmd'
 import {
   ENTER,
   SPACE,
   NEW_COMMAND_NAME,
   NEW_COMMAND_DESCRIPTION,
   NEW_COMMAND_VERSION,
+  DEFAULT_TIMEOUT_INTERVAL,
 } from '../utils/constants'
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
+jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_INTERVAL
+
 const pathToOp = `./${NEW_COMMAND_NAME}`
 
 beforeEach(async () => {
-  try {
-    await signin()
-    await sleep(500)
-    await run(
-      ['init'],
-      [
-        SPACE,
-        ENTER,
-        NEW_COMMAND_NAME,
-        ENTER,
-        NEW_COMMAND_DESCRIPTION,
-        ENTER,
-        ENTER,
-      ],
-    )
-  } catch (err) {
-    throw err
-  }
+  await signin()
+  await run(
+    ['init'],
+    [
+      SPACE,
+      ENTER,
+      NEW_COMMAND_NAME,
+      ENTER,
+      NEW_COMMAND_DESCRIPTION,
+      ENTER,
+      ENTER,
+    ],
+  )
 })
 
 afterEach(async () => {
-  await sleep(500)
-  if (fs.existsSync(pathToOp)) {
-    fs.removeSync(pathToOp)
-    console.log(pathToOp, ' directory deleted successfully.')
-  }
+  await signout()
+  if (fs.existsSync(pathToOp)) fs.removeSync(pathToOp)
 })
 
 afterAll(async () => {
-  await run(['account:signout'])
-  // avoid jest open handle error
-  await sleep(500)
+  await cleanup()
 })
 
 test('it should use default version if none is provided in the ops.yml', async () => {

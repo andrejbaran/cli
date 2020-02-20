@@ -41,7 +41,7 @@ const setEnv = (
 function run(
   args: string[] = [],
   inputs: string[] = [],
-  timeout: number = 1500,
+  timeout: number = 5000,
   command: string = opsBinary,
   options: SpawnOptions = {},
 ): Promise<string> {
@@ -98,9 +98,7 @@ const sendInput = function(
 
 const cleanup = async () => {
   try {
-    // we are using the Go API here directly because the Feathers API (www) does not have a pass-through method for cleanup
     await axios.get(`${defaultEnv.OPS_GO_API_HOST}api/v1/public/cleanup`)
-    console.log('cleanup endpoint hit successfully')
   } catch (error) {
     console.error({ error })
   }
@@ -129,7 +127,6 @@ const cleanupAddedOp = async opFullName => {
         },
       },
     )
-    console.log('cleaned up added op successfully')
   } catch (error) {
     console.error({ error })
   }

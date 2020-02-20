@@ -9,7 +9,7 @@
 import * as OclifConfig from '@oclif/config'
 import fs, { readJsonSync } from 'fs-extra'
 import path from 'path'
-import { run, signin, sleep } from '../../utils/cmd'
+import { run, signin, signout } from '../../utils/cmd'
 import {
   EXISTING_USER_NAME,
   EXISTING_USER_EMAIL,
@@ -17,22 +17,16 @@ import {
   EXISTING_TEAM_ID,
   EXISTING_USER_PASSWORD,
   ENTER,
+  DEFAULT_TIMEOUT_INTERVAL,
 } from '../../utils/constants'
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
+jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_INTERVAL
 
 beforeEach(async () => {
-  await run(['account:signout'])
-})
-
-afterAll(async () => {
-  // avoid jest open handle error
-  await sleep(500)
+  await signout()
 })
 
 test('it should signin via -u and -p flags and write the config file', async () => {
-  console.log('it should signin via -u and -p flags and write the config file')
-
   const aString = expect.stringMatching(/\w*/)
 
   const desiredConfigObject = {
@@ -69,8 +63,6 @@ test('it should signin via -u and -p flags and write the config file', async () 
 })
 
 test('it should signin via the -i flag and write the config file', async () => {
-  console.log('it should signin via the -i flag and write the config file')
-
   const aString = expect.stringMatching(/\w*/)
 
   const desiredConfigObject = {
@@ -98,11 +90,7 @@ test('it should signin via the -i flag and write the config file', async () => {
     ['account:signin', '-i'],
     [EXISTING_USER_NAME, ENTER, EXISTING_USER_PASSWORD, ENTER],
   )
-
-  await sleep(500)
-
   const config = await OclifConfig.load()
-
   const configFileExists = fs.existsSync(config.configDir)
   const configData = readJsonSync(path.join(config.configDir, 'config.json'))
 

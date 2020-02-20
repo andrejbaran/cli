@@ -5,6 +5,8 @@ export const SPACE = '\x20'
 export const ESCAPE = '\x1B'
 export const Y = '\x79'
 
+export const DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
+
 export const NEW_COMMAND_NAME = 't_command_e2e_test'
 export const NEW_COMMAND_DESCRIPTION = 't_command_e2e_test description'
 export const NEW_COMMAND_VERSION = '0.1.0'

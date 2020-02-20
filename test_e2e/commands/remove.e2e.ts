@@ -8,46 +8,29 @@
  *
  * @copyright (c) 2019 Hack Capital
  */
-import { run, signin, sleep, cleanupAddedOp, cleanup } from '../utils/cmd'
+import { run, signin, signout } from '../utils/cmd'
 import {
-  ENTER,
-  PUBLIC_OP_NAME_WITH_TEAM,
-  PUBLIC_OP_NAME_WITH_TEAM_AND_VERSION,
   EXISTING_USER_NAME,
+  DEFAULT_TIMEOUT_INTERVAL,
 } from '../utils/constants'
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 3
+jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_INTERVAL
 
 beforeEach(async () => {
-  try {
-    await run(['account:signout'])
-  } catch (err) {
-    throw err
-  }
+  await signin()
 })
 
-afterAll(async () => {
-  // avoid jest open handle error
-  await sleep(500)
+afterEach(async () => {
+  await signout()
 })
 
 test('it should error out if ops remove called with invalid op name', async () => {
-  await signin()
-  await sleep(500)
-
-  console.log(`ops remove invalid-op`)
-
   const invalidOpName = '@invalid-op-name'
   const result = await run(['remove', invalidOpName])
   expect(result).toContain('Sorry')
 })
 
 test('it should error out if op trying to remove is not found', async () => {
-  await signin()
-  await sleep(500)
-
-  console.log(`ops remove not-found-op`)
-
   const notFoundOpName = 'my-command:0.1.0'
   const result = await run(['remove', notFoundOpName])
   expect(result).toContain(
