@@ -231,6 +231,7 @@ export default class Publish extends Command {
       } catch (err) {
         if (err.error[0].code === 404) {
           filteredOps = filteredOps.concat(op)
+          continue
         }
         throw new APIError(err)
       }
