@@ -74,7 +74,7 @@ test('it should init a command, build, publish, list, remove', async () => {
   expect(publishRes.toLowerCase()).toContain('preparing:')
   expect(publishRes).toContain('has been published!')
 
-  await sleep(1000)
+  await sleep(5000)
 
   const listRes = await run(['list'], [DOWN, ENTER])
   expect(listRes).toContain(NEW_COMMAND_NAME)
