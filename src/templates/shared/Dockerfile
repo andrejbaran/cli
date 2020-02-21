@@ -1,7 +1,7 @@
 ############################
 # Build container
 ############################
-FROM registry.cto.ai/official_images/node:latest AS dep
+FROM node:12-alpine AS dep
 
 WORKDIR /ops
 
