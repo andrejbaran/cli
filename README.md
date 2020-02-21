@@ -58,6 +58,7 @@ USAGE
 * [`ops team:invite`](#ops-teaminvite)
 * [`ops team:join`](#ops-teamjoin)
 * [`ops team:list`](#ops-teamlist)
+* [`ops team:remove [MEMBER]`](#ops-teamremove-member)
 * [`ops team:switch`](#ops-teamswitch)
 * [`ops update`](#ops-update)
 * [`ops whoami`](#ops-whoami)
@@ -378,6 +379,21 @@ Shows the list of your teams.
 ```
 USAGE
   $ ops team:list
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops team:remove [MEMBER]`
+
+Remove your team members.
+
+```
+USAGE
+  $ ops team:remove [MEMBER]
+
+ARGUMENTS
+  MEMBER  The username of the team member you want to remove from the team.
 
 OPTIONS
   -h, --help  show CLI help
