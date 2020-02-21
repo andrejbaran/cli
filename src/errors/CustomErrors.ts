@@ -823,3 +823,43 @@ export class NoSecretFound extends ErrorTemplate {
     )
   }
 }
+
+export class NoMemberFound extends ErrorTemplate {
+  constructor(username, teamname) {
+    super(
+      white(
+        `😞 Sorry, we weren't able to find ${actionBlue(
+          username,
+        )} on ${actionBlue(teamname)}.\n    You can run ${terminalText(
+          'ops team:info',
+        )} to see members of your team.`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class NoMembersFound extends ErrorTemplate {
+  constructor() {
+    super(
+      white(`😞 Sorry, it looks like you are the only member of this team.`),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class FailedToRemoveMemberFromTeam extends ErrorTemplate {
+  constructor(err, member, team) {
+    super(
+      white(
+        `😅 Oops! We were not able to successfully remove ${actionBlue(
+          member,
+        )} from ${actionBlue(team)}.\n    ${tryAgainOrContact}`,
+      ),
+      err,
+      expectedSource,
+    )
+  }
+}

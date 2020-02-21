@@ -7,6 +7,7 @@ import {
   User,
   Tokens,
   State,
+  Membership,
 } from '~/types'
 import { COMMAND_TYPE, WORKFLOW_TYPE } from '~/constants/opConfig'
 
@@ -138,6 +139,22 @@ export const createMockState = (inputs: Partial<State>): State => {
   return Object.assign(
     {
       config: createMockConfig({}),
+    },
+    inputs,
+  )
+}
+
+export const createMockMembership = (
+  inputs: Partial<Membership>,
+): Membership => {
+  return Object.assign(
+    {
+      userId: '',
+      teamId: '',
+      username: '',
+      createdAt: '',
+      firstName: '',
+      lastName: '',
     },
     inputs,
   )

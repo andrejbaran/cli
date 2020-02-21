@@ -93,7 +93,7 @@ export default class TeamInfo extends Command {
     return inputs
   }
 
-  sendAnalytics = (inputs: InfoInputs) => {
+  sendAnalytics = async (inputs: InfoInputs) => {
     const {
       config: {
         user: { email, username },
@@ -101,7 +101,7 @@ export default class TeamInfo extends Command {
       },
       activeTeam: { name: activeTeamName },
     } = inputs
-    this.services.analytics.track(
+    await this.services.analytics.track(
       {
         userId: email,
         cliEvent: 'Ops CLI Team:Info',
