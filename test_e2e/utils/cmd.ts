@@ -147,4 +147,35 @@ const signout = async () => {
   return run(['account:signout'])
 }
 
-export { run, sleep, cleanup, cleanupAddedOp, signin, signout }
+const invite = async(username: string, teamID: string): Promise<string> => {
+  const config = await OclifConfig.load()
+  const configData = readJsonSync(path.join(config.configDir, 'config.json'))
+  const accessToken = configData && configData.tokens.accessToken
+
+  const response = await axios.post(`${defaultEnv.OPS_API_HOST}api/v1/private/teams/${teamID}/invites`,
+    {
+      "userOrEmail": [username]
+    },
+    {
+      headers: { Authorization: accessToken }
+    }
+  )
+  if (!response?.data?.data?.length) return ""
+  const inviteCode = response.data.data[0].inviteCode
+  return inviteCode
+}
+
+const acceptInvite = async(inviteCode: string) => {
+
+  const config = await OclifConfig.load()
+  const configData = readJsonSync(path.join(config.configDir, 'config.json'))
+  const accessToken = configData && configData.tokens.accessToken
+
+  return axios.post(`${defaultEnv.OPS_API_HOST}api/v1/private/invite/accept/${inviteCode}`, {},
+    {
+      headers: { Authorization: accessToken }
+    }
+  )
+}
+
+export { run, sleep, cleanup, cleanupAddedOp, signin, signout, invite, acceptInvite }
