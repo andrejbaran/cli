@@ -1,11 +1,3 @@
-/**
- * @author: JP Lew (jp@cto.ai)
- * @date: Friday, 24th May 2019 1:41:52 pm
- * @lastModifiedBy: Prachi Singh (prachi@hackcapital.com)
- * @lastModifiedTime: Friday, 29th November 2019 2:26:52 pm
- * @copyright (c) 2019 CTO.ai
- */
-
 import fs from 'fs-extra'
 import * as yaml from 'yaml'
 import { run, signin, cleanup, signout } from '../utils/cmd'
@@ -31,7 +23,7 @@ import {
 import { COMMAND, WORKFLOW } from '~/constants/opConfig'
 import { sleep } from '../../test/utils'
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_INTERVAL
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 5
 
 const pathToWorkflow = `./${NEW_WORKFLOW_NAME}`
 const pathToCommand = `./${NEW_COMMAND_NAME}`
@@ -74,9 +66,14 @@ test('it should init a command, build, publish, list, remove', async () => {
   expect(publishRes.toLowerCase()).toContain('preparing:')
   expect(publishRes).toContain('has been published!')
 
-  await sleep(5000)
+  await sleep(1000)
+  let listRes
+  for (let i = 0; i < 60; i++) {
+    listRes = await run(['list'], [DOWN, ENTER])
+    if (listRes.includes(NEW_COMMAND_NAME)) break
+    await sleep(1000)
+  }
 
-  const listRes = await run(['list'], [DOWN, ENTER])
   expect(listRes).toContain(NEW_COMMAND_NAME)
 
   const removeRes = await run(
