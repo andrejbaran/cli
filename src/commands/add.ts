@@ -266,7 +266,7 @@ export default class Add extends Command {
   sendAnalytics = async (inputs: AddInputs) => {
     this.services.analytics.track(
       {
-        userId: inputs.config.user.id,
+        userId: inputs.config.user.email,
         teamId: inputs.config.team.id,
         cliEvent: 'Ops CLI Add',
         event: 'Ops CLI Add',
