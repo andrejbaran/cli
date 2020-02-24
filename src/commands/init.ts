@@ -187,11 +187,6 @@ export default class Init extends Command {
       const { destDir, sharedDir } = initPaths
 
       await fs.ensureDir(destDir)
-      // copies op files if selected
-      if (templates.includes(COMMAND)) {
-        await fs.copy(`${this.srcDir}/${COMMAND}`, destDir)
-      }
-      // copies shared files
       await fs.copy(sharedDir, destDir)
       return { initPaths, initParams }
     } catch (err) {
@@ -390,7 +385,6 @@ export default class Init extends Command {
   }
 
   logWorkflowMessage = (initParams: InitParams) => {
-    const { workflowName } = initParams
     const { name } = this.getNameAndDescription(initParams)
     this.log(
       `\n🚀 To test your ${WORKFLOW} run: ${this.ux.colors.green(
