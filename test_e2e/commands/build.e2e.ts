@@ -49,7 +49,7 @@ test('it should use default version if none is provided in the ops.yml', async (
   fs.writeFileSync(`${pathToOp}/ops.yml`, opsYamlDocument)
   const buildRes = await run(['build', NEW_COMMAND_NAME])
   expect(buildRes.toLowerCase()).toContain(
-    'it looks like your ops.yml is a little out of date. it does not have a version, we are setting the default version to 0.1.0. learn more here (https://cto.ai/docs/ops-reference).',
+    'it looks like your ops.yml is a little out of date. it does not have a version, we are setting the default version to 0.1.0. learn more here (https://cto.ai/docs/developing-ops/configuring-ops).',
   )
   expect(buildRes.toLowerCase()).toContain(
     `building: ${NEW_COMMAND_NAME}:${NEW_COMMAND_VERSION}`.toLowerCase(),

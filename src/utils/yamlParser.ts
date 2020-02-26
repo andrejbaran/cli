@@ -61,8 +61,8 @@ export const parseYaml = (manifest: string): OpsYml => {
         `It looks like your ops.yml is a little out of date.\nYou should replace the ${callOutCyan(
           'ops',
         )} field with ${callOutCyan('commands')}.\nLearn more here ${ux.url(
-          'https://cto.ai/docs/ops-reference',
-          'https://cto.ai/docs/ops-reference',
+          'https://cto.ai/docs/developing-ops/configuring-ops',
+          'https://cto.ai/docs/developing-ops/configuring-ops',
         )}`,
       ),
     )
@@ -101,7 +101,10 @@ const formatRequiredFields = (opOrWorkflow, type) => {
   const defaultVersion = `0.1.0`
   const defaultVersionLog = `\nℹ️  It looks like your ops.yml is a little out of date. It does not have a version, we are setting the default version to ${ux.colors.callOutCyan(
     defaultVersion,
-  )}. Learn more ${ux.url('here', 'https://cto.ai/docs/ops-reference')}.\n`
+  )}. Learn more ${ux.url(
+    'here',
+    'https://cto.ai/docs/developing-ops/configuring-ops',
+  )}.\n`
   const newOp = { ...opOrWorkflow }
   newOp.isPublic = newOp.public
   delete newOp.public
