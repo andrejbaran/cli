@@ -108,117 +108,117 @@ describe('BuildStep', () => {
 
     expect(mockBuildStepService.isGlueCode).toHaveBeenCalledTimes(5)
   })
+  // TODO update test once glue_code is re enabled
+  // it('should replace all glue code steps with ops run', async () => {
+  //   const workflowArray: OpWorkflow[] = [
+  //     createMockWorkflow({
+  //       name: 'mockWorkflow',
+  //       version: 'latest',
+  //       remote: true,
+  //       steps: [
+  //         'ops run op1',
+  //         "var stuff1 = 'mock values 1';",
+  //         'ops run op2',
+  //         'ops run op3',
+  //         "var stuff2 = 'mock values 2';",
+  //       ],
+  //       publishDescription: 'v1 release',
+  //       teamID: 'team-id',
+  //     }),
+  //   ]
 
-  it('should replace all glue code steps with ops run', async () => {
-    const workflowArray: OpWorkflow[] = [
-      createMockWorkflow({
-        name: 'mockWorkflow',
-        version: 'latest',
-        remote: true,
-        steps: [
-          'ops run op1',
-          "var stuff1 = 'mock values 1';",
-          'ops run op2',
-          'ops run op3',
-          "var stuff2 = 'mock values 2';",
-        ],
-        publishDescription: 'v1 release',
-        teamID: 'team-id',
-      }),
-    ]
+  //   const inputs: PublishInputs = {
+  //     opWorkflows: workflowArray,
+  //     version: '1',
+  //   } as PublishInputs
 
-    const inputs: PublishInputs = {
-      opWorkflows: workflowArray,
-      version: '1',
-    } as PublishInputs
+  //   // SPY ON FEATHERS CREATE
+  //   const mockFeathersService = new FeathersClient()
+  //   mockFeathersService.create = jest
+  //     .fn()
+  //     .mockReturnValue({ data: {} as OpCommand })
 
-    // SPY ON FEATHERS CREATE
-    const mockFeathersService = new FeathersClient()
-    mockFeathersService.create = jest
-      .fn()
-      .mockReturnValue({ data: {} as OpCommand })
+  //   // MOCK BUILD STEP SERVICE
+  //   const mockBuildStepService = new BuildSteps()
+  //   mockBuildStepService.isGlueCode = jest.fn().mockReturnValue(true)
 
-    // MOCK BUILD STEP SERVICE
-    const mockBuildStepService = new BuildSteps()
-    mockBuildStepService.isGlueCode = jest.fn().mockReturnValue(true)
+  //   mockBuildStepService.buildAndPublishGlueCode = jest
+  //     .fn()
+  //     .mockReturnValue('ops run mock-op')
 
-    mockBuildStepService.buildAndPublishGlueCode = jest
-      .fn()
-      .mockReturnValue('ops run mock-op')
+  //   mockBuildStepService.isOpRun = jest.fn().mockReturnValue(true)
 
-    mockBuildStepService.isOpRun = jest.fn().mockReturnValue(true)
+  //   const mockRegistryAuthService = new RegistryAuthService()
+  //   mockRegistryAuthService.delete = jest
+  //     .fn()
+  //     .mockReturnValue({} as RegistryAuth)
+  //   mockRegistryAuthService.create = jest
+  //     .fn()
+  //     .mockReturnValue({} as RegistryAuth)
 
-    const mockRegistryAuthService = new RegistryAuthService()
-    mockRegistryAuthService.delete = jest
-      .fn()
-      .mockReturnValue({} as RegistryAuth)
-    mockRegistryAuthService.create = jest
-      .fn()
-      .mockReturnValue({} as RegistryAuth)
+  //   const config = await Config.load()
+  //   cmd = new Publish([], config, {
+  //     api: mockFeathersService,
+  //     buildStepService: mockBuildStepService,
+  //     registryAuthService: mockRegistryAuthService,
+  //   } as Services)
 
-    const config = await Config.load()
-    cmd = new Publish([], config, {
-      api: mockFeathersService,
-      buildStepService: mockBuildStepService,
-      registryAuthService: mockRegistryAuthService,
-    } as Services)
+  //   cmd.sendAnalytics = jest.fn()
 
-    cmd.sendAnalytics = jest.fn()
+  //   const teamName = 'team-name'
 
-    const teamName = 'team-name'
+  //   cmd.user = {
+  //     username: '',
+  //     email: '',
+  //     id: '',
+  //   }
+  //   cmd.team = {
+  //     id: 'team-id',
+  //     name: teamName,
+  //   }
+  //   cmd.state = {
+  //     config: {
+  //       tokens: {
+  //         sessionState: '',
+  //         accessToken: '',
+  //         refreshToken: '',
+  //         idToken: '',
+  //       },
+  //       team: cmd.team,
+  //       user: cmd.user,
+  //     },
+  //   }
 
-    cmd.user = {
-      username: '',
-      email: '',
-      id: '',
-    }
-    cmd.team = {
-      id: 'team-id',
-      name: teamName,
-    }
-    cmd.state = {
-      config: {
-        tokens: {
-          sessionState: '',
-          accessToken: '',
-          refreshToken: '',
-          idToken: '',
-        },
-        team: cmd.team,
-        user: cmd.user,
-      },
-    }
+  //   cmd.getRegistryAuth = jest.fn().mockReturnValue({} as RegistryAuth)
 
-    cmd.getRegistryAuth = jest.fn().mockReturnValue({} as RegistryAuth)
+  //   cmd.ux = {
+  //     prompt: jest.fn().mockReturnValue({ publishDescription: 'v1 release' }),
+  //   }
 
-    cmd.ux = {
-      prompt: jest.fn().mockReturnValue({ publishDescription: 'v1 release' }),
-    }
+  //   await cmd.workflowsPublishLoop(inputs)
 
-    await cmd.workflowsPublishLoop(inputs)
+  //   expect(mockFeathersService.create).toHaveBeenCalledWith(
+  //     `/private/teams/${teamName}/ops`,
+  //     createMockWorkflow({
+  //       name: 'mockWorkflow',
+  //       remote: true,
+  //       steps: [
+  //         'ops run mock-op',
+  //         'ops run mock-op',
+  //         'ops run mock-op',
+  //         'ops run mock-op',
+  //         'ops run mock-op',
+  //       ],
+  //       publishDescription: 'v1 release',
+  //       platformVersion: '1',
+  //       teamID: 'team-id',
+  //       version: 'latest',
+  //     }),
+  //     { headers: { Authorization: undefined } },
+  //   )
 
-    expect(mockFeathersService.create).toHaveBeenCalledWith(
-      `/private/teams/${teamName}/ops`,
-      createMockWorkflow({
-        name: 'mockWorkflow',
-        remote: true,
-        steps: [
-          'ops run mock-op',
-          'ops run mock-op',
-          'ops run mock-op',
-          'ops run mock-op',
-          'ops run mock-op',
-        ],
-        publishDescription: 'v1 release',
-        platformVersion: '1',
-        teamID: 'team-id',
-        version: 'latest',
-      }),
-      { headers: { Authorization: undefined } },
-    )
-
-    expect(mockFeathersService.create).toHaveBeenCalledTimes(1)
-  })
+  //   expect(mockFeathersService.create).toHaveBeenCalledTimes(1)
+  // })
 })
 
 it('should publish ops in a loop', async () => {

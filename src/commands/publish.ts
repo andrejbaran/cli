@@ -445,8 +445,11 @@ export default class Publish extends Command {
           const newSteps: string[] = []
           for (const step of workflow.steps) {
             let newStep = ''
-
-            if (await this.services.buildStepService.isGlueCode(step)) {
+            // TODO disabling gluecode until further planning has been done
+            if (
+              (await this.services.buildStepService.isGlueCode(step)) &&
+              false
+            ) {
               const opPath = path.resolve(
                 __dirname,
                 './../templates/workflowsteps/js/',
