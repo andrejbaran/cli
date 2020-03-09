@@ -1,15 +1,13 @@
+import { ux } from '@cto.ai/sdk'
 import * as Config from '@oclif/config'
-import * as path from 'path'
 import Run, { RunInputs } from '~/commands/run'
+import { APIError } from '~/errors/CustomErrors'
 import { ErrorResponse } from '~/errors/ErrorTemplate'
 import { FeathersClient } from '~/services/Feathers'
-import { WorkflowService } from '~/services/Workflow'
 import { OpService } from '~/services/Op'
-import { OPS_REGISTRY_HOST } from '~/constants/env'
-import { APIError } from '~/errors/CustomErrors'
+import { WorkflowService } from '~/services/Workflow'
+import { OpsYml, Services } from '~/types'
 import { createMockOp, createMockWorkflow } from '../mocks'
-import { Services, OpsYml } from '~/types'
-import { COMMAND_ENDPOINT } from '~/constants/opConfig'
 import { sleep } from '../utils'
 
 let cmd: Run
@@ -17,6 +15,8 @@ const nameOrPath = './src/templates/shared/'
 const version = '1'
 let config
 const apiError = new APIError('error')
+const uxprompt = ux.prompt
+const uxprint = ux.print
 
 beforeEach(async () => {
   config = await Config.load()
@@ -25,6 +25,9 @@ beforeEach(async () => {
 afterEach(async () => {
   // avoid jest open handle error
   await sleep(500)
+  //restore mocked ux functions
+  ux.prompt = uxprompt
+  ux.print = uxprint
 })
 
 describe('checkPathOpsYmlExists', () => {
@@ -181,7 +184,8 @@ describe('executeOpOrWorkflowService', () => {
     cmd = new Run([], config, {
       workflowService: mockWorkflowService,
     } as Services)
-    cmd.executeOpOrWorkflowService(inputs)
+    ux.prompt = jest.fn().mockResolvedValue({ bindConsent: true })
+    await cmd.executeOpOrWorkflowService(inputs)
     expect(mockWorkflowService.run).toHaveBeenCalledWith(
       mockWorkflow,
       opParams,
@@ -212,13 +216,56 @@ describe('executeOpOrWorkflowService', () => {
     cmd = new Run([], config, {
       opService: mockOpService,
     } as Services)
-    cmd.executeOpOrWorkflowService(inputs)
+    ux.prompt = jest.fn().mockResolvedValue({ bindConsent: true })
+    await cmd.executeOpOrWorkflowService(inputs)
     expect(mockOpService.run).toHaveBeenCalledWith(
       mockOp,
       inputs.parsedArgs,
       config,
       opVersion,
     )
+  })
+  test('should print warnings if the op has binds', async () => {
+    const mockOpService = new OpService()
+    mockOpService.run = jest.fn()
+    const mockOp = createMockOp({
+      isPublished: true,
+      bind: ['/test:/bind', '/print:/donotprint'],
+      mountCwd: true,
+      mountHome: true,
+    })
+    const opParams = ['arg1', 'arg2']
+    const opVersion = 'mock-op-version'
+
+    const inputs: RunInputs = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams,
+        flags: {},
+      },
+      config,
+      version,
+      opsAndWorkflows: [mockOp],
+      opOrWorkflow: mockOp,
+      opVersion,
+    } as RunInputs
+    cmd = new Run([], config, {
+      opService: mockOpService,
+    } as Services)
+    ux.prompt = jest.fn().mockResolvedValue({ bindConsent: true })
+    ux.print = jest.fn().mockResolvedValue(null)
+    await cmd.executeOpOrWorkflowService(inputs)
+
+    expect(ux.print).toBeCalledWith(
+      '⚠️  Warning, the op or workflow you are about to run mounts some directories!',
+    )
+    expect(ux.print).toBeCalledWith(
+      '⚠️  The current working directory will be mounted.',
+    )
+    expect(ux.print).toBeCalledWith('⚠️  The home directory will be mounted.')
+    expect(ux.print).toBeCalledWith('   /test\n   /print')
   })
   test('should set the image if the opOrWorkflow is a op and not published', async () => {
     config.team = {
@@ -251,7 +298,8 @@ describe('executeOpOrWorkflowService', () => {
     cmd = new Run([], config, {
       opService: mockOpService,
     } as Services)
-    cmd.executeOpOrWorkflowService(inputs)
+    ux.prompt = jest.fn().mockResolvedValue({ bindConsent: true })
+    await cmd.executeOpOrWorkflowService(inputs)
     expect(mockOpService.run).toHaveBeenCalledWith(
       mockOp,
       inputs.parsedArgs,
