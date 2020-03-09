@@ -123,7 +123,7 @@
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "prettier --check 'src/**/*.ts' --check 'test/**/*.ts'",
     "prepack": "scripts/prepack.sh",
-    "pretty": "prettier --write src/**/*.ts",
+    "pretty": "prettier --write src/**/*.ts --write test/**/*.spec.ts",
     "test": "jest --coverage",
     "test:e2e": "jest -c test_e2e/jest.config.js --runInBand",
     "test:e2e:debug": "node --inspect-brk node_modules/.bin/jest -c test_e2e/jest.config.js --runInBand",

@@ -309,6 +309,14 @@ export default class Run extends Command {
     }
   }
 
+  isOpCommand = (op: OpCommand | OpWorkflow): op is OpCommand => {
+    return (op as OpCommand).bind !== undefined
+  }
+
+  isOpWorkflow = (op: OpCommand | OpWorkflow): op is OpWorkflow => {
+    return (op as OpWorkflow).steps !== undefined
+  }
+
   executeOpOrWorkflowService = async (
     inputs: RunInputs,
   ): Promise<RunInputs> => {
@@ -320,7 +328,86 @@ export default class Run extends Command {
         parsedArgs: { opParams },
         teamName,
         opVersion,
+        opsAndWorkflows,
       } = inputs
+
+      let allBinds: {
+        bind: string[]
+        mountHome: boolean
+        mountCwd: boolean
+      } = { bind: [], mountCwd: false, mountHome: false }
+
+      opsAndWorkflows
+        .map(op => {
+          if (this.isOpCommand(op)) {
+            this.debug(
+              'executeOpOrWorkflowService: bindings: checking Op bindings:',
+              op.name,
+            )
+            let { bind, mountHome, mountCwd } = op
+            return { bind, mountHome, mountCwd }
+          } else if (this.isOpWorkflow(op)) {
+            return undefined
+          }
+        })
+        .forEach(opsBinds => {
+          this.debug(
+            'executeOpOrWorkflowService: bindings: processing bindings',
+            opsBinds,
+          )
+          if (opsBinds !== undefined) {
+            allBinds.mountCwd = allBinds.mountCwd || opsBinds.mountCwd
+            allBinds.mountHome = allBinds.mountHome || opsBinds.mountHome
+            allBinds.bind = allBinds.bind.concat(opsBinds.bind)
+          }
+        })
+
+      if (allBinds.mountCwd || allBinds.mountHome || allBinds.bind.length > 0) {
+        this.debug(
+          'executeOpOrWorkflowService: bindings: some bindings found, printing warnings',
+        )
+        //there's binds
+        this.ux.print(
+          '⚠️  Warning, the op or workflow you are about to run mounts some directories!',
+        )
+        if (allBinds.mountCwd) {
+          this.ux.print('⚠️  The current working directory will be mounted.')
+        }
+        if (allBinds.mountHome) {
+          this.ux.print('⚠️  The home directory will be mounted.')
+        }
+        if (allBinds.bind.length > 0) {
+          this.ux.print('⚠️  The following directories will be mounted:')
+          this.ux.print(
+            `   ${allBinds.bind
+              .map((value: string) => {
+                return value.split(':')[0]
+              })
+              .join('\n   ')}`,
+          )
+        }
+
+        this.debug(
+          'executeOpOrWorkflowService: bindings: acquiring user consent for filesystem bindings',
+        )
+        const { bindConsent } = await this.ux.prompt<{
+          bindConsent: boolean
+        }>({
+          type: 'confirm',
+          name: 'bindConsent',
+          default: 'no',
+          message:
+            'The Op(s)/Workflow(s) you are about to run is requesting access to your host file system. Are you OK with this?',
+        })
+
+        if (!bindConsent) {
+          this.debug(
+            'executeOpOrWorkflowService: bindings: user denied consent for fs bindings, exiting',
+          )
+          process.exit(1)
+        }
+      }
+
       if (opOrWorkflow.type === WORKFLOW_TYPE) {
         await this.services.workflowService.run(opOrWorkflow, opParams, config)
       } else {
