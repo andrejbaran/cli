@@ -1,0 +1,37 @@
+# for more info visit https://cto.ai/docs/developing-ops/configuring-ops
+version: "1"
+commands:
+  - name: hello-world-go:0.1.0
+    public: false
+    description: Your first Go hello-world op
+    run: /ops/main
+    remote: true
+    sdk: "2"
+    sourceCodeURL: ""
+    env:
+      - "MY_ENV_VAR=$MY_ENV_VAR"
+      - "MY_ACCESS_TOKEN=$MY_ACCESS_TOKEN"
+    mountCwd: false
+    mountHome: false
+    # bind:
+    #   - "/tmp:/tmp"
+    # port:
+    #   - 3000:3000
+    # help:
+    #   usage: "Your first Go hello-world op"
+    #   arguments:
+    #     username: "Your username"
+    #     email: "Your email"
+    #   options:
+    #     build: "Build flag"
+    #     clear: "Clears"
+workflows:
+  - name: hello-world-go:0.1.0
+    description: Your first Go hello-world workflow
+    public: false
+    sourceCodeURL: ""
+    steps:
+      - ops run @cto-ai/hello-world-go 
+    env:
+      - "MY_ENV_VAR=$MY_ENV_VAR"
+      - "MY_ACCESS_TOKEN=$MY_ACCESS_TOKEN"

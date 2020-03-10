@@ -31,7 +31,7 @@ workflows:
     public: false
     sourceCodeURL: ""
     steps:
-      - node ./index.js
+      - ops run @cto-ai/hello-world 
     env:
       - "MY_ENV_VAR=$MY_ENV_VAR"
       - "MY_ACCESS_TOKEN=$MY_ACCESS_TOKEN"

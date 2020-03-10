@@ -1,0 +1,37 @@
+# for more info visit https://cto.ai/docs/developing-ops/configuring-ops
+version: "1"
+commands:
+  - name: hello-world-bash:0.1.0
+    public: false
+    description: Your first Bash hello-world op
+    run: bash /ops/main.sh 
+    remote: true
+    sdk: "2"
+    sourceCodeURL: ""
+    env:
+      - "MY_ENV_VAR=$MY_ENV_VAR"
+      - "MY_ACCESS_TOKEN=$MY_ACCESS_TOKEN"
+    mountCwd: false
+    mountHome: false
+    # bind:
+    #   - "/tmp:/tmp"
+    # port:
+    #   - 3000:3000
+    # help:
+    #   usage: "Your first Bash hello-world op"
+    #   arguments:
+    #     username: "Your username"
+    #     email: "Your email"
+    #   options:
+    #     build: "Build flag"
+    #     clear: "Clears"
+workflows:
+  - name: hello-world-bash:0.1.0
+    description: Your first Bash hello-world op
+    public: false
+    sourceCodeURL: ""
+    steps:
+      - ops run @cto-ai/hello-world-bash 
+    env:
+      - "MY_ENV_VAR=$MY_ENV_VAR"
+      - "MY_ACCESS_TOKEN=$MY_ACCESS_TOKEN"
