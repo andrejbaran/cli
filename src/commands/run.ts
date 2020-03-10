@@ -584,6 +584,8 @@ export default class Run extends Command {
           image: `${OPS_REGISTRY_HOST}/${name}:${version}`,
           argments: opParams.length,
           cliVersion: this.config.version,
+          version,
+          namespace_version: `${teamName}/${name}:${version}`,
         },
       },
       this.accessToken,
