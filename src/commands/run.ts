@@ -577,7 +577,7 @@ export default class Run extends Command {
           team: teamName,
           email,
           username,
-          namespace: `@${teamName}/${name}`,
+          namespace: `${teamName}/${name}`,
           runtime: 'CLI',
           id,
           description,
