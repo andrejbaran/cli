@@ -9,4 +9,5 @@ export interface InitParams {
   workflowVersion: string | undefined
   templates: OpTypes[]
   help?: void
+  lang: string
 }

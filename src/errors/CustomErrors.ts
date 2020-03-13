@@ -62,6 +62,18 @@ export class ConfigError extends ErrorTemplate {
   }
 }
 
+export class EnumeratingLangsError extends ErrorTemplate {
+  constructor(err) {
+    super(
+      white(
+        `❗We couldn't enumerate the available templates.\n   Your Ops CLI installation may have been corrupted.\n   ${tryAgainOrContact}`,
+      ),
+      err,
+      expectedSource,
+    )
+  }
+}
+
 export class CopyTemplateFilesError extends ErrorTemplate {
   constructor(err) {
     super(

@@ -11,7 +11,7 @@ import { createMockOp, createMockWorkflow } from '../mocks'
 import { sleep } from '../utils'
 
 let cmd: Run
-const nameOrPath = './src/templates/shared/'
+const nameOrPath = './src/templates/shared/JavaScript'
 const version = '1'
 let config
 const apiError = new APIError('error')
