@@ -9,7 +9,7 @@ import { Services } from '~/types'
 
 let cmd: Build
 let config
-let mockOpPath = './src/templates/shared/'
+let mockOpPath = './src/templates/shared/JavaScript'
 let mockResolvedOpPath = path.resolve(process.cwd(), mockOpPath)
 beforeEach(async () => {
   config = await Config.load()

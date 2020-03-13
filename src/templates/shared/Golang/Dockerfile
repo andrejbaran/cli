@@ -14,7 +14,7 @@ RUN go build -ldflags="-s -w" -o main && strip -s main && chmod 777 main
 ############################
 # Final container
 ############################
-FROM registry.cto.ai/official_images/base:latest
+FROM registry.cto.ai/official_images/base:2-stretch-slim
 
 WORKDIR /ops
 

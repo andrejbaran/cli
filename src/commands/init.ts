@@ -2,23 +2,26 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
 import Command, { flags } from '~/base'
-import { Container, InitParams, InitPaths, Question } from '~/types'
-import { asyncPipe } from '~/utils/asyncPipe'
+import {
+  COMMAND,
+  HELP_COMMENTS,
+  OpTypes,
+  WORKFLOW,
+  YAML_TYPE_SEQUENCE,
+  YAML_TYPE_STRING,
+} from '~/constants/opConfig'
 import {
   AnalyticsError,
   CopyTemplateFilesError,
   CouldNotInitializeOp,
+  EnumeratingLangsError,
 } from '~/errors/CustomErrors'
-import {
-  WORKFLOW,
-  COMMAND,
-  OpTypes,
-  HELP_COMMENTS,
-  YAML_TYPE_SEQUENCE,
-  YAML_TYPE_STRING,
-} from '~/constants/opConfig'
-import { titleCase, appendSuffix } from '~/utils'
-import { validVersionChars } from '~/utils'
+import { Container, InitParams, InitPaths, Question } from '~/types'
+import { appendSuffix, titleCase, validVersionChars } from '~/utils'
+import { asyncPipe } from '~/utils/asyncPipe'
+
+//special handling for the package.json
+const javascriptTemplate = 'JavaScript'
 
 export default class Init extends Command {
   static description = 'Easily create a new Op.'
@@ -104,6 +107,8 @@ export default class Init extends Command {
   }
 
   determineTemplate = async (prompts: Container<Question>) => {
+    //get list of language templates available
+    const langs: Promise<string[]> = this._getLanguagesAvailable(this.srcDir)
     const { templates } = await this.ux.prompt<Partial<InitParams>>({
       type: 'checkbox',
       name: 'templates',
@@ -127,15 +132,35 @@ export default class Init extends Command {
       afterMessage: `${this.ux.colors.reset.green('✓')}`,
       validate: input => input.length != 0,
     })
-    return { prompts, templates }
+
+    let resolvedLangs: string[]
+    try {
+      resolvedLangs = await langs
+    } catch (err) {
+      this.debug('%O', err)
+      throw new EnumeratingLangsError(err)
+    }
+
+    const { lang } = await this.ux.prompt<Partial<InitParams>>({
+      type: 'list',
+      name: 'lang',
+      message: `Which template would you like? ${this.ux.colors.reset.green(
+        '→',
+      )}`,
+      choices: resolvedLangs,
+    })
+    this.debug('Template folder selected', lang)
+    return { prompts, templates, lang }
   }
 
   determineQuestions = ({
     prompts,
     templates,
+    lang,
   }: {
     prompts: Container<Question>
     templates: OpTypes[]
+    lang: string
   }) => {
     // Filters initPrompts based on the templates selected in determineTemplate
     const removeIfNotSelectedTemplate = ([key, _val]: [string, Question]) => {
@@ -146,30 +171,34 @@ export default class Init extends Command {
       .filter(removeIfNotSelectedTemplate)
       .map(([_key, question]) => question)
 
-    return { questions, templates }
+    return { questions, templates, lang }
   }
 
   askQuestions = async ({
     questions,
     templates,
+    lang,
   }: {
     questions: Question[]
     templates: OpTypes[]
+    lang: string
   }) => {
     const answers = await this.ux.prompt<Partial<InitParams>>(questions)
-    return { answers, templates }
+    return { answers, templates, lang }
   }
 
   determineInitPaths = ({
     answers,
     templates,
+    lang,
   }: {
     answers: Partial<InitParams>
     templates: OpTypes[]
+    lang: string
   }) => {
-    const initParams = { ...answers, templates }
+    const initParams = { ...answers, templates, lang }
     const { name } = this.getNameAndDescription(initParams)
-    const sharedDir = `${this.srcDir}/shared`
+    const sharedDir = `${this.srcDir}/shared/${lang}`
     const destDir = `${this.destDir}/${name}`
     const initPaths = { sharedDir, destDir }
     return { initPaths, initParams }
@@ -183,7 +212,6 @@ export default class Init extends Command {
     initParams: InitParams
   }) => {
     try {
-      const { templates } = initParams
       const { destDir, sharedDir } = initPaths
 
       await fs.ensureDir(destDir)
@@ -202,20 +230,24 @@ export default class Init extends Command {
     initPaths: InitPaths
     initParams: InitParams
   }) => {
-    try {
-      const { destDir, sharedDir } = initPaths
-      const { name, description } = this.getNameAndDescription(initParams)
-      const packageObj = JSON.parse(
-        fs.readFileSync(`${sharedDir}/package.json`, 'utf8'),
-      )
-      packageObj.name = name
-      packageObj.description = description
-      const newPackageString = JSON.stringify(packageObj, null, 2)
-      fs.writeFileSync(`${destDir}/package.json`, newPackageString)
+    if (initParams.lang === javascriptTemplate) {
+      try {
+        const { destDir, sharedDir } = initPaths
+        const { name, description } = this.getNameAndDescription(initParams)
+        const packageObj = JSON.parse(
+          fs.readFileSync(`${sharedDir}/package.json`, 'utf8'),
+        )
+        packageObj.name = name
+        packageObj.description = description
+        const newPackageString = JSON.stringify(packageObj, null, 2)
+        fs.writeFileSync(`${destDir}/package.json`, newPackageString)
+        return { initPaths, initParams }
+      } catch (err) {
+        this.debug('%O', err)
+        throw new CouldNotInitializeOp(err)
+      }
+    } else {
       return { initPaths, initParams }
-    } catch (err) {
-      this.debug('%O', err)
-      throw new CouldNotInitializeOp(err)
     }
   }
 
@@ -470,6 +502,31 @@ export default class Init extends Command {
     if (input === '')
       return 'You need to provide a description of your op before continuing'
     return true
+  }
+
+  async _getLanguagesAvailable(srcdir: string) {
+    //get list of language templates available
+    let langs: string[] = fs.readdirSync(`${srcdir}/shared`)
+    return langs
+      .filter((value: string) => {
+        try {
+          //FIXME: check in parallel?
+          return fs.statSync(`${srcdir}/shared/${value}`).isDirectory()
+        } catch (error) {
+          return false
+        }
+      })
+      .sort((a: string, b: string) => {
+        if (a === b) {
+          return 0
+        } else if (a === javascriptTemplate) {
+          return -1
+        } else if (b === javascriptTemplate) {
+          return 1
+        } else {
+          return a > b ? 1 : -1
+        }
+      })
   }
 
   private _validateVersion(input: string) {
