@@ -267,6 +267,53 @@ describe('executeOpOrWorkflowService', () => {
     expect(ux.print).toBeCalledWith('⚠️  The home directory will be mounted.')
     expect(ux.print).toBeCalledWith('   /test\n   /print')
   })
+  test('should not die if binds is defined but empty', async () => {
+    const mockOpService = new OpService()
+    mockOpService.run = jest.fn()
+    const mockOp = createMockOp({
+      isPublished: true,
+      bind: [],
+      mountCwd: false,
+      mountHome: false,
+    })
+    const opParams = ['arg1', 'arg2']
+    const opVersion = 'mock-op-version'
+
+    const inputs: RunInputs = {
+      parsedArgs: {
+        args: {
+          nameOrPath,
+        },
+        opParams,
+        flags: {},
+      },
+      config,
+      version,
+      opsAndWorkflows: [mockOp],
+      opOrWorkflow: mockOp,
+      opVersion,
+    } as RunInputs
+    cmd = new Run([], config, {
+      opService: mockOpService,
+    } as Services)
+    ux.prompt = jest.fn().mockResolvedValue({ bindConsent: true })
+    ux.print = jest.fn().mockResolvedValue(null)
+
+    //bind:
+    //is a valid entry in ops.yml, resulting in bind = null
+    inputs.opsAndWorkflows.map((value: any) => {
+      if (value && value.bind) {
+        value.bind = null
+      }
+      return value
+    })
+    try {
+      const actual = await cmd.executeOpOrWorkflowService(inputs)
+      expect(actual).toBeTruthy()
+    } catch (error) {
+      expect(error).toBeFalsy()
+    }
+  })
   test('should set the image if the opOrWorkflow is a op and not published', async () => {
     config.team = {
       name: 'FAKE_TEAM_NAME',
