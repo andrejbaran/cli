@@ -355,10 +355,12 @@ export default class Run extends Command {
             'executeOpOrWorkflowService: bindings: processing bindings',
             opsBinds,
           )
-          if (opsBinds !== undefined) {
+          if (opsBinds) {
             allBinds.mountCwd = allBinds.mountCwd || opsBinds.mountCwd
             allBinds.mountHome = allBinds.mountHome || opsBinds.mountHome
-            allBinds.bind = allBinds.bind.concat(opsBinds.bind)
+            if (opsBinds.bind) {
+              allBinds.bind = allBinds.bind.concat(opsBinds.bind)
+            }
           }
         })
 
