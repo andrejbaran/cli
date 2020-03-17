@@ -1,14 +1,14 @@
 #!/bin/bash
 
 howdy="👋 How are you today?"
-tags="demo track go"
-metadata="language:golang"
+tags="demo track shell"
+metadata="language:bash"
 
-ctoai track "$howdy" $tags $metadata
-answer=$(ctoai prompt input \
+sdk track "$howdy" $tags $metadata
+answer=$(ux prompt input \
    --message "$howdy" \
    --name "answer")
 
 response="👉 Answer: $answer"
-ctoai track "$response" $tags $metadata
-ctoai print "$response"
+sdk track "$response" $tags $metadata
+ux print "$response"
