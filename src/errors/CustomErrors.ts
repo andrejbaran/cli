@@ -875,3 +875,41 @@ export class FailedToRemoveMemberFromTeam extends ErrorTemplate {
     )
   }
 }
+
+export class MissingYamlPortError extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        '🤔 Looks like the port configurations are missing. Please check your ops.yml configuration and try again.',
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class AllocatedYamlPortError extends ErrorTemplate {
+  constructor(badPorts: string) {
+    super(
+      white(
+        `🤔 Looks like port(s) ${ux.colors.bold(
+          badPorts,
+        )} are already allocated. Please check your ops.yml configuration and try again.`,
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}
+
+export class DuplicateYamlPortError extends ErrorTemplate {
+  constructor() {
+    super(
+      white(
+        '🤔 Looks like there are duplicates in the port configuration. Please check your ops.yml configuration and try again.',
+      ),
+      undefined,
+      expectedSource,
+    )
+  }
+}

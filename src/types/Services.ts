@@ -7,6 +7,7 @@ import { WorkflowService } from '~/services/Workflow'
 import { OpService } from '~/services/Op'
 import { KeycloakService } from '~/services/Keycloak'
 import { RegistryAuthService } from 'services/RegistryAuth'
+import { ContainerService } from '~/services/Container'
 import { SecretService } from '~/services/Secret'
 
 export type Services = {
@@ -20,4 +21,5 @@ export type Services = {
   keycloakService: KeycloakService
   registryAuthService: RegistryAuthService
   secretService: SecretService
+  containerService: ContainerService
 }
