@@ -29,6 +29,7 @@ workflows:
   - name: hello-world-go:0.1.0
     description: Your first Go hello-world workflow
     public: false
+    remote: true
     sourceCodeURL: ""
     steps:
       - ops run @cto-ai/hello-world-go 

@@ -4,7 +4,7 @@ commands:
   - name: hello-world-bash:0.1.0
     public: false
     description: Your first Bash hello-world op
-    run: bash /ops/main.sh 
+    run: bash /ops/main.sh
     remote: true
     sdk: "2"
     sourceCodeURL: ""
@@ -29,6 +29,7 @@ workflows:
   - name: hello-world-bash:0.1.0
     description: Your first Bash hello-world op
     public: false
+    remote: true
     sourceCodeURL: ""
     steps:
       - ops run @cto-ai/hello-world-bash 
