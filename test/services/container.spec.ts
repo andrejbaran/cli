@@ -1,20 +1,6 @@
 import { ContainerService } from '~/services/Container'
 import http = require('http')
 
-test('containerService:validatePorts should return error since port not configured', async () => {
-  expect.assertions(1)
-  const containerService = new ContainerService()
-  let portMap = null
-
-  try {
-    await containerService.validatePorts(portMap)
-  } catch (e) {
-    expect(e.message).toBe(
-      '🤔 Looks like the port configurations are missing. Please check your ops.yml configuration and try again.',
-    )
-  }
-})
-
 test('containerService:validatePorts should return error since ports are duplicated', async () => {
   expect.assertions(1)
   const containerService = new ContainerService()

@@ -53,7 +53,7 @@ export class ContainerService {
   }
 
   validatePorts = async (portMap: string[]) => {
-    if (!portMap || portMap[0] === null) {
+    if (portMap.length === 0 || portMap[0] === null) {
       const errorMessage = new MissingYamlPortError()
       this.log(errorMessage.message)
       throw errorMessage
@@ -89,10 +89,12 @@ export class ContainerService {
     const docker = await getDocker(console, 'ContainerService')
     this.log(`⚙️  Running ${ux.colors.dim(op.name)}...`)
 
-    await this.validatePorts(op.port).catch(err => {
-      debug('%O', err)
-      throw new Error('Error creating Docker container')
-    })
+    if (op.port) {
+      await this.validatePorts(op.port).catch(err => {
+        debug('%O', err)
+        throw new Error('Error creating Docker container')
+      })
+    }
 
     try {
       this.container = await docker.createContainer(options)
