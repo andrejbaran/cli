@@ -30,7 +30,7 @@ commands:
 workflows:
   - name: hello-world:0.1.0
     description: Your first hello-world op
-    remote: false
+    runtime: 'cli'
     public: false
     sourceCodeURL: ""
     steps:

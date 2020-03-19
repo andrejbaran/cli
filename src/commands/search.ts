@@ -164,8 +164,8 @@ export default class Search extends Command {
       selectedOpOrWorkflow: { id: opId, teamID },
     } = inputs
     const teamOp = teamID === this.team.id
-    const remote =
-      'remote' in selectedOpOrWorkflow ? selectedOpOrWorkflow.remote : false
+    const runtime =
+      'runtime' in selectedOpOrWorkflow ? selectedOpOrWorkflow.runtime : false
     try {
       this.services.analytics.track(
         {
@@ -178,7 +178,7 @@ export default class Search extends Command {
             username: this.user.username,
             selectedOp: opId,
             teamOp,
-            remote,
+            runtime,
             results: this.opsAndWorkflows.length,
             filter,
           },

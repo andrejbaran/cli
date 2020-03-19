@@ -27,7 +27,8 @@ export interface OpCommand extends BaseFields {
 
 export interface OpWorkflow extends BaseFields {
   type: WORKFLOW_TYPE
-  remote: boolean
+  runtime: string
+  //remote: boolean
   steps: string[]
 }
 

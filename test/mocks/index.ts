@@ -57,7 +57,7 @@ export const createMockWorkflow = (inputs: Partial<OpWorkflow>): OpWorkflow => {
       runId: '',
       opsHome: '',
       port: '',
-      remote: '',
+      runtime: '',
       configDir: '',
       stateDir: '',
       teamID: '',

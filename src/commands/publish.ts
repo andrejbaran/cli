@@ -441,7 +441,7 @@ export default class Publish extends Command {
         })
         workflow.publishDescription = publishDescription
 
-        if ('remote' in workflow && workflow.remote) {
+        if ('runtime' in workflow && workflow.runtime == 'slack') {
           const newSteps: string[] = []
           for (const step of workflow.steps) {
             let newStep = ''

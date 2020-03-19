@@ -22,7 +22,7 @@ commands:
 workflows:
   - name: echo_message_workflow:0.1.0
     description: sample workflow that echoes a message
-    remote: false
+    runtime: 'slack'
     public: false
     sourceCodeURL: ""
     steps:

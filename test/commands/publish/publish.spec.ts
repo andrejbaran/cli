@@ -19,7 +19,7 @@ describe('BuildStep', () => {
       createMockWorkflow({
         name: 'mockWorkflow',
         version: 'latest',
-        remote: true,
+        runtime: 'slack',
         steps: [
           'ops run op1',
           "var stuff1 = 'mock values 1';",
@@ -114,7 +114,7 @@ describe('BuildStep', () => {
   //     createMockWorkflow({
   //       name: 'mockWorkflow',
   //       version: 'latest',
-  //       remote: true,
+  //       runtime: 'slack',
   //       steps: [
   //         'ops run op1',
   //         "var stuff1 = 'mock values 1';",
@@ -201,7 +201,7 @@ describe('BuildStep', () => {
   //     `/private/teams/${teamName}/ops`,
   //     createMockWorkflow({
   //       name: 'mockWorkflow',
-  //       remote: true,
+  //       runtime: 'slack',
   //       steps: [
   //         'ops run mock-op',
   //         'ops run mock-op',
