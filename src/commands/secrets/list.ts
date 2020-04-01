@@ -16,8 +16,8 @@ export default class SecretsList extends Command {
         {
           userId: this.state.config.user.email,
           teamId: this.state.config.team.id,
-          cliEvent: 'Secrets CLI List',
-          event: 'Secrets CLI List',
+          cliEvent: 'Ops CLI Secrets:List',
+          event: 'Ops CLI Secrets:List',
           properties: {
             email: this.state.config.user.email,
             username: this.state.config.user.username,

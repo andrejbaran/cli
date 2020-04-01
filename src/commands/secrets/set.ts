@@ -152,8 +152,8 @@ export default class SecretsSet extends Command {
         {
           userId: email,
           teamId: team.id,
-          cliEvent: 'Ops CLI Set Secrets',
-          event: 'Ops CLI Set Secrets',
+          cliEvent: 'Ops CLI Secrets:Set',
+          event: 'Ops CLI Secrets:Set',
           properties: {
             email,
             username,

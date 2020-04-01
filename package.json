@@ -111,6 +111,9 @@
       },
       "secrets": {
         "description": "Manage your secrets."
+      },
+      "team": {
+        "description": "Manage your teams."
       }
     }
   },

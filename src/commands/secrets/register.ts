@@ -114,8 +114,8 @@ export default class SecretsRegister extends Command {
       {
         userId: email,
         teamId: team.id,
-        cliEvent: 'Ops CLI Register Secrets Provider',
-        event: 'Ops CLI Register Secrets Provider',
+        cliEvent: 'Ops CLI Secrets:Register',
+        event: 'Ops CLI Secrets:Register',
         properties: {
           email,
           username,

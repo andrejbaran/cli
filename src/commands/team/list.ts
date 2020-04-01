@@ -83,8 +83,8 @@ export default class TeamList extends Command {
     this.services.analytics.track(
       {
         userId: email,
-        cliEvent: 'Ops CLI team:list',
-        event: 'Ops CLI team:list',
+        cliEvent: 'Ops CLI Team:List',
+        event: 'Ops CLI Team:List',
         properties: {
           email,
           username,

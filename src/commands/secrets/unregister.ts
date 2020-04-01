@@ -78,8 +78,8 @@ export default class UnregisterSecret extends Command {
         {
           userId: user.email,
           teamId: team.id,
-          cliEvent: 'Secrets CLI Unregister',
-          event: 'Secrets CLI Unregister',
+          cliEvent: 'Ops CLI Secrets:Unregister',
+          event: 'Ops CLI Secrets:Unregister',
           properties: {
             email: user.email,
             username: user.username,
