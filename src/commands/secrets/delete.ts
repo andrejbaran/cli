@@ -103,8 +103,8 @@ export default class SecretsDelete extends Command {
         {
           userId: this.state.config.user.email,
           teamId: this.state.config.team.id,
-          cliEvent: 'Secrets CLI Delete',
-          event: 'Secrets CLI Delete',
+          cliEvent: 'Ops CLI Secrets:Delete',
+          event: 'Ops CLI Secrets:Delete',
           properties: {
             email: this.state.config.user.email,
             username: this.state.config.user.username,

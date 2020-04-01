@@ -144,8 +144,8 @@ export default class TeamInvite extends Command {
       {
         userId: email,
         teamId,
-        cliEvent: 'Ops CLI team:invite',
-        event: 'Ops CLI team:invite',
+        cliEvent: 'Ops CLI Team:Invite',
+        event: 'Ops CLI Team:Invite',
         properties: {
           email,
           username,
