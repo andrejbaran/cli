@@ -840,9 +840,9 @@ export class NoMemberFound extends ErrorTemplate {
   constructor(username, teamname) {
     super(
       white(
-        `😞 Sorry, we weren't able to find ${actionBlue(
+        `😞 Sorry, we weren't able to find member ${actionBlue(
           username,
-        )} on ${actionBlue(teamname)}.\n    You can run ${terminalText(
+        )} on team ${actionBlue(teamname)}.\n    You can run ${terminalText(
           'ops team:info',
         )} to see members of your team.`,
       ),
