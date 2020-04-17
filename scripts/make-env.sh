@@ -9,8 +9,8 @@ EOF
 
 cat << EOF > .env.development
 OPS_REGISTRY_HOST="reg.local.hc.ai"
-OPS_API_HOST="http://reg.local.hc.ai/"
-OPS_KEYCLOAK_HOST="http://uaa.local.hc.ai:8888/auth"
+OPS_API_HOST="http://www.local.hc.ai/"
+OPS_KEYCLOAK_HOST="http://www.local.hc.ai/auth"
 OPS_CLIENT_SECRET="29fb78ce-486c-4606-a75a-fb4928a84a37"
 EOF
 
