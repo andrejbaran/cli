@@ -38,6 +38,7 @@ describe('checkPathOpsYmlExists', () => {
   })
 })
 
+// TODO: change these tests to not rely on the real template
 describe('getOpsAndWorkflowsFromFileSystem', () => {
   test('should parse a yaml file', async () => {
     cmd = new Run([], config)
@@ -45,8 +46,6 @@ describe('getOpsAndWorkflowsFromFileSystem', () => {
 
     expect(result.ops[0].name).toBe('hello-world')
     expect(result.ops[0].version).toBe('0.1.0')
-    expect(result.workflows[0].name).toBe('hello-world')
-    expect(result.workflows[0].version).toBe('0.1.0')
     expect(result.version).toBe('1')
   })
 
@@ -66,7 +65,7 @@ describe('getOpsAndWorkflowsFromFileSystem', () => {
       inputs as RunInputs,
     )
 
-    expect(result.opsAndWorkflows.length).toBe(2)
+    expect(result.opsAndWorkflows.length).toBe(1)
   })
 
   test('should filter out ops which do not match argument', async () => {

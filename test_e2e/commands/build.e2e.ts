@@ -3,7 +3,6 @@ import * as yaml from 'yaml'
 import { run, signin, cleanup, signout } from '../utils/cmd'
 import {
   ENTER,
-  SPACE,
   NEW_COMMAND_NAME,
   NEW_COMMAND_DESCRIPTION,
   NEW_COMMAND_VERSION,
@@ -17,15 +16,7 @@ beforeEach(async () => {
   await signin()
   await run(
     ['init'],
-    [
-      SPACE,
-      ENTER,
-      NEW_COMMAND_NAME,
-      ENTER,
-      NEW_COMMAND_DESCRIPTION,
-      ENTER,
-      ENTER,
-    ],
+    [ENTER, NEW_COMMAND_NAME, ENTER, NEW_COMMAND_DESCRIPTION, ENTER, ENTER],
   )
 })
 
