@@ -18,7 +18,7 @@ export { onExit } from './onExit'
 export { getOpImageTag, getOpUrl, PUBLIC_OPS_PREFIX } from './getOpUrl'
 export { handleMandatory, handleUndefined } from './guards'
 export { terminalText } from './terminalText'
-export { titleCase, pluralize, appendSuffix } from './stringUtils'
+export { pluralize, appendSuffix } from './stringUtils'
 export {
   writeConfig,
   readConfig,

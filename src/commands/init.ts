@@ -2,14 +2,7 @@ import * as fs from 'fs-extra'
 import * as path from 'path'
 import * as yaml from 'yaml'
 import Command, { flags } from '~/base'
-import {
-  COMMAND,
-  HELP_COMMENTS,
-  OpTypes,
-  WORKFLOW,
-  YAML_TYPE_SEQUENCE,
-  YAML_TYPE_STRING,
-} from '~/constants/opConfig'
+import { COMMAND, OpTypes } from '~/constants/opConfig'
 import {
   AnalyticsError,
   CopyTemplateFilesError,
@@ -17,7 +10,7 @@ import {
   EnumeratingLangsError,
 } from '~/errors/CustomErrors'
 import { Container, InitParams, InitPaths, Question } from '~/types'
-import { appendSuffix, titleCase, validVersionChars } from '~/utils'
+import { appendSuffix, validVersionChars } from '~/utils'
 import { asyncPipe } from '~/utils/asyncPipe'
 
 //special handling for the package.json
@@ -28,6 +21,7 @@ export default class Init extends Command {
   static flags = {
     help: flags.help({ char: 'h' }),
   }
+  static args = [{ name: 'name', description: 'the name of the op to create' }]
   questions: object[] = []
 
   srcDir = path.resolve(__dirname, '../templates/')
@@ -69,69 +63,19 @@ export default class Init extends Command {
       validate: this._validateVersion,
       default: '0.1.0',
     },
-    [appendSuffix(WORKFLOW, 'Name')]: {
-      type: 'input',
-      name: appendSuffix(WORKFLOW, 'Name'),
-      message: `\n Provide a name for your new workflow ${this.ux.colors.reset.green(
-        '→',
-      )}\n${this.ux.colors.reset(
-        this.ux.colors.secondary('Names must be lowercase'),
-      )}\n\n🏷  ${this.ux.colors.white('Name:')}`,
-      afterMessage: this.ux.colors.reset.green('✓'),
-      afterMessageAppend: this.ux.colors.reset(' added!'),
-      validate: this._validateName,
-      transformer: input => this.ux.colors.cyan(input.toLocaleLowerCase()),
-      filter: input => input.toLowerCase(),
-    },
-    [appendSuffix(WORKFLOW, 'Description')]: {
-      type: 'input',
-      name: appendSuffix(WORKFLOW, 'Description'),
-      message: `\nProvide a description ${this.ux.colors.reset.green(
-        '→',
-      )}\n\n✍️  ${this.ux.colors.white('Description:')}`,
-      afterMessage: this.ux.colors.reset.green('✓'),
-      afterMessageAppend: this.ux.colors.reset(' added!'),
-      validate: this._validateDescription,
-    },
-    [appendSuffix(WORKFLOW, 'Version')]: {
-      type: 'input',
-      name: appendSuffix(WORKFLOW, 'Version'),
-      message: `\nProvide a version ${this.ux.colors.reset.green(
-        '→',
-      )}\n\n✍️  ${this.ux.colors.white('Version:')}`,
-      afterMessage: this.ux.colors.reset.green('✓'),
-      afterMessageAppend: this.ux.colors.reset(' added!'),
-      validate: this._validateVersion,
-      default: '0.1.0',
-    },
   }
 
-  determineTemplate = async (prompts: Container<Question>) => {
+  determineTemplate = async ({
+    prompts,
+    name,
+  }: {
+    prompts: Container<Question>
+    name: String
+  }) => {
     //get list of language templates available
     const langs: Promise<string[]> = this._getLanguagesAvailable(this.srcDir)
-    const { templates } = await this.ux.prompt<Partial<InitParams>>({
-      type: 'checkbox',
-      name: 'templates',
-      message: `What type of op would you like to create ${this.ux.colors.reset.green(
-        '→',
-      )}`,
-      choices: [
-        {
-          name: `${titleCase(
-            COMMAND,
-          )} - A template for building commands which can be distributed via The Ops Platform.`,
-          value: COMMAND,
-        },
-        {
-          name: `${titleCase(
-            WORKFLOW,
-          )} - A template for combining many commands into a workflow which can be distributed via The Ops Platform.`,
-          value: WORKFLOW,
-        },
-      ],
-      afterMessage: `${this.ux.colors.reset.green('✓')}`,
-      validate: input => input.length != 0,
-    })
+    // For now, this is the only type of Op we have
+    const templates = [COMMAND]
 
     let resolvedLangs: string[]
     try {
@@ -150,40 +94,55 @@ export default class Init extends Command {
       choices: resolvedLangs,
     })
     this.debug('Template folder selected', lang)
-    return { prompts, templates, lang }
+    return { prompts, templates, lang, name }
   }
 
   determineQuestions = ({
     prompts,
     templates,
     lang,
+    name,
   }: {
     prompts: Container<Question>
     templates: OpTypes[]
     lang: string
+    name: string
   }) => {
     // Filters initPrompts based on the templates selected in determineTemplate
     const removeIfNotSelectedTemplate = ([key, _val]: [string, Question]) => {
-      return key.includes(templates[0]) || key.includes(templates[1])
+      return templates.some(template => key.includes(template))
     }
 
     const questions = Object.entries(prompts)
       .filter(removeIfNotSelectedTemplate)
       .map(([_key, question]) => question)
 
-    return { questions, templates, lang }
+    return { questions, templates, lang, name }
   }
 
   askQuestions = async ({
     questions,
     templates,
     lang,
+    name,
   }: {
     questions: Question[]
     templates: OpTypes[]
     lang: string
+    name: string
   }) => {
+    if (name) {
+      const validation = this._validateName(name)
+      if (validation != true) {
+        this.log(validation)
+      } else {
+        questions.splice(0, 1)
+      }
+    }
     const answers = await this.ux.prompt<Partial<InitParams>>(questions)
+    if (!answers.commandName) {
+      answers.commandName = name
+    }
     return { answers, templates, lang }
   }
 
@@ -198,9 +157,11 @@ export default class Init extends Command {
   }) => {
     const initParams = { ...answers, templates, lang }
     const { name } = this.getNameAndDescription(initParams)
-    const sharedDir = `${this.srcDir}/shared/${lang}`
-    const destDir = `${this.destDir}/${name}`
-    const initPaths = { sharedDir, destDir }
+
+    const initPaths = {
+      sharedDir: `${this.srcDir}/shared/${lang}`,
+      destDir: `${this.destDir}/${name}`,
+    }
     return { initPaths, initParams }
   }
 
@@ -230,6 +191,7 @@ export default class Init extends Command {
     initPaths: InitPaths
     initParams: InitParams
   }) => {
+    // TODO: We probably need to change the go.mod in the Golang template too
     if (initParams.lang === javascriptTemplate) {
       try {
         const { destDir, sharedDir } = initPaths
@@ -269,11 +231,6 @@ export default class Init extends Command {
       await this.customizeOpsYaml(initParams, opsYamlDoc)
       await this.customizeWorkflowYaml(initParams, opsYamlDoc)
 
-      // Process each root level section of the YAML file & add comments
-      Object.keys(HELP_COMMENTS).forEach(rootKey => {
-        this.addHelpCommentsFor(rootKey, opsYamlDoc)
-      })
-
       // Get the YAML file as string
       const newOpsString = opsYamlDoc.toString()
       fs.writeFileSync(`${destDir}/ops.yml`, newOpsString)
@@ -281,43 +238,6 @@ export default class Init extends Command {
     } catch (err) {
       this.debug('%O', err)
       throw new CouldNotInitializeOp(err)
-    }
-  }
-
-  // The `yaml` library has a pretty bad API for handling comments
-  // More: https://eemeli.org/yaml/#comments'
-  // TODO: Review type checking for yamlDoc (yaml.ast.Document) & remove tsignores
-  addHelpCommentsFor = (key: string, yamlDoc: yaml.ast.Document) => {
-    const docContents = yamlDoc.contents as yaml.ast.SeqNode
-    const docContentsItems = docContents.items as Array<yaml.ast.Pair | null>
-    const configItem = docContentsItems.find(item => {
-      if (!item || !item.key) return
-      const itemKey = item.key as yaml.ast.Scalar
-      return itemKey.value === key
-    })
-
-    // Simple config fields (`version`)
-    if (
-      configItem &&
-      configItem.value &&
-      configItem.value.type === YAML_TYPE_STRING &&
-      HELP_COMMENTS[key]
-    ) {
-      configItem.comment = ` ${HELP_COMMENTS[key]}`
-    }
-
-    // Config fields with nested values (`ops`, `workflows`)
-    if (
-      configItem &&
-      configItem.value &&
-      configItem.value.type === YAML_TYPE_SEQUENCE
-    ) {
-      // @ts-ignore
-      yamlDoc.getIn([key, 0]).items.map(configItem => {
-        const comment: string = HELP_COMMENTS[key][configItem.key]
-        if (comment)
-          configItem.comment = ` ${HELP_COMMENTS[key][configItem.key]}`
-      })
     }
   }
 
@@ -344,27 +264,13 @@ export default class Init extends Command {
     yamlDoc.getIn(['commands', 0]).set('description', commandDescription)
   }
 
+  // TODO: remove this function when workflows are removed from templates
   customizeWorkflowYaml = async (
     initParams: InitParams,
     yamlDoc: yaml.ast.Document,
   ) => {
-    const {
-      templates,
-      workflowName,
-      workflowDescription,
-      workflowVersion,
-    } = initParams
-    if (!templates.includes(WORKFLOW)) {
-      // @ts-ignore
-      yamlDoc.delete('workflows')
-      return
-    }
-    yamlDoc
-      // @ts-ignore
-      .getIn(['workflows', 0])
-      .set('name', `${workflowName}:${workflowVersion}`)
     // @ts-ignore
-    yamlDoc.getIn(['workflows', 0]).set('description', workflowDescription)
+    yamlDoc.delete('workflows')
   }
 
   logMessages = async ({
@@ -375,10 +281,10 @@ export default class Init extends Command {
     initParams: InitParams
   }) => {
     const { destDir } = initPaths
-    const { templates } = initParams
+    const { commandName } = initParams
     const { name } = this.getNameAndDescription(initParams)
 
-    this.logSuccessMessage(templates)
+    this.log(`\n🎉 Success! Your new Op is ready to start coding... \n`)
 
     fs.readdirSync(`${destDir}`).forEach((file: any) => {
       let callout = ''
@@ -396,49 +302,13 @@ export default class Init extends Command {
       this.log(`📁 .${msg}`)
     })
 
-    if (templates.includes(COMMAND)) {
-      this.logCommandMessage(initParams)
-    }
-
-    if (templates.includes(WORKFLOW)) {
-      this.logWorkflowMessage(initParams)
-    }
-
-    return { initPaths, initParams }
-  }
-
-  logCommandMessage = (initParams: InitParams) => {
-    const { commandName } = initParams
     this.log(
-      `\n🚀 To test your ${COMMAND} run: ${this.ux.colors.green(
+      `\n🚀 To try out your Op run: ${this.ux.colors.green(
         '$',
       )} ${this.ux.colors.callOutCyan(`ops run ${commandName}`)}`,
     )
-  }
 
-  logWorkflowMessage = (initParams: InitParams) => {
-    const { name } = this.getNameAndDescription(initParams)
-    this.log(
-      `\n🚀 To test your ${WORKFLOW} run: ${this.ux.colors.green(
-        '$',
-      )} ${this.ux.colors.callOutCyan(
-        `cd ${name} && npm install && ops run .`,
-      )}`,
-    )
-  }
-
-  logSuccessMessage = (templates: OpTypes[]) => {
-    const successMessageBoth = `\n🎉 Success! Your ${COMMAND} and ${WORKFLOW} template Ops are ready to start coding... \n`
-    const getSuccessMessage = (opType: string) =>
-      `\n🎉 Success! Your ${opType} template Op is ready to start coding... \n`
-
-    if (templates.includes(COMMAND) && templates.includes(WORKFLOW)) {
-      return this.log(successMessageBoth)
-    }
-
-    const opType = templates.includes(COMMAND) ? COMMAND : WORKFLOW
-
-    return this.log(getSuccessMessage(opType))
+    return { initPaths, initParams }
   }
 
   sendAnalytics = async ({
@@ -484,16 +354,15 @@ export default class Init extends Command {
 
   getNameAndDescription = (initParams: Partial<InitParams>) => {
     return {
-      name: initParams.commandName || initParams.workflowName,
-      description:
-        initParams.commandDescription || initParams.workflowDescription,
+      name: initParams.commandName,
+      description: initParams.commandDescription,
     }
   }
 
   _validateName(input: string) {
     if (input === '') return 'You need name your op before you can continue'
     if (!input.match('^[a-z0-9_-]*$')) {
-      return 'Sorry, please name the Op using only numbers, letters, -, or _'
+      return 'Sorry, please name the Op using only numbers, lowercase letters, -, or _'
     }
     return true
   }
@@ -539,7 +408,9 @@ export default class Init extends Command {
   }
 
   async run() {
-    this.parse(Init)
+    const {
+      args: { name },
+    } = this.parse(Init)
     try {
       await this.isLoggedIn()
       const initPipeline = asyncPipe(
@@ -554,7 +425,7 @@ export default class Init extends Command {
         this.logMessages,
       )
 
-      await initPipeline(this.initPrompts)
+      await initPipeline({ prompts: this.initPrompts, name })
     } catch (err) {
       this.debug('%O', err)
       this.config.runHook('error', { err, accessToken: this.accessToken })

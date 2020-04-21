@@ -43,7 +43,6 @@ test('publish should error out if no image is given for a brand new ops.yml', as
   await run(
     ['init'],
     [
-      SPACE,
       ENTER,
       INVALID_COMMAND_NAME,
       ENTER,

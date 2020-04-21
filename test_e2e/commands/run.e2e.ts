@@ -91,38 +91,6 @@ test('it should run a local workflow by passing path as argument', async () => {
   )
 })
 
-test('it should init a local workflow then run it unpublished', async () => {
-  const initRes = await run(
-    ['init'],
-    [
-      DOWN,
-      SPACE,
-      ENTER,
-      NEW_WORKFLOW_NAME,
-      ENTER,
-      NEW_WORKFLOW_DESCRIPTION,
-      ENTER,
-      ENTER,
-    ],
-  )
-  expect(initRes.toLowerCase()).toContain('success!')
-  expect(initRes).toContain(`🚀 To test your ${WORKFLOW} run:`)
-  expect(initRes).toContain(
-    `cd ${NEW_WORKFLOW_NAME} && npm install && ops run .`,
-  )
-
-  const result = await run(['run', NEW_WORKFLOW_NAME], [ENTER])
-
-  expect(result).toContain(
-    `Workflow ${NEW_WORKFLOW_NAME} completed successfully.`,
-  )
-  const pathToWorkflow = `./${NEW_WORKFLOW_NAME}`
-
-  if (fs.existsSync(pathToWorkflow)) {
-    fs.removeSync(pathToWorkflow)
-  }
-})
-
 test('it should run a public command by exact match', async () => {
   const result = await run(
     ['run', `@${PUBLIC_TEAM_NAME}/${PUBLIC_COMMAND_NAME}`],

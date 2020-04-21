@@ -6,13 +6,6 @@
  * @copyright (c) 2019 CTO.ai
  */
 
-export const titleCase = (str: string) => {
-  return str
-    .split(' ')
-    .map(w => w[0].toUpperCase() + w.substr(1).toLowerCase())
-    .join(' ')
-}
-
 export const pluralize = (str: string) => {
   return `${str}s`
 }

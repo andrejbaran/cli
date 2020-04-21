@@ -6,6 +6,8 @@ import { COMMAND, WORKFLOW, OpTypes } from '~/constants/opConfig'
 import { AnalyticsService } from '~/services/Analytics'
 import { createMockUser, createMockTeam } from '../mocks'
 
+jest.mock('fs-extra')
+
 let cmd: Init
 let config
 
@@ -17,13 +19,21 @@ describe('opsInit', () => {
   test('determineTemplate: Ensures it calls the ux prompt library', async () => {
     cmd = new Init([], config, {} as Services)
 
-    const selectedTemplate = COMMAND
+    const selectedLang = 'JavaScript'
+    const prompts = {}
 
-    cmd.ux.prompt = jest.fn().mockReturnValue({ templates: selectedTemplate })
+    cmd.ux.prompt = jest.fn().mockReturnValue({ lang: selectedLang })
+    cmd._getLanguagesAvailable = jest
+      .fn()
+      .mockReturnValue(['JavaScript', 'Python'])
 
-    await cmd.determineTemplate({})
+    let result = await cmd.determineTemplate({ prompts })
 
-    expect(cmd.ux.prompt.mock.calls.length).toBe(2)
+    expect(result.prompts).toBe(prompts)
+    expect(result.lang).toBe(selectedLang)
+    expect(result.templates).toEqual([COMMAND])
+
+    expect(cmd.ux.prompt).toHaveBeenCalledTimes(1)
   })
 
   test('determineQuestions: Makes sure it filters out the questions properly', async () => {
@@ -45,50 +55,108 @@ describe('opsInit', () => {
 
     const results = cmd.determineQuestions({ prompts, templates, lang: '' })
 
-    expect(results.questions.length).toBe(1)
-    expect(results.questions).toContain(testCommandQuestion)
+    expect(results.questions).toEqual([testCommandQuestion])
+    expect(results.templates).toEqual(templates)
+    expect(results.lang).toBe('')
   })
 
   test('askQuestions', async () => {
     cmd = new Init([], config, {} as Services)
-    cmd.ux.prompt = jest.fn().mockReturnValue(true)
-    await cmd.askQuestions({ questions: [], templates: [], lang: '' })
+    const answers = { description: 'abc123' }
+    cmd.ux.prompt = jest.fn().mockReturnValue(answers)
+    const questions = [
+      {
+        name: 'mock-question',
+      },
+    ]
 
-    expect(cmd.ux.prompt.mock.calls.length).toBe(1)
+    const results = await cmd.askQuestions({
+      questions,
+      templates: [],
+      lang: '',
+      name: null,
+    })
+
+    expect(cmd.ux.prompt).toHaveBeenCalledTimes(1)
+    expect(cmd.ux.prompt).toHaveBeenCalledWith(questions)
+    expect(results.answers).toEqual(answers)
+  })
+
+  test('askQuestions_withvalidname', async () => {
+    cmd = new Init([], config, {} as Services)
+    const answers = { description: 'abc132' }
+    cmd.ux.prompt = jest.fn().mockReturnValue(answers)
+    const questions = [
+      {
+        name: 'mock-question',
+      },
+    ]
+
+    const results = await cmd.askQuestions({
+      questions,
+      templates: [],
+      lang: '',
+      name: 'myop-123',
+    })
+
+    expect(cmd.ux.prompt).toHaveBeenCalledTimes(1)
+    expect(cmd.ux.prompt).toHaveBeenCalledWith([])
+    expect(results.answers).toEqual({
+      description: 'abc132',
+      commandName: 'myop-123',
+    })
+  })
+
+  test('askQuestions_withinvalidname', async () => {
+    cmd = new Init([], config, {} as Services)
+    const answers = { commandName: 'nope', description: 'abc132' }
+    cmd.ux.prompt = jest.fn().mockReturnValue(answers)
+    cmd.log = jest.fn()
+    const questions = [
+      {
+        name: 'mock-question',
+      },
+    ]
+
+    const results = await cmd.askQuestions({
+      questions,
+      templates: [],
+      lang: '',
+      name: 'INVALID!',
+    })
+
+    expect(cmd.ux.prompt).toHaveBeenCalledTimes(1)
+    expect(cmd.ux.prompt).toHaveBeenCalledWith(questions)
+    expect(cmd.log).toHaveBeenCalled()
+    expect(results.answers).toEqual(answers)
   })
 
   test('_getLanguagesAvailable: Ensures it gets languages and prints in correct order', async () => {
-    const tmpDir = require('os').tmpdir()
-    const { sep } = require('path')
-    const srcdir: string = fs.mkdtempSync(`${tmpDir}${sep}`)
-
-    //prepare the test folder
-    // TODO: Implement this with mocking the FS read/write package https://jestjs.io/docs/en/manual-mocks
-    let readdirReturnvalue: {
-      name: string
-      isDirectory: boolean
-    }[] = [
-      { name: 'Bash', isDirectory: true },
-      { name: 'Golang', isDirectory: true },
-      { name: 'JavaScript', isDirectory: true },
-      { name: 'Python', isDirectory: true },
-      { name: '.DS_Store', isDirectory: false },
-      { name: 'loss.jpg', isDirectory: false },
+    jest.resetAllMocks()
+    const entries = [
+      '.DS_Store',
+      'Bash',
+      'Golang',
+      'JavaScript',
+      'Python',
+      'list.txt',
     ]
-    readdirReturnvalue.forEach(value => {
-      if (value.isDirectory) {
-        fs.ensureDirSync(`${srcdir}${sep}shared${sep}${value.name}`)
-      } else {
-        fs.ensureFileSync(`${srcdir}${sep}shared${sep}${value.name}`)
-      }
-    })
+    fs.readdirSync.mockReturnValue(entries)
+    const dirstat = { isDirectory: () => true }
+    const filestat = { isDirectory: () => false }
+    fs.statSync.mockImplementation(filename =>
+      filename.includes('.DS_Store') || filename.includes('list.txt')
+        ? filestat
+        : dirstat,
+    )
 
     const cmd: Init = new Init([], config, {} as Services)
-    let actual: string[] = await cmd._getLanguagesAvailable(`${srcdir}`)
+    const srcdir = 'fake-directory'
+    let actual: string[] = await cmd._getLanguagesAvailable(srcdir)
     const expected: string[] = ['JavaScript', 'Bash', 'Golang', 'Python']
 
     expect(actual).toEqual(expected)
-    fs.remove(srcdir) //cleanup, but don't block other tests
+    expect(fs.readdirSync).toHaveBeenCalledWith(`${srcdir}/shared`)
   })
 
   test('determineInitPaths', async () => {
@@ -105,7 +173,7 @@ describe('opsInit', () => {
         commandName: 'mock Ops name',
         commandDescription: 'mock Ops description',
         commandVersion: '0.1.0',
-        templates: ['command'],
+        templates: [COMMAND],
         lang: 'Assembly',
       },
     }
@@ -132,7 +200,7 @@ describe('opsInit', () => {
         commandDescription: 'mock Ops description',
         commandVersion: '0.1.0',
       },
-      templates: ['command'],
+      templates: [COMMAND],
       lang: 'Assembly',
     })
 
@@ -140,11 +208,87 @@ describe('opsInit', () => {
   })
 
   test('copyTemplateFiles', async () => {
-    // TODO: Implement this with mocking the FS read/write package https://jestjs.io/docs/en/manual-mocks
+    cmd = new Init([], config, {} as Services)
+    jest.resetAllMocks()
+
+    fs.ensureDir.mockResolvedValue(true)
+    fs.copy.mockResolvedValue(true)
+
+    const initPaths = {
+      destDir: '/home/cicd/myop',
+      sharedDir: 'src/shared/Python',
+    }
+    const initParams = {}
+    const input = { initPaths, initParams }
+
+    const result = await cmd.copyTemplateFiles(input)
+
+    expect(result).toEqual(input)
+    expect(fs.ensureDir).toHaveBeenCalledTimes(1)
+    expect(fs.ensureDir).toHaveBeenCalledWith(initPaths.destDir)
+    expect(fs.copy).toHaveBeenCalledTimes(1)
+    expect(fs.copy).toHaveBeenCalledWith(initPaths.sharedDir, initPaths.destDir)
+  })
+
+  test('customizePackageJson_nonJS', async () => {
+    cmd = new Init([], config, {} as Services)
+    jest.resetAllMocks()
+
+    const initPaths = {
+      destDir: '/home/cicd/myop',
+      sharedDir: 'src/shared/Python',
+    }
+    const initParams = {
+      lang: 'Python',
+    }
+    const input = { initPaths, initParams }
+
+    const results = await cmd.customizePackageJson(input)
+
+    expect(results).toEqual(input)
+    expect(fs.readFileSync).not.toHaveBeenCalled()
+    expect(fs.writeFileSync).not.toHaveBeenCalled()
   })
 
   test('customizePackageJson', async () => {
-    // TODO: Implement this with mocking the FS read/write package https://jestjs.io/docs/en/manual-mocks
+    cmd = new Init([], config, {} as Services)
+    jest.resetAllMocks()
+
+    const inputJson = `{"name": "template", "description": "this is a template", "dependencies": {"@cto.ai/ops": "^2.1.0"}}`
+    const outputJson = JSON.stringify(
+      {
+        name: 'myop',
+        description: "it's my op",
+        dependencies: { '@cto.ai/ops': '^2.1.0' },
+      },
+      null,
+      2,
+    )
+
+    fs.readFileSync.mockReturnValue(inputJson)
+
+    const initPaths = {
+      destDir: '/home/cicd/myop',
+      sharedDir: 'src/shared/JavaScript',
+    }
+    const initParams = {
+      lang: 'JavaScript',
+      commandName: 'myop',
+      commandDescription: "it's my op",
+    }
+    const input = { initPaths, initParams }
+
+    const results = await cmd.customizePackageJson(input)
+
+    expect(results).toEqual(input)
+    expect(fs.readFileSync).toHaveBeenCalledWith(
+      'src/shared/JavaScript/package.json',
+      'utf8',
+    )
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      '/home/cicd/myop/package.json',
+      outputJson,
+    )
   })
 
   test('customizeYaml', async () => {
@@ -171,6 +315,6 @@ describe('opsInit', () => {
     const initParams = {} as InitParams
     await cmd.sendAnalytics({ initPaths, initParams })
 
-    expect(cmd.services.analytics.track.mock.calls.length).toBe(1)
+    expect(cmd.services.analytics.track).toHaveBeenCalledTimes(1)
   })
 })

@@ -34,8 +34,6 @@ test('init should create a directory with the command name', async () => {
   const initRes = await run(
     ['init'],
     [
-      DOWN,
-      SPACE,
       ENTER,
       NEW_WORKFLOW_NAME,
       ENTER,
@@ -48,7 +46,29 @@ test('init should create a directory with the command name', async () => {
 
   const newFileExists = fs.existsSync(NEW_WORKFLOW_NAME)
   expect(initRes.toLowerCase()).toContain('success!')
-  expect(initRes).toContain(`🚀 To test your ${WORKFLOW} run:`)
+  expect(initRes).toContain(`🚀 To try out your Op run:`)
+  expect(newFileExists).toBeTruthy()
+
+  const packageObj = fs.readFileSync(`${pathToWorkflow}/ops.yml`, 'utf8')
+
+  const WF_VERSIONS = (
+    NEW_WORKFLOW_NAME +
+    ':' +
+    NEW_WORKFLOW_VERSION
+  ).toLowerCase()
+
+  expect(packageObj).toContain(WF_VERSIONS)
+})
+
+test('init should create a directory with the command name when passed it on the CLI', async () => {
+  const initRes = await run(
+    ['init', NEW_WORKFLOW_NAME],
+    [ENTER, NEW_WORKFLOW_DESCRIPTION, ENTER, NEW_WORKFLOW_VERSION, ENTER],
+  )
+
+  const newFileExists = fs.existsSync(NEW_WORKFLOW_NAME)
+  expect(initRes.toLowerCase()).toContain('success!')
+  expect(initRes).toContain(`🚀 To try out your Op run:`)
   expect(newFileExists).toBeTruthy()
 
   const packageObj = fs.readFileSync(`${pathToWorkflow}/ops.yml`, 'utf8')
