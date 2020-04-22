@@ -22,7 +22,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.7.3 darwin-x64 node-v12.12.0
+@cto.ai/ops/1.8.0 darwin-x64 node-v12.12.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -42,7 +42,7 @@ USAGE
 * [`ops build [PATH]`](#ops-build-path)
 * [`ops cleanup [OPNAME]`](#ops-cleanup-opname)
 * [`ops help [COMMAND]`](#ops-help-command)
-* [`ops init`](#ops-init)
+* [`ops init [NAME]`](#ops-init-name)
 * [`ops list`](#ops-list)
 * [`ops publish PATH`](#ops-publish-path)
 * [`ops remove OP`](#ops-remove-op)
@@ -182,13 +182,16 @@ OPTIONS
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.1.6/src/commands/help.ts)_
 
-## `ops init`
+## `ops init [NAME]`
 
 Easily create a new Op.
 
 ```
 USAGE
-  $ ops init
+  $ ops init [NAME]
+
+ARGUMENTS
+  NAME  the name of the op to create
 
 OPTIONS
   -h, --help  show CLI help
