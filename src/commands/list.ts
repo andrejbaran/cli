@@ -15,6 +15,7 @@ import {
   COMMAND,
   WORKFLOW,
   WORKFLOW_TYPE,
+  GLUECODE_TYPE,
   OP_FILE,
 } from '../constants/opConfig'
 import { pluralize, asyncPipe, parseYaml } from '~/utils'
@@ -53,25 +54,29 @@ export default class List extends Command {
       )
       if (!manifest) return inputs
 
-      const { workflows = [], ops = [] }: OpsYml = parseYaml(manifest)
+      const { ops = [] }: OpsYml = parseYaml(manifest)
 
-      const localWorkflows = workflows.map(workflow => ({
-        ...workflow,
-        local: true,
-      }))
       const localCommands = ops.map(ops => ({ ...ops, local: true }))
       return {
         ...inputs,
-        opResults: [...inputs.opResults, ...localWorkflows, ...localCommands],
+        opResults: [...inputs.opResults, ...localCommands],
       }
     } catch {
       return { ...inputs }
     }
   }
 
+  filterOutWorkflows = (inputs: ListInputs): ListInputs => {
+    const opResults = inputs.opResults.filter(
+      input => input.type !== WORKFLOW_TYPE,
+    )
+    this.opResults = opResults
+    return { ...inputs, opResults }
+  }
+
   filterOutGlueCodes = (inputs: ListInputs): ListInputs => {
     const opResults = inputs.opResults.filter(
-      input => input.type !== 'glue_code',
+      input => input.type !== GLUECODE_TYPE,
     )
     this.opResults = opResults
     return { ...inputs, opResults }
@@ -99,8 +104,7 @@ export default class List extends Command {
         team: { name },
       },
     } = inputs
-    const commandText = multiBlue('\u2022Command')
-    const workflowText = multiOrange('\u2022Workflow')
+    const commandText = multiBlue('Command')
     const teamText = secondary(`@${name}`)
     const subHeader = reset.dim(
       '🌎 = Public 🔑 = Private 🖥  = Local  🔍 Search:',
@@ -112,7 +116,7 @@ export default class List extends Command {
       name: 'selectedOp',
       pageSize: 5,
       message: `\nListing ops for team ${teamText}${callOutCyan(
-        `. Select a ${commandText} or ${workflowText} to continue ${reset.green(
+        `. Select a ${commandText} to continue ${reset.green(
           '→',
         )}\n${subHeader} `,
       )}`,
@@ -229,6 +233,7 @@ export default class List extends Command {
         this.startSpinner,
         this.getApiOps,
         this.getLocalOps,
+        this.filterOutWorkflows,
         this.filterOutGlueCodes,
         this.stopSpinner,
         this.promptOps,

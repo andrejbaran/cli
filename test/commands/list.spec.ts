@@ -2,13 +2,19 @@ import * as Config from '@oclif/config'
 import List from '~/commands/list'
 import { FeathersClient } from '~/services/Feathers'
 import { Services, Config as ConfigType, Team, ListInputs } from '~/types'
-import { GLUECODE_TYPE, WORKFLOW_TYPE, WORKFLOW } from '~/constants/opConfig'
+import {
+  COMMAND_TYPE,
+  GLUECODE_TYPE,
+  WORKFLOW_TYPE,
+  WORKFLOW,
+} from '~/constants/opConfig'
 import { sleep } from '../utils'
 import {
   createMockTeam,
   createMockConfig,
   createMockTokens,
   createMockState,
+  createMockWorkflow,
   createMockUser,
   createMockOp,
 } from '../mocks'
@@ -16,6 +22,12 @@ import { ux } from '@cto.ai/sdk'
 
 let cmd: List
 let config: Config.IConfig
+let mockInputs: ListInputs
+
+const publicMockOpId = 'PUBLIC_FAKE_OP_ID'
+const privateMockOpId = 'PRIVATE_FAKE_OP_ID'
+const gluecodeMockId = 'GLUECODE_FAKE_OP_ID'
+const workflowMockId = 'WORKFLOW_FAKE_OP_ID'
 
 beforeEach(async () => {
   config = await Config.load()
@@ -48,8 +60,6 @@ describe('promptOps', () => {
 
 describe('getApiOps', () => {
   test('Check if list displays public and private ops', async () => {
-    const publicMockOpId = 'PUBLIC_FAKE_OP_ID'
-    const privateMockOpId = 'PRIVATE_FAKE_OP_ID'
     const mockToken = createMockTokens({})
     const mockTeam = createMockTeam({ id: 'FAKE_ID', name: 'FAKE_TEAM_NAME' })
     const mockConfig = createMockConfig({ team: mockTeam, tokens: mockToken })
@@ -70,32 +80,47 @@ describe('getApiOps', () => {
   })
 })
 
-describe('filterOutGlueCodes', () => {
-  test('Check if list filters out glucode', async () => {
-    const publicMockOpId = 'PUBLIC_FAKE_OP_ID'
-    const privateMockOpId = 'PRIVATE_FAKE_OP_ID'
+describe('filters', () => {
+  let publicMockOp, glueCodeOp, workflowMockOp
+
+  beforeAll(() => {
+    publicMockOp = createMockOp({
+      id: publicMockOpId,
+      isPublic: true,
+      type: COMMAND_TYPE,
+    })
+    glueCodeOp = createMockOp({
+      id: gluecodeMockId,
+      isPublic: false,
+      type: GLUECODE_TYPE,
+    })
+    workflowMockOp = createMockWorkflow({
+      id: workflowMockId,
+      isPublic: false,
+      type: WORKFLOW_TYPE,
+    })
+
+    const mockReturnedOps = [publicMockOp, glueCodeOp, workflowMockOp]
+
     const mockToken = createMockTokens({})
     const mockTeam = createMockTeam({ id: 'FAKE_ID', name: 'FAKE_TEAM_NAME' })
     const mockConfig = createMockConfig({ team: mockTeam, tokens: mockToken })
-
-    const mockReturnedOps = [
-      { id: publicMockOpId, isPublic: true, type: WORKFLOW_TYPE },
-      { id: privateMockOpId, isPublic: false, type: GLUECODE_TYPE },
-    ]
-    const mockFeathersService = new FeathersClient()
-    mockFeathersService.find = jest
-      .fn()
-      .mockReturnValue({ data: mockReturnedOps })
-
-    cmd = new List([], config, { api: mockFeathersService } as Services)
-
-    const inputs = {
+    mockInputs = {
       config: mockConfig,
       opResults: mockReturnedOps,
       selectedOp: {},
     } as ListInputs
+  })
 
-    const noGlue = await cmd.filterOutGlueCodes(inputs)
-    expect(noGlue.opResults.length).toEqual(1)
+  test('Check if filterOutGlueCodes filters out gluecode', async () => {
+    const { opResults: filteredOps } = cmd.filterOutGlueCodes(mockInputs)
+    expect(filteredOps).toHaveLength(2)
+    expect(filteredOps).not.toContain(glueCodeOp)
+  })
+
+  test('Check if filterOutWorkflows filters out workflows', async () => {
+    const { opResults: filteredOps } = cmd.filterOutWorkflows(mockInputs)
+    expect(filteredOps).toHaveLength(2)
+    expect(filteredOps).not.toContain(workflowMockOp)
   })
 })
