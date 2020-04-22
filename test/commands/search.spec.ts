@@ -12,16 +12,22 @@ import { AnalyticsService } from '~/services/Analytics'
 import {
   createMockTeam,
   createMockOp,
+  createMockWorkflow,
   createMockUser,
   createMockConfig,
   createMockTokens,
   createMockState,
 } from '../mocks'
-import { GLUECODE_TYPE, COMMAND } from '~/constants/opConfig'
+import { GLUECODE_TYPE, COMMAND, WORKFLOW_TYPE } from '~/constants/opConfig'
 import { ux } from '@cto.ai/sdk'
 
 let cmd: Search
 let config: Config.IConfig
+let mockInputs: SearchInputs
+
+const publicMockOpId = 'PUBLIC_FAKE_OP_ID'
+const gluecodeMockId = 'GLUECODE_FAKE_OP_ID'
+const workflowMockId = 'WORKFLOW_FAKE_OP_ID'
 
 beforeEach(async () => {
   config = await Config.load()
@@ -32,20 +38,14 @@ afterEach(async () => {
   await sleep(500)
 })
 
-describe('getApiOps', () => {
-  test('Check if search successfully retrieves ops from the api, and filters out GlueCode', async () => {
+describe('getApiOpsAndWorkflows', () => {
+  test('Check if search successfully retrieves ops from the api', async () => {
     const publicMockOpId = 'PUBLIC_FAKE_OP_ID'
-    const gluecodeMockId = 'GLUECODE_FAKE_OP_ID'
     const publicMockOp = createMockOp({
       name: 'FAKE_OP_NAME1',
       id: publicMockOpId,
     })
-    const glueCodeOp = createMockOp({
-        name: 'FAKE_OP_NAME',
-        id: gluecodeMockId,
-        type: GLUECODE_TYPE,
-      }),
-      mockReturnedOps = [publicMockOp, glueCodeOp]
+    const mockReturnedOps = [publicMockOp]
     const mockFeathersService = new FeathersClient()
     const mockToken = createMockTokens({})
     const mockTeam = createMockTeam({ id: 'FAKE_ID', name: 'FAKE_TEAM_NAME' })
@@ -59,9 +59,58 @@ describe('getApiOps', () => {
 
     cmd.state = createMockState({ config: mockConfig })
 
-    const res = await cmd.getApiOps({} as SearchInputs)
-    expect(res.apiOps.length).toEqual(1)
-    expect(res.apiOps[0].id).toEqual(publicMockOpId)
+    const res = await cmd.getApiOpsAndWorkflows({} as SearchInputs)
+    expect(res.apiOps).toHaveLength(1)
+    expect(res.apiOps).toContain(publicMockOp)
+  })
+})
+
+describe('filters', () => {
+  let publicMockOp, glueCodeOp, publicWorkflowOp
+
+  beforeAll(() => {
+    publicMockOp = createMockOp({
+      name: 'FAKE_OP_NAME1',
+      id: publicMockOpId,
+    })
+    glueCodeOp = createMockOp({
+      name: 'FAKE_OP_NAME',
+      id: gluecodeMockId,
+      type: GLUECODE_TYPE,
+    })
+    publicWorkflowOp = createMockWorkflow({
+      name: 'FAKE_WORKFLOW_NAME',
+      id: workflowMockId,
+    })
+    const mockReturnedOps = [publicMockOp, glueCodeOp, publicWorkflowOp]
+    mockInputs = {
+      filter: 'FAKE_FILTER',
+      apiOps: mockReturnedOps,
+      selectedOp: createMockOp({}) as OpCommand,
+    } as SearchInputs
+  })
+
+  test('Check if filterOutGlueCodes successfully removes glue code ops', async () => {
+    const { apiOps: filteredOps } = cmd.filterOutGlueCodes(mockInputs)
+    expect(filteredOps).toHaveLength(2)
+    expect(filteredOps).not.toContain(glueCodeOp)
+  })
+
+  test('Check if filterOutWorkflows successfully removes workflows', async () => {
+    const { apiOps: filteredOps } = cmd.filterOutWorkflows(mockInputs)
+    expect(filteredOps).toHaveLength(2)
+    expect(filteredOps).not.toContain(publicWorkflowOp)
+  })
+
+  test('Check if filterByNameOrDescription successfully removes ops that do not match', async () => {
+    const matchingMockOpFilter = createMockOp({
+      name: 'FAKE_OP_NAME_FAKE_FILTER',
+      id: 'FAKE_OP_FILTERED_ID',
+    })
+    mockInputs.apiOps.push(matchingMockOpFilter)
+    const { apiOps: filteredOps } = cmd.filterByNameOrDescription(mockInputs)
+    expect(filteredOps).toHaveLength(1)
+    expect(filteredOps).toContain(matchingMockOpFilter)
   })
 })
 
@@ -77,8 +126,7 @@ describe('sendAnalytics', () => {
     const inputs = {
       filter: 'FAKE_FILTER',
       apiOps: [],
-      localWorkflows: [],
-      selectedOpOrWorkflow: createMockOp({}) as OpCommand,
+      selectedOp: createMockOp({}) as OpCommand,
     } as SearchInputs
 
     cmd.readConfig = jest.fn().mockReturnValue({
@@ -92,11 +140,11 @@ describe('sendAnalytics', () => {
 
     await cmd.sendAnalytics('')(inputs)
 
-    expect(mockAnalyticsService.track.mock.calls.length).toBe(1)
+    expect(mockAnalyticsService.track).toHaveBeenCalledTimes(1)
   })
 })
 
-describe('selectOpOrWorkflowPrompt', () => {
+describe('selectOpPrompt', () => {
   test('Check if calls are made to ux prompt library ', async () => {
     const selectedTemplate = COMMAND
     cmd = new Search([], config, {} as Services)
@@ -106,7 +154,7 @@ describe('selectOpOrWorkflowPrompt', () => {
     cmd.user = createMockUser({})
     cmd.team = createMockTeam({})
 
-    await cmd.selectOpOrWorkflowPrompt({} as SearchInputs)
-    expect(cmd.ux.prompt.mock.calls.length).toBe(1)
+    await cmd.selectOpPrompt({} as SearchInputs)
+    expect(cmd.ux.prompt).toHaveBeenCalledTimes(1)
   })
 })

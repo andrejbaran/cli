@@ -7,8 +7,6 @@ import {
   Answers,
   OpCommand,
   Fuzzy,
-  OpWorkflow,
-  OpsYml,
   SearchInputs,
   OpsFindResponse,
 } from '../types'
@@ -33,13 +31,16 @@ export default class Search extends Command {
         'Filters Op results which include filter text in Op name or description.',
     },
   ]
+
   static flags = {
     help: flags.help({ char: 'h' }),
   }
 
-  opsAndWorkflows: (OpCommand | OpWorkflow)[] = []
+  ops: OpCommand[] = []
 
-  getApiOps = async (inputs: SearchInputs): Promise<SearchInputs> => {
+  getApiOpsAndWorkflows = async (
+    inputs: SearchInputs,
+  ): Promise<SearchInputs> => {
     try {
       const findResponse: OpsFindResponse = await this.services.api.find(
         `/private/ops`,
@@ -51,7 +52,6 @@ export default class Search extends Command {
       )
       let { data: apiOps } = findResponse
 
-      apiOps = apiOps.filter(op => op.type !== GLUECODE_TYPE)
       return { ...inputs, apiOps }
     } catch (err) {
       this.debug('error: %O', err)
@@ -59,62 +59,30 @@ export default class Search extends Command {
     }
   }
 
-  getLocalWorkflows = async (inputs: SearchInputs): Promise<SearchInputs> => {
-    const localWorkflows = []
-    try {
-      const manifest = await fs.readFile(
-        path.join(process.cwd(), OP_FILE),
-        'utf8',
-      )
-      if (!manifest) return inputs
-
-      const { workflows = [] }: OpsYml = parseYaml(manifest)
-
-      workflows.forEach(workflow => (workflow.local = true))
-      return { ...inputs, localWorkflows: workflows }
-    } catch {
-      return { ...inputs, localWorkflows }
-    }
+  filterOutWorkflows = (inputs: SearchInputs): SearchInputs => {
+    const apiOps = inputs.apiOps.filter(input => input.type !== WORKFLOW_TYPE)
+    return { ...inputs, apiOps }
   }
 
-  _removeIfNameOrDescriptionDontContainQuery = (filter: string) => (
-    workflow: OpWorkflow,
-  ): boolean => {
-    return (
-      workflow.name.includes(filter) || workflow.description.includes(filter)
+  filterOutGlueCodes = (inputs: SearchInputs): SearchInputs => {
+    const apiOps = inputs.apiOps.filter(input => input.type !== GLUECODE_TYPE)
+    return { ...inputs, apiOps }
+  }
+
+  filterByNameOrDescription = (inputs: SearchInputs) => {
+    const apiOps = inputs.apiOps.filter(
+      op =>
+        op.name.includes(inputs.filter) ||
+        op.description.includes(inputs.filter),
     )
-  }
-
-  filterLocalWorkflows = (inputs: SearchInputs) => {
-    let { localWorkflows, filter } = inputs
-    if (!localWorkflows.length) return inputs
-
-    localWorkflows = localWorkflows.filter(
-      this._removeIfNameOrDescriptionDontContainQuery(filter),
-    )
-
-    return { ...inputs, localWorkflows }
-  }
-  _removeIfLocalExists = (workflows: OpWorkflow[]) => (apiOp: OpCommand) => {
-    const match = workflows.find(workflow => workflow.name === apiOp.name)
-    return !match
-  }
-
-  resolveLocalAndApi = (inputs: SearchInputs) => {
-    const { apiOps, localWorkflows } = inputs
-    const ops = apiOps.filter(this._removeIfLocalExists(localWorkflows))
-    this.opsAndWorkflows = [...ops, ...localWorkflows].sort((a, b) => {
-      if (a.name < b.name) return -1
-      if (b.name < a.name) return 1
-      return 0
-    })
-    return inputs
+    return { ...inputs, apiOps }
   }
 
   checkData = async (inputs: SearchInputs) => {
-    if (!this.opsAndWorkflows.length) {
+    this.ops = inputs.apiOps as OpCommand[]
+    if (!this.ops.length) {
       this.log(
-        `\n 😞 No ops found in your team, public or local workspaces. Try again or run ${this.ux.colors.callOutCyan(
+        `\n 😞 No ops found in your team, or public workspaces. Try again or run ${this.ux.colors.callOutCyan(
           'ops publish',
         )} to create an op. \n`,
       )
@@ -122,18 +90,15 @@ export default class Search extends Command {
     return inputs
   }
 
-  selectOpOrWorkflowPrompt = async (
-    inputs: SearchInputs,
-  ): Promise<SearchInputs> => {
-    const commandText = this.ux.colors.multiBlue('\u2022Command')
-    const workflowText = this.ux.colors.multiOrange('\u2022Workflow')
-    const { selectedOpOrWorkflow } = await this.ux.prompt<{
-      selectedOpOrWorkflow: OpCommand | OpWorkflow
+  selectOpPrompt = async (inputs: SearchInputs): Promise<SearchInputs> => {
+    const commandText = this.ux.colors.multiBlue('Command')
+    const { selectedOp } = await this.ux.prompt<{
+      selectedOp: OpCommand
     }>({
       type: 'autocomplete',
-      name: 'selectedOpOrWorkflow',
+      name: 'selectedOp',
       pageSize: 5,
-      message: `\nSelect a public ${commandText} or ${workflowText} to continue ${this.ux.colors.reset.green(
+      message: `\nSelect a public ${commandText} to continue ${this.ux.colors.reset.green(
         '→',
       )}\n${this.ux.colors.reset.dim('🔍 Search:')} `,
       source: this._autocompleteSearch.bind(this),
@@ -143,12 +108,12 @@ export default class Search extends Command {
         )} for usage information.`,
       )}`,
     })
-    return { ...inputs, selectedOpOrWorkflow }
+    return { ...inputs, selectedOp }
   }
 
   showRunMessage = (inputs: SearchInputs): SearchInputs => {
     const {
-      selectedOpOrWorkflow: { name, teamName },
+      selectedOp: { name, teamName },
     } = inputs
     this.log(
       `\n💻 Run ${this.ux.colors.green('$')} ${this.ux.colors.italic.dim(
@@ -160,12 +125,10 @@ export default class Search extends Command {
 
   sendAnalytics = (filter: string) => async (inputs: SearchInputs) => {
     const {
-      selectedOpOrWorkflow,
-      selectedOpOrWorkflow: { id: opId, teamID },
+      selectedOp,
+      selectedOp: { id: opId, teamID },
     } = inputs
     const teamOp = teamID === this.team.id
-    const remote =
-      'remote' in selectedOpOrWorkflow ? selectedOpOrWorkflow.remote : false
     try {
       this.services.analytics.track(
         {
@@ -178,8 +141,7 @@ export default class Search extends Command {
             username: this.user.username,
             selectedOp: opId,
             teamOp,
-            remote,
-            results: this.opsAndWorkflows.length,
+            results: this.ops.length,
             filter,
           },
         },
@@ -198,37 +160,29 @@ export default class Search extends Command {
   }
 
   private fuzzyFilterParams = () => {
-    const list = this.opsAndWorkflows.map(opOrWorkflow => {
-      const name = this._formatOpOrWorkflowName(opOrWorkflow)
+    const list = this.ops.map(op => {
+      const name = this._formatOpName(op)
       return {
-        name: `${name} - ${opOrWorkflow.description}`,
-        value: opOrWorkflow,
+        name: `${name} - ${op.description}`,
+        value: op,
       }
     })
     const options = { extract: el => el.name }
     return { list, options }
   }
 
-  private _formatOpOrWorkflowName = (opOrWorkflow: OpCommand | OpWorkflow) => {
-    const teamName = opOrWorkflow.teamName ? `@${opOrWorkflow.teamName}/` : ''
+  private _formatOpName = (op: OpCommand) => {
+    const teamName = op.teamName ? `@${op.teamName}/` : ''
     const name = `${this.ux.colors.reset.white(
-      `${teamName}${opOrWorkflow.name}`,
-    )} ${this.ux.colors.reset.dim(`(${opOrWorkflow.version})`)}`
-    if (opOrWorkflow.type === WORKFLOW_TYPE) {
-      return `${this.ux.colors.reset(
-        this.ux.colors.multiOrange('\u2022'),
-      )} ${name}`
-    } else {
-      return `${this.ux.colors.reset(
-        this.ux.colors.multiBlue('\u2022'),
-      )} ${name}`
-    }
+      `${teamName}${op.name}`,
+    )} ${this.ux.colors.reset.dim(`(${op.version})`)}`
+    return `${this.ux.colors.reset(this.ux.colors.multiBlue('\u2022'))} ${name}`
   }
 
   startSpinner = async (inputs: SearchInputs) => {
     await this.ux.spinner.start(
       `🔍 ${this.ux.colors.white('Searching')} ${this.ux.colors.callOutCyan(
-        `all ${pluralize(COMMAND)} and ${pluralize(WORKFLOW)}`,
+        `all ${pluralize(COMMAND)}`,
       )}`,
     )
     return inputs
@@ -249,17 +203,17 @@ export default class Search extends Command {
 
       const searchPipeline = asyncPipe(
         this.startSpinner,
-        this.getApiOps,
-        this.getLocalWorkflows,
-        this.filterLocalWorkflows,
-        this.resolveLocalAndApi,
+        this.getApiOpsAndWorkflows,
+        this.filterByNameOrDescription,
+        this.filterOutWorkflows,
+        this.filterOutGlueCodes,
         this.checkData,
         this.stopSpinner,
-        this.selectOpOrWorkflowPrompt,
+        this.selectOpPrompt,
         this.showRunMessage,
         this.sendAnalytics(filter),
       )
-      await searchPipeline(filter)
+      await searchPipeline({ filter })
     } catch (err) {
       await this.ux.spinner.stop(`${this.ux.colors.errorRed('Failed')}`)
       this.debug('%O', err)
