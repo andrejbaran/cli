@@ -24,7 +24,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.8.0 darwin-x64 node-v12.12.0
+@cto.ai/ops/1.8.0 darwin-x64 node-v11.14.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -315,8 +315,9 @@ USAGE
   $ ops secrets:set
 
 OPTIONS
-  -k, --key=key
-  -v, --value=value
+  -f, --from-file=from-file  path to a file containing the value of the secret to set
+  -k, --key=key              the key of the secret to set
+  -v, --value=value          the value of the secret to set
 ```
 
 ## `ops secrets:unregister`

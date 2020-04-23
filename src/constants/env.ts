@@ -33,4 +33,4 @@ export const DOCKER_SOCKET = process.env.DOCKER_SOCKET || '/var/run/docker.sock'
 
 export const SEGMENT_URL = process.env.SEGMENT_URL || 'https://api.segment.io'
 
-export const OPS_CLIENT_SECRET = process.env.OPS_CLIENT_SECRET || '';
+export const OPS_CLIENT_SECRET = process.env.OPS_CLIENT_SECRET || ''
