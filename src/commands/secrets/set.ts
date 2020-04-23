@@ -2,17 +2,15 @@ import { ux } from '@cto.ai/sdk'
 import Command from '~/base'
 import { State } from '~/types'
 import { asyncPipe } from '~/utils'
+import * as fs from 'fs-extra'
 import {
   AnalyticsError,
   SetSecretsProvider,
-  SecretsValuesNotEqual,
-  SecretsFlagsRequired,
   NoSecretsProviderFound,
-  APIError,
   InvalidSecretVault,
   UserUnauthorized,
   InvalidSecretToken,
-  RegisterSecretsProvider,
+  SecretValueFileError,
 } from '~/errors/CustomErrors'
 import { flags } from '@oclif/parser'
 
@@ -20,7 +18,10 @@ export interface SetSecretInputs {
   state: State
   key: string
   value: string
+  valueFilename: string
 }
+
+const KEY_REGEX = /^[\w.-]+$/
 
 const { white, reset } = ux.colors
 
@@ -28,70 +29,114 @@ export default class SecretsSet extends Command {
   static description = 'Add a key & value'
 
   public static flags = {
-    key: flags.string({ char: 'k' }),
-    value: flags.string({ char: 'v' }),
+    key: flags.string({
+      char: 'k',
+      description: 'the key of the secret to set',
+    }),
+    value: flags.string({
+      char: 'v',
+      description: 'the value of the secret to set',
+      exclusive: ['from-file'],
+    }),
+    'from-file': flags.string({
+      char: 'f',
+      description: 'path to a file containing the value of the secret to set',
+      exclusive: ['value'],
+    }),
   }
 
-  validateRegisterInput = async (input: string): Promise<boolean | string> => {
+  validateKeyInput = async (input: string): Promise<boolean | string> => {
+    if (!input) {
+      return `😞 Sorry, the value cannot be empty`
+    }
+    if (!KEY_REGEX.test(input)) {
+      return `😞 Secret keys can only contain letters, numbers, underscores, hyphens, and periods`
+    }
+    return true
+  }
+
+  validateValueInput = async (input: string): Promise<boolean | string> => {
     if (!input) {
       return `😞 Sorry, the value cannot be empty`
     }
     return true
   }
 
-  promptForSecret = async (
+  resolveFileSecret = async (
     input: SetSecretInputs,
   ): Promise<SetSecretInputs> => {
-    if (input.key && input.value) {
+    if (!input.valueFilename) {
       return input
     }
 
+    try {
+      const value = await fs.readFile(input.valueFilename, 'utf8')
+      return {
+        ...input,
+        value,
+      }
+    } catch (err) {
+      this.debug('%O', err)
+      throw new SecretValueFileError(err)
+    }
+  }
+
+  promptForSecret = async (
+    input: SetSecretInputs,
+  ): Promise<SetSecretInputs> => {
     await ux.print(
       `\n🔑 Add a secret to secret storage for team ${
         input.state.config.team.name
       } ${reset.green('→')}`,
     )
 
-    const { key, valueOriginal, valueConfirm } = await ux.prompt<{
-      key: string
-      valueOriginal: string
-      valueConfirm: string
-    }>([
-      {
+    let key: string = ''
+    if (input.key) {
+      const keyValidationResult = await this.validateKeyInput(input.key)
+      if (keyValidationResult === true) {
+        key = input.key
+      } else {
+        await this.ux.print(keyValidationResult as string)
+      }
+    }
+    key =
+      key ||
+      (await ux.prompt<{ key: string }>({
         type: 'input',
         name: 'key',
         message: `Enter the name of the secret to be stored ${reset.green(
           '→',
         )}`,
         afterMessage: `${reset.white('Secret name:')}`,
-        validate: this.validateRegisterInput.bind(this),
-      },
-      {
-        type: 'password',
-        name: 'valueOriginal',
+        validate: this.validateKeyInput,
+      })).key
+
+    let value: string = ''
+    if (input.value) {
+      const valueValidationResult = await this.validateValueInput(input.value)
+      if (valueValidationResult === true) {
+        value = input.value
+      } else {
+        await this.ux.print(valueValidationResult as string)
+      }
+    }
+    value =
+      value ||
+      (await ux.prompt<{
+        value: string
+      }>({
+        type: 'editor',
+        name: 'value',
         message: `\nNext add the secret's value to be stored ${reset.green(
           '→',
         )}`,
-        validate: this.validateRegisterInput.bind(this),
-      },
-      {
-        type: 'password',
-        name: 'valueConfirm',
-        message: `\nPlease confirm the secret's value to be stored ${reset.green(
-          '→',
-        )}`,
-        validate: this.validateRegisterInput.bind(this),
-      },
-    ])
-
-    if (valueOriginal !== valueConfirm) {
-      throw new SecretsValuesNotEqual()
-    }
+        validate: this.validateValueInput,
+      })).value
 
     return {
-      key: key,
-      value: valueOriginal,
-      state: input.state,
+      ...input,
+      key,
+      value,
     }
   }
 
@@ -168,30 +213,26 @@ export default class SecretsSet extends Command {
     }
   }
 
-  validateFlags = (k: string | undefined, v: string | undefined) => {
-    if ((k && !v) || (v && !k)) {
-      throw new SecretsFlagsRequired()
-    }
-  }
-
   async run() {
     let {
-      flags: { key, value },
+      flags: { key, value, 'from-file': valueFilename },
     } = this.parse(SecretsSet)
 
     try {
+      this.ux.spinner.start('Initializing')
       await this.isLoggedIn()
       const secretProviderErr = await this.services.secretService.checkForSecretProviderErrors(
         this.services.api,
         this.state.config,
       )
+      //@ts-ignore
+      this.ux.spinner.stop()
       if (secretProviderErr instanceof Error) {
         throw secretProviderErr
       }
 
-      this.validateFlags(key, value)
-
       const switchPipeline = asyncPipe(
+        this.resolveFileSecret,
         this.promptForSecret,
         this.setSecret,
         this.sendAnalytics,
@@ -201,6 +242,7 @@ export default class SecretsSet extends Command {
         state: this.state,
         key,
         value,
+        valueFilename,
       })
     } catch (err) {
       this.debug('%O', err)
