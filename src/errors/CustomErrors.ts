@@ -794,31 +794,24 @@ export class NoSecretsOnTeam extends ErrorTemplate {
   }
 }
 
-export class SetSecretsProvider extends ErrorTemplate {
+export class SecretValueFileError extends ErrorTemplate {
   constructor(err) {
     super(
-      white('😅 Oops! we were not able to successfully set the secret'),
+      white(
+        `🤔 There was an error loading the value from the given filename.
+    Please ensure that the file exists and that you can read it.`,
+      ),
       err,
       expectedSource,
     )
   }
 }
 
-export class SecretsValuesNotEqual extends ErrorTemplate {
-  constructor() {
+export class SetSecretsProvider extends ErrorTemplate {
+  constructor(err) {
     super(
-      white('🤔 Sorry, the values you have entered do not match!'),
-      undefined,
-      expectedSource,
-    )
-  }
-}
-
-export class SecretsFlagsRequired extends ErrorTemplate {
-  constructor() {
-    super(
-      white('😅 Oops! it appears that either flag -k or -v is missing'),
-      undefined,
+      white('😅 Oops! we were not able to successfully set the secret'),
+      err,
       expectedSource,
     )
   }
