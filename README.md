@@ -24,7 +24,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.8.0 darwin-x64 node-v11.14.0
+@cto.ai/ops/1.8.1 darwin-x64 node-v13.12.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
