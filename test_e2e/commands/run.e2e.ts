@@ -12,6 +12,7 @@ import { run, signin, signout } from '../utils/cmd'
 import {
   DOWN,
   ENTER,
+  Y,
   EXISTING_OP_NAME,
   NEW_FILE,
   EXISTING_WORKFLOW_NAME,
@@ -25,7 +26,7 @@ import {
 } from '../utils/constants'
 import { WORKFLOW } from '~/constants/opConfig'
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_INTERVAL
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 5
 
 beforeEach(async () => {
   await signin()
@@ -36,7 +37,7 @@ afterEach(async () => {
 })
 
 test('it should run a published op by passing name as argument', async () => {
-  const result = await run(['run', EXISTING_OP_NAME])
+  const result = await run(['run', EXISTING_OP_NAME], [Y, ENTER])
   expect(result).toContain(`Running ${EXISTING_OP_NAME}...`)
 
   const newFile = path.join(process.cwd(), NEW_FILE)
@@ -49,7 +50,7 @@ test('it should run a published op by passing name as argument', async () => {
 })
 
 test('it should run a published workflow by passing name as argument', async () => {
-  const result = await run(['run', EXISTING_WORKFLOW_NAME])
+  const result = await run(['run', EXISTING_WORKFLOW_NAME], [Y, ENTER])
   expect(result).toContain('Running echo hello 1')
   expect(result).toContain('Running echo hello 2')
   expect(result).toContain('Running echo hello 3')
@@ -64,7 +65,10 @@ test('it should run a local op by passing path as argument', async () => {
     '../sample_ops',
     EXISTING_OP_NAME,
   )
-  const result = await run(['run', pathToExistingOp], ['write', ENTER])
+  const result = await run(
+    ['run', pathToExistingOp],
+    [ENTER, ENTER, 'write', ENTER],
+  )
   expect(result).toContain(`Running ${EXISTING_OP_NAME}...`)
   const newFile = path.join(process.cwd(), NEW_FILE)
   const newFileExists = fs.existsSync(newFile)
@@ -82,7 +86,10 @@ test('it should run a local workflow by passing path as argument', async () => {
     EXISTING_WORKFLOW_NAME,
   )
 
-  const result = await run(['run', pathToExistingWorkflow], [DOWN, ENTER])
+  const result = await run(
+    ['run', pathToExistingWorkflow],
+    [DOWN, ENTER, Y, ENTER],
+  )
   expect(result).toContain('Running echo hello 1')
   expect(result).toContain('Running echo hello 2')
   expect(result).toContain('Running echo hello 3')
