@@ -408,19 +408,8 @@ export class KeycloakService {
   /**
    * Returns the URL used to invalidate the current user's session
    */
-  buildInvalidateSessionUrl = (): string => {
-    return `${OPS_KEYCLOAK_HOST}/realms/ops/protocol/openid-connect/logout`
-  }
-
-  /**
-   * Returns the necessary headers to invalidate the session
-   */
-  buildInvalidateSessionHeaders = (
-    sessionState: string,
-    accessToken: string,
-  ): { Cookie: string } => {
-    return {
-      Cookie: `$KEYCLOAK_SESSION=ops/${sessionState}; KEYCLOAK_IDENTITY=${accessToken}`,
-    }
+  buildInvalidateSessionUrl = ()  => {
+    const url = `${OPS_KEYCLOAK_HOST}/realms/ops/protocol/openid-connect/logout?redirect_uri=http%3A%2F%2Fwww.local.hc.ai%2F`
+    open(url)
   }
 }

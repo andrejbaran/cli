@@ -224,15 +224,8 @@ abstract class CTOCommand extends Command {
 
     // If session state exists, invalidate it
     if (sessionState)
-      await axios.get(
-        this.services.keycloakService.buildInvalidateSessionUrl(),
-        {
-          headers: this.services.keycloakService.buildInvalidateSessionHeaders(
-            sessionState,
-            this.accessToken,
-          ),
-        },
-      )
+      await this.services.keycloakService
+        .buildInvalidateSessionUrl()
   }
 
   initConfig = async (tokens: Tokens) => {
