@@ -1,3 +1,5 @@
+![](https://cto.ai/static/sdk-banner.png)
+
 # ops
 
 💻 CTO.ai Ops - The CLI built for Teams 🚀
@@ -470,20 +472,22 @@ Run a single unit test, or filter them by filename:
 
 ## E2E Tests (`test_e2e` directory)
 
-These are known as "cli-acceptance-tests" in Concourse: https://concourse.stg-platform.hc.ai/teams/main/pipelines/ci/jobs/cli-acceptance/
+The CLI has a number of robused E2E tests that are hosted inside of CTO.ai's private CI/CD infra.
+
+We are planning to expose this system via Github Actions in the future, but for now, a CTO.ai team member will review your PR and test coverage.
 
 ### How to run E2E tests locally
 
 The default test server is staging, but you can override this by passing in your own `OPS_REGISTRY_HOST` and `OPS_API_HOST` values from your shell config.
 
-Run tests against staging:
+Run tests against staging (as part of the CTO.ai platform developer workflow):
 
   1. Run `npm run configdev` to point the ops binary at the development Typescript app (instead of the production Javascript bundle)
   2. Ensure you have a `.env.staging` file (you can generate one by running scripts/make-env.sh)
   3. Set your `NODE_ENV` to 'staging':  `export NODE_ENV=staging`
   4. `npm run test:e2e`
 
-Run tests against Minikube:
+Run tests against Minikube (as part of the CTO.ai platform developer workflow):
 
   1. Create a user in Keycloak with the following credentials:
 
