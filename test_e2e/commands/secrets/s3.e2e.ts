@@ -1,5 +1,6 @@
 import {
   ENTER,
+  ESCAPE,
   EXISTING_USER_NAME,
   DEFAULT_TIMEOUT_INTERVAL,
 } from '../../utils/constants'
@@ -21,7 +22,7 @@ test('It should be able to set,list and delete a secret', async () => {
 
   const setRes = await run(
     ['secrets:set'],
-    [key, ENTER, value, ENTER, value, ENTER],
+    [key, ENTER, ENTER, 'i', value, ESCAPE, ':wq', ENTER],
   )
   expect(setRes.toLowerCase()).toContain(
     `secret ${key} has been added to your team`,
