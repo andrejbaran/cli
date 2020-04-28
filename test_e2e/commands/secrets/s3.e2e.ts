@@ -20,10 +20,7 @@ test('It should be able to set,list and delete a secret', async () => {
   const key = 'testabc'
   const value = 'testme'
 
-  const setRes = await run(
-    ['secrets:set'],
-    [key, ENTER, ENTER, 'i', value, ESCAPE, ':wq', ENTER],
-  )
+  const setRes = await run(['secrets:set', '-v', value], [key, ENTER])
   expect(setRes.toLowerCase()).toContain(
     `secret ${key} has been added to your team`,
   )
