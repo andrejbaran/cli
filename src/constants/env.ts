@@ -11,7 +11,7 @@ export const OPS_API_HOST = process.env.OPS_API_HOST || 'https://cto.ai/'
 export const OPS_API_PATH = process.env.OPS_API_PATH || 'api/v1'
 
 export const OPS_SEGMENT_KEY =
-  process.env.OPS_SEGMENT_KEY || 'sRsuG18Rh9IHgr9bK7GsrB7BfLfNmhCG'
+  process.env.OPS_SEGMENT_KEY || 'kskyrGqdnuvMZCE0V2kMrzS9Gfrl8J0y'
 
 export const OPS_REGISTRY_HOST: string =
   process.env.OPS_REGISTRY_HOST || 'registry.cto.ai'
