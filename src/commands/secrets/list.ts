@@ -46,7 +46,7 @@ export default class SecretsList extends Command {
       await secretsListAnalyticsPipeline(inputs)
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err })
+      this.config.runHook('error', { err, accessToken: this.accessToken })
     }
   }
 }

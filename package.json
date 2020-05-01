@@ -114,6 +114,9 @@
       },
       "team": {
         "description": "Manage your teams."
+      },
+      "configs": {
+        "description": "Manage your configs."
       }
     }
   },

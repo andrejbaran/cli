@@ -10,6 +10,7 @@ import { KeycloakService } from './Keycloak'
 import { RegistryAuthService } from './RegistryAuth'
 import { SecretService } from './Secret'
 import { ContainerService } from './Container'
+import { ConfigService } from './Config'
 
 export {
   FeathersClient,
@@ -22,6 +23,7 @@ export {
   KeycloakService,
   RegistryAuthService,
   SecretService,
+  ConfigService,
 }
 
 export const defaultServicesList = {
@@ -36,4 +38,5 @@ export const defaultServicesList = {
   registryAuthService: new RegistryAuthService(),
   secretService: new SecretService(),
   containerService: new ContainerService(),
+  configService: new ConfigService(),
 }

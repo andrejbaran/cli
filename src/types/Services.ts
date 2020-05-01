@@ -9,6 +9,7 @@ import { KeycloakService } from '~/services/Keycloak'
 import { RegistryAuthService } from 'services/RegistryAuth'
 import { ContainerService } from '~/services/Container'
 import { SecretService } from '~/services/Secret'
+import { ConfigService } from '~/services/Config'
 
 export type Services = {
   api: ApiService
@@ -22,4 +23,5 @@ export type Services = {
   registryAuthService: RegistryAuthService
   secretService: SecretService
   containerService: ContainerService
+  configService: ConfigService
 }

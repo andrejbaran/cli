@@ -24,7 +24,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.8.1 darwin-x64 node-v13.12.0
+@cto.ai/ops/1.8.1 darwin-x64 node-v11.14.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -43,6 +43,9 @@ USAGE
 * [`ops add [OPNAME]`](#ops-add-opname)
 * [`ops build [PATH]`](#ops-build-path)
 * [`ops cleanup [OPNAME]`](#ops-cleanup-opname)
+* [`ops configs:delete`](#ops-configsdelete)
+* [`ops configs:list`](#ops-configslist)
+* [`ops configs:set`](#ops-configsset)
 * [`ops help [COMMAND]`](#ops-help-command)
 * [`ops init [NAME]`](#ops-init-name)
 * [`ops list`](#ops-list)
@@ -165,6 +168,45 @@ ARGUMENTS
 
 OPTIONS
   -h, --help  show CLI help
+```
+
+## `ops configs:delete`
+
+Delete a config stored for the active team
+
+```
+USAGE
+  $ ops configs:delete
+
+OPTIONS
+  -h, --help     show CLI help
+  -k, --key=key  Secret Key Name
+```
+
+## `ops configs:list`
+
+List all the configs that are stored for the active team
+
+```
+USAGE
+  $ ops configs:list
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+## `ops configs:set`
+
+Add a new config key & value
+
+```
+USAGE
+  $ ops configs:set
+
+OPTIONS
+  -f, --from-file=from-file  path to a file containing the value of the config to set
+  -k, --key=key              the key of the config to set
+  -v, --value=value          the value of the config to set
 ```
 
 ## `ops help [COMMAND]`

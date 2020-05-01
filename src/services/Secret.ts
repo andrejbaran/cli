@@ -4,14 +4,12 @@ import { ux } from '@cto.ai/sdk'
 import { Answers, Fuzzy, SecretListInputs, Config, ApiService } from '~/types'
 import { asyncPipe, terminalText } from '~/utils'
 import {
-  APIError,
   NoSecretsProviderFound,
   NoSecretsOnTeam,
   NoTeamFound,
   TeamUnauthorized,
   InvalidSecretVault,
   InvalidSecretToken,
-  RegisterSecretsProvider,
 } from '~/errors/CustomErrors'
 
 const debug = Debug('ops:SecretService')
