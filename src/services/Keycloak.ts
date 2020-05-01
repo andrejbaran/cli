@@ -408,8 +408,23 @@ export class KeycloakService {
   /**
    * Returns the URL used to invalidate the current user's session
    */
-  buildInvalidateSessionUrl = (): string => {
-    return `${OPS_KEYCLOAK_HOST}/realms/ops/protocol/openid-connect/logout`
+  InvalidateSession = async (
+    accessToken,
+    refreshToken: string,
+  ): Promise<void> => {
+    await axios.post(
+      `${OPS_KEYCLOAK_HOST}/realms/ops/protocol/openid-connect/logout`,
+      querystring.stringify({
+        client_id: this.CLIENT_ID,
+        refresh_token: refreshToken,
+      }),
+      {
+        headers: {
+          Authorization: accessToken,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      },
+    )
   }
 
   /**
