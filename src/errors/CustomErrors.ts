@@ -794,7 +794,7 @@ export class NoSecretsOnTeam extends ErrorTemplate {
   }
 }
 
-export class SecretValueFileError extends ErrorTemplate {
+export class ValueFileError extends ErrorTemplate {
   constructor(err) {
     super(
       white(

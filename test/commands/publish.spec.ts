@@ -9,7 +9,7 @@ import { OpCommand, RegistryAuth, User } from '~/types'
 import { OpWorkflow } from '~/types/OpsYml'
 import { Services } from '~/types'
 import { Publish as PublishService } from '~/services/Publish'
-import { createMockWorkflow } from './../../../test//mocks'
+import { createMockWorkflow } from '../mocks'
 
 let cmd: Publish
 

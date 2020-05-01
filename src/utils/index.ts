@@ -26,3 +26,5 @@ export {
   formatConfigObject,
 } from './config'
 export * from './ports'
+
+export const KEY_REGEX = /^[\w.-]+$/

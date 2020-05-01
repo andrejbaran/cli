@@ -1,21 +1,12 @@
 import { ux } from '@cto.ai/sdk'
-import Command from '~/base'
-import { State } from '~/types'
+import Command, { flags } from '~/base'
+import { Config } from '~/types'
 import { asyncPipe, KEY_REGEX } from '~/utils'
 import * as fs from 'fs-extra'
-import {
-  AnalyticsError,
-  SetSecretsProvider,
-  NoSecretsProviderFound,
-  InvalidSecretVault,
-  UserUnauthorized,
-  InvalidSecretToken,
-  ValueFileError,
-} from '~/errors/CustomErrors'
-import { flags } from '@oclif/parser'
+import { AnalyticsError, ValueFileError } from '~/errors/CustomErrors'
 
-export interface SetSecretInputs {
-  state: State
+export interface ConfigSetInputs {
+  config: Config
   key: string
   value: string
   valueFilename: string
@@ -23,22 +14,22 @@ export interface SetSecretInputs {
 
 const { white, reset } = ux.colors
 
-export default class SecretsSet extends Command {
-  static description = 'Add a key & value'
+export default class ConfigsSet extends Command {
+  static description = 'Add a new config key & value'
 
   public static flags = {
     key: flags.string({
       char: 'k',
-      description: 'the key of the secret to set',
+      description: 'the key of the config to set',
     }),
     value: flags.string({
       char: 'v',
-      description: 'the value of the secret to set',
+      description: 'the value of the config to set',
       exclusive: ['from-file'],
     }),
     'from-file': flags.string({
       char: 'f',
-      description: 'path to a file containing the value of the secret to set',
+      description: 'path to a file containing the value of the config to set',
       exclusive: ['value'],
     }),
   }
@@ -48,7 +39,7 @@ export default class SecretsSet extends Command {
       return `😞 Sorry, the value cannot be empty`
     }
     if (!KEY_REGEX.test(input)) {
-      return `😞 Secret keys can only contain letters, numbers, underscores, hyphens, and periods`
+      return `😞 Config keys can only contain letters, numbers, underscores, hyphens, and periods`
     }
     return true
   }
@@ -60,9 +51,9 @@ export default class SecretsSet extends Command {
     return true
   }
 
-  resolveFileSecret = async (
-    input: SetSecretInputs,
-  ): Promise<SetSecretInputs> => {
+  resolveFileConfig = async (
+    input: ConfigSetInputs,
+  ): Promise<ConfigSetInputs> => {
     if (!input.valueFilename) {
       return input
     }
@@ -79,16 +70,16 @@ export default class SecretsSet extends Command {
     }
   }
 
-  promptForSecret = async (
-    input: SetSecretInputs,
-  ): Promise<SetSecretInputs> => {
+  promptForConfig = async (
+    input: ConfigSetInputs,
+  ): Promise<ConfigSetInputs> => {
     await ux.print(
-      `\n🔑 Add a secret to secret storage for team ${
-        input.state.config.team.name
-      } ${reset.green('→')}`,
+      `\n🔑 Add a config for team ${input.config.team.name} ${reset.green(
+        '→',
+      )}`,
     )
 
-    let key: string = ''
+    let key = ''
     if (input.key) {
       const keyValidationResult = await this.validateKeyInput(input.key)
       if (keyValidationResult === true) {
@@ -99,17 +90,17 @@ export default class SecretsSet extends Command {
     }
     key =
       key ||
-      (await ux.prompt<{ key: string }>({
+      (await ux.prompt<{ key }>({
         type: 'input',
         name: 'key',
-        message: `Enter the name of the secret to be stored ${reset.green(
+        message: `Enter the name of the config to be stored ${reset.green(
           '→',
         )}`,
-        afterMessage: `${reset.white('Secret name:')}`,
+        afterMessage: `${reset.white('Config name:')}`,
         validate: this.validateKeyInput,
       })).key
 
-    let value: string = ''
+    let value = ''
     if (input.value) {
       const valueValidationResult = await this.validateValueInput(input.value)
       if (valueValidationResult === true) {
@@ -125,7 +116,7 @@ export default class SecretsSet extends Command {
       }>({
         type: 'editor',
         name: 'value',
-        message: `\nNext add the secret's value to be stored ${reset.green(
+        message: `\nNext add the config's value to be stored ${reset.green(
           '→',
         )}`,
         validate: this.validateValueInput,
@@ -138,12 +129,12 @@ export default class SecretsSet extends Command {
     }
   }
 
-  setSecret = async (inputs: SetSecretInputs) => {
+  setConfig = async (inputs: ConfigSetInputs) => {
     try {
       await this.services.api.create(
-        `/private/teams/${inputs.state.config.team.name}/secrets`,
+        `/private/teams/${inputs.config.team.name}/configs`,
         {
-          secrets: {
+          teamConfigs: {
             [inputs.key]: inputs.value,
           },
         },
@@ -157,46 +148,35 @@ export default class SecretsSet extends Command {
       return inputs
     } catch (err) {
       this.debug('%O', err)
-      switch (err.error[0].code) {
-        case 400:
-          throw new InvalidSecretVault(err)
-        case 401:
-          throw new UserUnauthorized(err)
-        case 403:
-          if (err.error[0].message.includes('invalid secret token')) {
-            throw new InvalidSecretToken(err)
-          } else {
-            throw new NoSecretsProviderFound(err)
-          }
-        default:
-          throw new SetSecretsProvider(err)
-      }
+      //TODO handle error
     }
   }
 
-  logMessage = (inputs: SetSecretInputs): SetSecretInputs => {
+  logMessage = (inputs: ConfigSetInputs): ConfigSetInputs => {
     this.log(
       `\n ${white(
-        `🙌 Great job! Secret ${ux.colors.callOutCyan(
+        `🙌 Great job! Config ${ux.colors.callOutCyan(
           inputs.key,
         )} has been added to your team ${ux.colors.blueBright(
-          inputs.state.config.team.name,
+          inputs.config.team.name,
         )}!`,
       )}`,
     )
     return inputs
   }
 
-  sendAnalytics = async (inputs: SetSecretInputs) => {
-    const { team } = inputs.state.config
-    const { email, username } = inputs.state.config.user
+  sendAnalytics = async (inputs: ConfigSetInputs) => {
+    const {
+      team,
+      user: { email, username },
+    } = inputs.config
     try {
       this.services.analytics.track(
         {
           userId: email,
           teamId: team.id,
-          cliEvent: 'Ops CLI Secrets:Set',
-          event: 'Ops CLI Secrets:Set',
+          cliEvent: 'Ops CLI Configs:Set',
+          event: 'Ops CLI Configs:Set',
           properties: {
             email,
             username,
@@ -214,30 +194,19 @@ export default class SecretsSet extends Command {
   async run() {
     let {
       flags: { key, value, 'from-file': valueFilename },
-    } = this.parse(SecretsSet)
+    } = this.parse(ConfigsSet)
 
     try {
-      this.ux.spinner.start('Initializing')
-      await this.isLoggedIn()
-      const secretProviderErr = await this.services.secretService.checkForSecretProviderErrors(
-        this.services.api,
-        this.state.config,
-      )
-      //@ts-ignore
-      this.ux.spinner.stop()
-      if (secretProviderErr instanceof Error) {
-        throw secretProviderErr
-      }
-
-      const switchPipeline = asyncPipe(
-        this.resolveFileSecret,
-        this.promptForSecret,
-        this.setSecret,
+      const config = await this.isLoggedIn()
+      const configSetPipeline = asyncPipe(
+        this.resolveFileConfig,
+        this.promptForConfig,
+        this.setConfig,
         this.sendAnalytics,
         this.logMessage,
       )
-      await switchPipeline({
-        state: this.state,
+      await configSetPipeline({
+        config,
         key,
         value,
         valueFilename,
