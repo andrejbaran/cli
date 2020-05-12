@@ -138,7 +138,7 @@ export default class TeamInvite extends Command {
     const { inviteesArray } = inputs
     const {
       user: { email, username },
-      team: { id: teamId },
+      team: { id: teamId, name: teamName },
     } = config
     this.services.analytics.track(
       {
@@ -150,6 +150,7 @@ export default class TeamInvite extends Command {
           email,
           username,
           invitees: inviteesArray,
+          team: teamName,
         },
       },
       this.accessToken,
