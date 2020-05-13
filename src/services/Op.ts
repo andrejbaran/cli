@@ -146,6 +146,7 @@ export class OpService {
     op.runId = uuid()
     return { ...inputs, op }
   }
+
   getImage = async (inputs: OpRunInputs) => {
     const {
       op,
@@ -207,7 +208,7 @@ export class OpService {
   }
 
   setEnvs = (inputs: OpRunInputs): OpRunInputs => {
-    const { config, op } = inputs
+    const { config, op, parsedArgs } = inputs
     const defaultEnv: Container<string> = {
       OPS_HOME: path.resolve(sdk.homeDir() + '/.config/@cto.ai/ops'),
       CONFIG_DIR: `/${config.team.name}/${op.name}`,
@@ -223,6 +224,10 @@ export class OpService {
       OPS_TEAM_ID: config.team.id,
       OPS_TEAM_NAME: config.team.name,
       OPS_HOST_PLATFORM: os.platform(),
+    }
+
+    if (parsedArgs.flags.batch) {
+      defaultEnv.SDK_BATCH_MODE = '1'
     }
 
     let opsHome =

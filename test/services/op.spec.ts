@@ -42,6 +42,44 @@ describe('OpService', () => {
     opRunInputs = { ...opRunInputs, op: { ...baseOp } }
   })
 
+  describe('updateOpFields', () => {
+    it('should append the parameters to the run command line', () => {
+      const opService = new OpService()
+      const result = opService.updateOpFields({
+        ...opRunInputs,
+        op: { ...opRunInputs.op, run: 'node index.js' },
+        parsedArgs: { ...opRunInputs.parsedArgs, opParams: ['first', 'again'] },
+      })
+
+      expect(result.op).toHaveProperty('run', 'node index.js first again')
+    })
+
+    it('should assign a runId', () => {
+      const opService = new OpService()
+      const result = opService.updateOpFields({
+        ...opRunInputs,
+        op: { ...opRunInputs.op, run: 'node index.js' },
+        parsedArgs: { ...opRunInputs.parsedArgs, opParams: ['first', 'again'] },
+      })
+
+      expect(result.op.runId).not.toBe('')
+    })
+
+    it('should prepend the daemon command to the run command line if sdk is 2', () => {
+      const opService = new OpService()
+      const result = opService.updateOpFields({
+        ...opRunInputs,
+        op: { ...opRunInputs.op, run: 'node index.js', sdk: '2' },
+        parsedArgs: { ...opRunInputs.parsedArgs, opParams: ['first', 'again'] },
+      })
+
+      expect(result.op).toHaveProperty(
+        'run',
+        '/bin/sdk-daemon node index.js first again',
+      )
+    })
+  })
+
   it('addPortsToOptions Should parse a single port in the correct format', async () => {
     const opService = new OpService()
     const port = ['3000:3000']
