@@ -228,7 +228,7 @@ abstract class CTOCommand extends Command {
       this.services.keycloakService
         .InvalidateSession(accessToken, refreshToken)
         .catch(err => {
-          console.log('err :>> ', err)
+          debug('error signing out', err)
         })
     }
   }
