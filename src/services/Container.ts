@@ -20,16 +20,13 @@ export class ContainerService {
     let localPorts: string[] = []
     let dockerPorts: string[] = []
 
-    for (let i = 0; i < portMap.length; i++) {
-      let portSplit = portMap[i].split(':')
-      if (portSplit[0] !== '' && portSplit[1] !== '') {
-        localPorts.push(portSplit[0])
-        dockerPorts.push(portSplit[1])
-      } else {
-        const errorMessage = new MissingYamlPortError()
-        this.log(errorMessage.message)
-        throw errorMessage
+    for (const portPair of portMap) {
+      let portSplit = portPair.split(':')
+      if (portSplit[0] === '' && portSplit[1] === '') {
+        throw new MissingYamlPortError()
       }
+      localPorts.push(portSplit[0])
+      dockerPorts.push(portSplit[1])
     }
 
     return [localPorts, dockerPorts]
@@ -42,10 +39,10 @@ export class ContainerService {
   checkLocalPorts = async (localPorts: string[]): Promise<string[]> => {
     let allocatedPorts: string[] = []
 
-    for (let i = 0; i < localPorts.length; i++) {
-      const port = await detect(localPorts[i])
-      if (localPorts[i] != port) {
-        allocatedPorts.push(localPorts[i])
+    for (const localPort of localPorts) {
+      const port = await detect(localPort)
+      if (localPort != port) {
+        allocatedPorts.push(localPort)
       }
     }
 
@@ -54,31 +51,23 @@ export class ContainerService {
 
   validatePorts = async (portMap: string[]) => {
     if (portMap.length === 0 || portMap[0] === null) {
-      const errorMessage = new MissingYamlPortError()
-      this.log(errorMessage.message)
-      throw errorMessage
+      throw new MissingYamlPortError()
     }
 
-    const [localPorts, dockerPorts] = await this.getPorts(portMap)
+    const [localPorts, dockerPorts] = this.getPorts(portMap)
 
     if (this.hasDuplicates(localPorts)) {
-      const errorMessage = new DuplicateYamlPortError()
-      this.log(errorMessage.message)
-      throw errorMessage
+      throw new DuplicateYamlPortError()
     }
 
     if (this.hasDuplicates(dockerPorts)) {
-      const errorMessage = new DuplicateYamlPortError()
-      this.log(errorMessage.message)
-      throw errorMessage
+      throw new DuplicateYamlPortError()
     }
 
     const allocatedPorts = await this.checkLocalPorts(localPorts)
 
     if (allocatedPorts.length != 0) {
-      const errorMessage = new AllocatedYamlPortError(allocatedPorts.join(', '))
-      this.log(errorMessage.message)
-      throw errorMessage
+      throw new AllocatedYamlPortError(allocatedPorts.join(', '))
     }
   }
 
@@ -90,10 +79,14 @@ export class ContainerService {
     this.log(`⚙️  Running ${ux.colors.dim(op.name)}...`)
 
     if (op.port) {
-      await this.validatePorts(op.port).catch(err => {
+      try {
+        await this.validatePorts(op.port)
+      } catch (err) {
+        // validatePorts throws a user-friendly error message
+        this.log(err.message)
         debug('%O', err)
         throw new Error('Error creating Docker container')
-      })
+      }
     }
 
     try {
@@ -104,6 +97,7 @@ export class ContainerService {
       throw new Error('Error creating Docker container')
     }
   }
+
   start = async (stream: NodeJS.ReadWriteStream) => {
     if (!this.container) throw new Error('No docker container to start up')
 
