@@ -98,6 +98,10 @@ export class ContainerService {
     }
   }
 
+  /**
+   * Starts and runs the current container.
+   * NOTE: will `process.exit` when the container wraps up!
+   */
   start = async (stream: NodeJS.ReadWriteStream) => {
     if (!this.container) throw new Error('No docker container to start up')
 
@@ -106,8 +110,8 @@ export class ContainerService {
       this.resize()
       process.stdout.on('resize', this.resize)
 
-      await this.container.wait()
-      this.handleExit(stream, false)
+      const exitStatus = await this.container.wait()
+      this.handleExit(stream, false, exitStatus)
     } catch (err) {
       debug('%O', err)
       throw new Error(err)
@@ -128,12 +132,18 @@ export class ContainerService {
     stdin.on('data', (key: string) => {
       // Detects it is detaching a running container
       if (previousKey === CTRL_P && key === CTRL_Q) {
-        this.handleExit(stream, false)
+        this.handleExit(stream, false, 0)
       }
       previousKey = key
     })
   }
-  handleExit = (stream: NodeJS.ReadWriteStream, isRaw: boolean) => {
+
+  // NOTE: This function (indirectly) calls `process.exit`
+  handleExit = (
+    stream: NodeJS.ReadWriteStream,
+    isRaw: boolean,
+    exitStatus: number,
+  ) => {
     if (!this.container) throw new Error('No docker container for removal')
     const stdout = process.stdout
     const stdin = process.stdin
@@ -144,7 +154,7 @@ export class ContainerService {
       stdin.setRawMode && stdin.setRawMode(isRaw)
       stdin.resume()
       stream.end()
-      this.container.remove(() => process.exit())
+      this.container.remove(() => process.exit(exitStatus))
     } catch (err) {
       debug('%O', err)
       throw new Error(err)
