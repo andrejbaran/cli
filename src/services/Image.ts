@@ -46,7 +46,7 @@ export class ImageService {
     }
     this.log(`🔋 Pulling ${ux.colors.dim(op.name)} from registry...\n`)
 
-    const parser = await this.setParser(op, this.getProgressBarText)
+    const parser = this.setParser(op, this.getProgressBarText)
     await new Promise(this.updateStatusBar(stream, parser))
 
     ux.spinner.stop(ux.colors.green('Done!'))
@@ -167,46 +167,47 @@ export class ImageService {
       parser.pipe = function(dest: any) {
         return _pipe(dest)
       }
-      await new Promise(async function(resolve, reject) {
-        const docker = await getDocker(console, 'build')
+      const docker = await getDocker(console, 'build')
+      // TODO: What error handling should we do if this is falsy
+      if (!docker) {
+        return
+      }
 
-        if (docker) {
-          const stream = await docker
-            .buildImage(
-              { context: opPath, src: op.src },
-              { t: tag, pull: true },
+      const stream = await docker
+        .buildImage({ context: opPath, src: op.src }, { t: tag, pull: true })
+        .catch(err => {
+          debug('%O', err)
+          throw new DockerBuildImageError(err)
+        })
+      // TODO: What error handling should we do if this is falsy
+      if (!stream) {
+        return
+      }
+
+      await new Promise(function(resolve, reject) {
+        stream
+          .pipe(json.parse())
+          .pipe(parser)
+          .on('data', (d: any, data: any) => {
+            all.push(d)
+          })
+          .on('end', function() {
+            if (errors.length) {
+              return reject(new DockerBuildImageError(errors[0]))
+            }
+            log(
+              `\n💻 Run ${ux.colors.green('$')} ${ux.colors.italic.dim(
+                'ops run ' + op.name,
+              )} to test your op.`,
             )
-            .catch(err => {
-              debug('%O', err)
-              throw new DockerBuildImageError(err)
-            })
+            log(
+              `📦 Run ${ux.colors.green('$')} ${ux.colors.italic.dim(
+                'ops publish ' + opPath,
+              )} to share your op. \n`,
+            )
 
-          if (stream) {
-            stream
-              .pipe(json.parse())
-              .pipe(parser)
-              .on('data', (d: any, data: any) => {
-                all.push(d)
-              })
-              .on('end', async function() {
-                if (errors.length) {
-                  return reject(new DockerBuildImageError(errors[0]))
-                }
-                log(
-                  `\n💻 Run ${ux.colors.green('$')} ${ux.colors.italic.dim(
-                    'ops run ' + op.name,
-                  )} to test your op.`,
-                )
-                log(
-                  `📦 Run ${ux.colors.green('$')} ${ux.colors.italic.dim(
-                    'ops publish ' + opPath,
-                  )} to share your op. \n`,
-                )
-
-                resolve()
-              })
-          }
-        }
+            resolve()
+          })
       })
     } catch (err) {
       debug('%O', err)
