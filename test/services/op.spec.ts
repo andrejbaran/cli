@@ -42,7 +42,7 @@ describe('OpService', () => {
     opRunInputs = { ...opRunInputs, op: { ...baseOp } }
   })
 
-  it('opService:addPortsToOptions Should parse a single port in the correct format', async () => {
+  it('addPortsToOptions Should parse a single port in the correct format', async () => {
     const opService = new OpService()
     const port = ['3000:3000']
     const expectedExposedPorts = {
@@ -68,7 +68,7 @@ describe('OpService', () => {
     )
   })
 
-  it('opService:addPortsToOptions Should parse multiple ports in the correct format', async () => {
+  it('addPortsToOptions Should parse multiple ports in the correct format', async () => {
     const opService = new OpService()
     const port = ['3000:3000', '4000:5000', '6000:3000']
     const expectedExposedPorts = {
@@ -102,16 +102,14 @@ describe('OpService', () => {
     )
   })
 
-  it("opService:addPortsToOptions Should throw an error if ports aren't formatted properly", async () => {
+  it("addPortsToOptions Should throw an error if ports aren't formatted properly", async () => {
     const opService = new OpService()
     const port = ['invalidPort']
-    try {
+    await expect(
       opService.addPortsToOptions({
         ...opRunInputs,
         op: { ...opRunInputs.op, port },
-      })
-    } catch (err) {
-      expect(err).toEqual(YamlPortError)
-    }
+      }),
+    ).rejects.toBeInstanceOf(YamlPortError)
   })
 })
