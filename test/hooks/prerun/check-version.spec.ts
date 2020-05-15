@@ -1,6 +1,7 @@
 import * as util from 'util'
 import hook from '~/hooks/prerun/check-version'
 import * as C from '@oclif/config'
+jest.mock('~/utils')
 import * as utils from '~/utils'
 import { Config } from '~/types'
 
@@ -8,74 +9,52 @@ let config
 
 beforeEach(async () => {
   config = await C.load()
+  jest.resetAllMocks()
 })
 
 describe('Check Version', () => {
+  test('should skip version check if command is update', async () => {
+    await hook.call({ config }, { Command: { id: 'update' } })
+
+    expect(utils.readConfig).not.toBeCalled()
+    expect(utils.getLatestVersion).not.toBeCalled()
+    expect(utils.writeConfig).not.toBeCalled()
+  })
+
   test('should skip version check if lastUpdateCheckAt is within 24 hours', async () => {
-    const spyWrite = jest.spyOn(utils, 'writeConfig')
-    const spyGetVersion = jest.spyOn(utils, 'getLatestVersion')
-    const spyRead = jest.spyOn(utils, 'readConfig')
-    spyRead.mockReturnValue(
-      new Promise(res => {
-        return res({ lastUpdateCheckAt: new Date() } as Config)
-      }),
-    )
+    utils.readConfig.mockResolvedValue({
+      lastUpdateCheckAt: new Date(),
+    } as Config)
+
     await hook.call({ config }, { Command: { id: 'test' } })
-    expect(spyRead).toBeCalled()
-    expect(spyGetVersion).not.toBeCalled()
-    expect(spyWrite).not.toBeCalled()
+
+    expect(utils.readConfig).toBeCalled()
+    expect(utils.getLatestVersion).not.toBeCalled()
+    expect(utils.writeConfig).not.toBeCalled()
   })
 
   test('should check version if lastUpdateCheckAt is null', async () => {
-    const spyWrite = jest.spyOn(utils, 'writeConfig')
-    const spyGetVersion = jest.spyOn(utils, 'getLatestVersion')
-    const spyRead = jest.spyOn(utils, 'readConfig')
-    spyRead.mockReturnValue(
-      new Promise(res => {
-        return res({ lastUpdateCheckAt: undefined } as Config)
-      }),
-    )
-    spyWrite.mockReturnValue(
-      new Promise(res => {
-        return res()
-      }),
-    )
-    spyGetVersion.mockReturnValue(
-      new Promise(res => {
-        return res('0.0.0')
-      }),
-    )
+    utils.readConfig.mockResolvedValue({
+      lastUpdateCheckAt: undefined,
+    } as Config)
+    utils.writeConfig.mockResolvedValue()
+    utils.getLatestVersion.mockResolvedValue('0.0.0')
     await hook.call({ config, log: util.format }, { Command: { id: 'test' } })
-    expect(spyRead).toBeCalled()
-    expect(spyWrite).toBeCalled()
-    expect(spyGetVersion).toBeCalled()
+    expect(utils.readConfig).toBeCalled()
+    expect(utils.writeConfig).toBeCalled()
+    expect(utils.getLatestVersion).toBeCalled()
   })
 
   test('should check version if lastUpdateCheckAt is past 24 hours', async () => {
-    const spyWrite = jest.spyOn(utils, 'writeConfig')
-    const spyGetVersion = jest.spyOn(utils, 'getLatestVersion')
-    const spyRead = jest.spyOn(utils, 'readConfig')
+    let lastUpdateCheckAt = new Date()
+    lastUpdateCheckAt.setDate(lastUpdateCheckAt.getDate() - 2)
+    utils.readConfig.mockResolvedValue({ lastUpdateCheckAt } as Config)
+    utils.writeConfig.mockResolvedValue()
+    utils.getLatestVersion.mockResolvedValue('0.0.0')
 
-    spyRead.mockReturnValue(
-      new Promise(res => {
-        let d = new Date()
-        d.setDate(d.getDate() - 2)
-        return res({ lastUpdateCheckAt: d } as Config)
-      }),
-    )
-    spyWrite.mockReturnValue(
-      new Promise(res => {
-        return res()
-      }),
-    )
-    spyGetVersion.mockReturnValue(
-      new Promise(res => {
-        return res('0.0.0')
-      }),
-    )
     await hook.call({ config, log: util.format }, { Command: { id: 'test' } })
-    expect(spyRead).toBeCalled()
-    expect(spyWrite).toBeCalled()
-    expect(spyGetVersion).toBeCalled()
+    expect(utils.readConfig).toBeCalled()
+    expect(utils.writeConfig).toBeCalled()
+    expect(utils.getLatestVersion).toBeCalled()
   })
 })
