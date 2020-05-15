@@ -13,23 +13,9 @@ import * as Config from '@oclif/config'
 import Add from '~/commands/add'
 import { isValidOpFullName } from '~/utils/validate'
 import { FeathersClient } from '~/services/Feathers'
-import {
-  Services,
-  Config as ConfigType,
-  OpCommand,
-  SearchInputs,
-} from '~/types'
+import { Services } from '~/types'
 import { sleep } from '../utils'
-import { AnalyticsService } from '~/services/Analytics'
-import {
-  createMockTeam,
-  createMockOp,
-  createMockUser,
-  createMockConfig,
-  createMockTokens,
-} from '../mocks'
-import { COMMAND } from '~/constants/opConfig'
-import { ux } from '@cto.ai/sdk'
+import { createMockTeam, createMockConfig, createMockTokens } from '../mocks'
 import { OpAlreadyAdded, OpNotFoundOpsAdd } from '~/errors/CustomErrors'
 
 let cmd: Add

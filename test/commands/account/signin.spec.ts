@@ -95,8 +95,8 @@ describe('ops account:signin', () => {
     await cmd.run()
 
     expect(keycloakService.init).toHaveBeenCalledTimes(1)
-    await expect(cmd.cliSigninPipeline).not.toHaveBeenCalled()
-    await expect(cmd.browserSigninPipeline).toHaveBeenCalled()
+    expect(cmd.cliSigninPipeline).not.toHaveBeenCalled()
+    expect(cmd.browserSigninPipeline).toHaveBeenCalled()
   })
 
   test('should use cli signin flow when -u and -p flags are passed', async () => {
@@ -107,13 +107,15 @@ describe('ops account:signin', () => {
       keycloakService,
     } as Services)
 
-    cmd.cliSigninPipeline = jest.fn()
+    const innerCliPipeline = jest.fn()
+    cmd.cliSigninPipeline = jest.fn().mockReturnValue(innerCliPipeline)
     cmd.browserSigninPipeline = jest.fn()
 
     await cmd.run()
     expect(keycloakService.init).toHaveBeenCalledTimes(1)
-    await expect(cmd.cliSigninPipeline).toHaveBeenCalled()
-    await expect(cmd.browserSigninPipeline).not.toHaveBeenCalled()
+    expect(cmd.cliSigninPipeline).toHaveBeenCalled()
+    expect(innerCliPipeline).toHaveBeenCalled()
+    expect(cmd.browserSigninPipeline).not.toHaveBeenCalled()
   })
 
   test('should use cli signin flow when -i flag passed', async () => {
@@ -124,13 +126,15 @@ describe('ops account:signin', () => {
       keycloakService,
     } as Services)
 
-    cmd.cliSigninPipeline = jest.fn()
+    const innerCliPipeline = jest.fn()
+    cmd.cliSigninPipeline = jest.fn().mockReturnValue(innerCliPipeline)
     cmd.browserSigninPipeline = jest.fn()
 
     await cmd.run()
     expect(keycloakService.init).toHaveBeenCalledTimes(1)
-    await expect(cmd.cliSigninPipeline).toHaveBeenCalled()
-    await expect(cmd.browserSigninPipeline).not.toHaveBeenCalled()
+    expect(cmd.cliSigninPipeline).toHaveBeenCalled()
+    expect(innerCliPipeline).toHaveBeenCalled()
+    expect(cmd.browserSigninPipeline).not.toHaveBeenCalled()
   })
 
   test('determineQuestions should prompt for user and password if no flags passed', async () => {
@@ -143,7 +147,7 @@ describe('ops account:signin', () => {
       signinPrompts,
       flagsInteractive,
     )()
-    await expect(resultInteractive).toEqual([
+    expect(resultInteractive).toEqual([
       signinPrompts.user,
       signinPrompts.password,
     ])
@@ -158,7 +162,7 @@ describe('ops account:signin', () => {
       signinPrompts,
       flagsNoPassword,
     )()
-    await expect(resultNoPassword).toEqual([signinPrompts.password])
+    expect(resultNoPassword).toEqual([signinPrompts.password])
   })
 
   test('determineQuestions should prompt for username if password flag passed', async () => {
@@ -167,7 +171,7 @@ describe('ops account:signin', () => {
     // -p
     const flagsNoUser = { password: 'password' }
     const resultNoUser = cmd.determineQuestions(signinPrompts, flagsNoUser)()
-    await expect(resultNoUser).toMatchObject([signinPrompts.user])
+    expect(resultNoUser).toMatchObject([signinPrompts.user])
   })
 
   test('determineQuestions should not prompt if username and password flags passed', async () => {
@@ -176,7 +180,7 @@ describe('ops account:signin', () => {
     // -u & -p
     const flagsAll = { password: 'password', user: 'username' }
     const resultAll = cmd.determineQuestions(signinPrompts, flagsAll)()
-    await expect(resultAll).toEqual([])
+    expect(resultAll).toEqual([])
   })
 
   test('determineUserCredentials should merge user and password flag data with zero prompted data', async () => {
@@ -187,7 +191,7 @@ describe('ops account:signin', () => {
     const resultAll = cmd.determineUserCredentials(flagsAll)({})
 
     const expectedCredentials = { password: 'password', user: 'username' }
-    await expect(resultAll).toEqual(expectedCredentials)
+    expect(resultAll).toEqual(expectedCredentials)
   })
 
   test('determineUserCredentials should merge user flag data with prompted password data', async () => {
@@ -200,6 +204,6 @@ describe('ops account:signin', () => {
     })
 
     const expectedCredentials = { password: 'password', user: 'username' }
-    await expect(result).toEqual(expectedCredentials)
+    expect(result).toEqual(expectedCredentials)
   })
 })
