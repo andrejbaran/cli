@@ -226,9 +226,12 @@ it('should publish ops in a loop', async () => {
   mockConfig.runHook = jest.fn().mockReturnValue(true)
 
   const mockImageService = new ImageService()
-  mockImageService.checkLocalImage = jest.fn().mockReturnValue(true)
+  mockImageService.checkLocalImage = jest.fn().mockResolvedValue(true)
 
   const mockPublishService = new PublishService()
+  mockPublishService.publishOpToAPI = jest
+    .fn()
+    .mockResolvedValue({ data: { id: 'published' } })
   mockPublishService.publishOpToRegistry = jest.fn().mockReturnValue({
     data: {
       name: 'mock-op',
@@ -250,15 +253,57 @@ it('should publish ops in a loop', async () => {
   }
 
   cmd.getRegistryAuth = jest.fn().mockReturnValue({} as RegistryAuth)
+  cmd.ux.prompt = jest
+    .fn()
+    .mockResolvedValue({ publishDescription: 'mockDescription' })
+  cmd.sendAnalytics = jest.fn()
 
   const inputs: PublishInputs = {
-    version: 'mockVersion',
+    version: 'test',
     opCommands: [
       {
         name: 'mock-op',
+        version: 'mockVersion',
+        run: 'node test.js',
       } as OpCommand,
     ],
   } as PublishInputs
 
-  cmd.opsPublishLoop(inputs)
+  await cmd.opsPublishLoop(inputs)
+
+  expect(cmd.ux.prompt).toHaveBeenCalledWith(
+    expect.objectContaining({ type: 'input', name: 'publishDescription' }),
+  )
+
+  expect(mockImageService.checkLocalImage).toHaveBeenCalledWith(
+    expect.stringContaining('/mock-op'),
+  )
+
+  expect(mockPublishService.publishOpToAPI).toHaveBeenCalledTimes(1)
+  expect(mockPublishService.publishOpToAPI).toHaveBeenCalledWith(
+    {
+      name: 'mock-op',
+      version: 'mockVersion',
+      run: 'node test.js',
+      type: 'command',
+      publishDescription: 'mockDescription',
+    },
+    'test',
+    'team-name',
+    cmd.accessToken,
+    cmd.services.api,
+  )
+
+  expect(mockPublishService.publishOpToRegistry).toHaveBeenCalledTimes(1)
+  expect(mockPublishService.publishOpToRegistry).toHaveBeenCalledWith(
+    { id: 'published' },
+    {},
+    'team-name',
+    cmd.accessToken,
+    cmd.services.registryAuthService,
+    cmd.services.api,
+    'test',
+  )
+
+  expect(cmd.sendAnalytics).toHaveBeenCalledWith('op', { id: 'published' })
 })

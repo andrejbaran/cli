@@ -379,6 +379,7 @@ export default class Publish extends Command {
         if (!localImage) {
           throw new DockerPublishNoImageFound(op.name, this.team.name)
         }
+        // TODO: What do we do if this isn't true
         if ('run' in op) {
           op.type = COMMAND_TYPE
           const {
@@ -413,7 +414,6 @@ export default class Publish extends Command {
         throw err
       }
       throw new APIError(err)
-      4
     }
   }
 

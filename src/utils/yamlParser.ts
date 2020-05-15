@@ -43,6 +43,10 @@ const checkOpNecessaryFields = (opContents: OpCommand | OpWorkflow) => {
 const _splitOpNameAndVersion = (
   op: OpCommand | OpWorkflow,
 ): [string, string] => {
+  // Pass through to the (later) validation code
+  if (!op.name || typeof op.name != 'string') {
+    return ['', '']
+  }
   const splits = op.name.split(':')
   return [splits[0], splits[1]]
 }
@@ -97,7 +101,7 @@ export const parseYaml = (manifest: string): OpsYml => {
   return yamlContents
 }
 
-const formatRequiredFields = (opOrWorkflow, type) => {
+const formatRequiredFields = (opOrWorkflow, type: string) => {
   const defaultVersion = `0.1.0`
   const defaultVersionLog = `\nℹ️  It looks like your ops.yml is a little out of date. It does not have a version, we are setting the default version to ${ux.colors.callOutCyan(
     defaultVersion,

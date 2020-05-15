@@ -353,7 +353,7 @@ export class OpService {
     const PortBindings: PortMap = {}
     if (op.port) {
       const parsedPorts = op.port
-        .filter(p => !!p) // Remove null valuesT
+        .filter(p => !!p) // Remove null values
         .map(port => {
           if (typeof port !== 'string') throw new YamlPortError(port)
           const portSplits = port.split(':')
