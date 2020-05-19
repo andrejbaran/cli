@@ -13,7 +13,7 @@ interface HandleErrorInputs {
 
 export class ErrorService {
   public log = console.log
-  constructor(protected api = new FeathersClient()) {}
+  constructor() {}
 
   handleError = async (inputs: HandleErrorInputs): Promise<void> => {
     const { accessToken, err } = inputs
