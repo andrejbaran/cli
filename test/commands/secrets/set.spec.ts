@@ -145,9 +145,9 @@ describe('set secrets', () => {
       expect(cmd.ux.print).toHaveBeenCalled()
     })
 
-    test('should strip trailing whitespace when prompting for a value', async () => {
+    test('should strip leading and trailing whitespace when prompting for a value', async () => {
       cmd.ux.prompt = jest.fn().mockReturnValue({
-        value: 'myvalue\n\n\t\n',
+        value: ' \t\nmyvalue\n\n\t\n',
       })
       cmd.ux.print = jest.fn()
 

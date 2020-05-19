@@ -144,9 +144,9 @@ describe('set Configs', () => {
       expect(cmd.ux.print).toHaveBeenCalled()
     })
 
-    test('should remove trailing whitespace when prompting for the value', async () => {
+    test('should remove leading and trailing whitespace when prompting for the value', async () => {
       cmd.ux.prompt = jest.fn().mockReturnValue({
-        value: 'myvalue   \n',
+        value: '\n\n\nmyvalue   \n',
       })
       cmd.ux.print = jest.fn()
       const mockConfig = createMockConfig({})
