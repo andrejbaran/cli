@@ -145,6 +145,35 @@ describe('set secrets', () => {
       expect(cmd.ux.print).toHaveBeenCalled()
     })
 
+    test('should strip trailing whitespace when prompting for a value', async () => {
+      cmd.ux.prompt = jest.fn().mockReturnValue({
+        value: 'myvalue\n\n\t\n',
+      })
+      cmd.ux.print = jest.fn()
+
+      const input = {
+        state: { config: { team: { name: 'test-team' } } } as State,
+        value: null,
+        key: 'mykey',
+      }
+
+      const result = await cmd.promptForSecret(input)
+
+      expect(result).toEqual({
+        state: input.state,
+        value: 'myvalue',
+        key: 'mykey',
+      })
+      expect(cmd.ux.prompt).toHaveBeenCalledTimes(1)
+      expect(cmd.ux.prompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'editor',
+          name: 'value',
+        }),
+      )
+      expect(cmd.ux.print).toHaveBeenCalled()
+    })
+
     test('should prompt for only the key if the value is provided', async () => {
       cmd.ux.prompt = jest.fn().mockReturnValue({
         key: 'mykey',

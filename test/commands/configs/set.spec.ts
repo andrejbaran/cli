@@ -144,6 +144,36 @@ describe('set Configs', () => {
       expect(cmd.ux.print).toHaveBeenCalled()
     })
 
+    test('should remove trailing whitespace when prompting for the value', async () => {
+      cmd.ux.prompt = jest.fn().mockReturnValue({
+        value: 'myvalue   \n',
+      })
+      cmd.ux.print = jest.fn()
+      const mockConfig = createMockConfig({})
+
+      const input = {
+        config: mockConfig,
+        value: null,
+        key: 'mykey',
+      } as ConfigSetInputs
+
+      const result = await cmd.promptForConfig(input)
+
+      expect(result).toEqual({
+        config: mockConfig,
+        value: 'myvalue',
+        key: 'mykey',
+      })
+      expect(cmd.ux.prompt).toHaveBeenCalledTimes(1)
+      expect(cmd.ux.prompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'editor',
+          name: 'value',
+        }),
+      )
+      expect(cmd.ux.print).toHaveBeenCalled()
+    })
+
     test('should prompt for only the key if the value is provided', async () => {
       cmd.ux.prompt = jest.fn().mockReturnValue({
         key: 'mykey',

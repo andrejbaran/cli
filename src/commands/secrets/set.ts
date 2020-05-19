@@ -129,8 +129,7 @@ export default class SecretsSet extends Command {
           '→',
         )}`,
         validate: this.validateValueInput,
-        filter: input => input.trimRight(),
-      })).value
+      })).value.trimRight()
 
     return {
       ...input,
