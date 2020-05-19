@@ -5,6 +5,7 @@ export type RunCommandArgs = {
   args: { nameOrPath: string }
   flags: {
     build?: boolean
+    batch?: boolean
     help?: boolean
   }
   opParams: string[]

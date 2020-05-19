@@ -52,6 +52,11 @@ export default class Run extends Command {
         'Builds the op before running. Must provide a path to the op.',
       default: false,
     }),
+    batch: flags.boolean({
+      char: 'B',
+      description: 'Runs the op in non-interactive batch mode.',
+      default: false,
+    }),
   }
 
   // Used to specify variable length arguments
@@ -60,7 +65,7 @@ export default class Run extends Command {
   static args = [
     {
       name: 'nameOrPath',
-      description: 'Name or path of the command or workflow you want to run.',
+      description: 'Name or path of the Op you want to run.',
       parse: (input: string): string => {
         return input.toLowerCase()
       },
@@ -597,10 +602,13 @@ export default class Run extends Command {
 
   async run() {
     try {
+      this.ux.spinner.start('initializing')
       await this.isLoggedIn()
       const { config } = this.state
 
       const parsedArgs: RunCommandArgs = this.customParse(Run, this.argv)
+      //@ts-ignore
+      this.ux.spinner.stop()
       const {
         args: { nameOrPath },
       } = parsedArgs
