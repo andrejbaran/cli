@@ -120,6 +120,7 @@ export default class ConfigsSet extends Command {
           '→',
         )}`,
         validate: this.validateValueInput,
+        filter: input => input.trimRight(),
       })).value
 
     return {
