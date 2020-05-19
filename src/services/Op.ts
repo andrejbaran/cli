@@ -27,6 +27,8 @@ import { RegistryAuthService } from '~/services/RegistryAuth'
 import { Config, Container, OpCommand, RunCommandArgs } from '~/types'
 import { asyncPipe, getOpImageTag, getOpUrl } from '~/utils'
 import { isValidOpName, isValidOpVersion } from '~/utils/validate'
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
 
 const debug = Debug('ops:OpService')
 
@@ -146,6 +148,7 @@ export class OpService {
     op.runId = uuid()
     return { ...inputs, op }
   }
+
   getImage = async (inputs: OpRunInputs) => {
     const {
       op,
@@ -207,7 +210,7 @@ export class OpService {
   }
 
   setEnvs = (inputs: OpRunInputs): OpRunInputs => {
-    const { config, op } = inputs
+    const { config, op, parsedArgs } = inputs
     const defaultEnv: Container<string> = {
       OPS_HOME: path.resolve(sdk.homeDir() + '/.config/@cto.ai/ops'),
       CONFIG_DIR: `/${config.team.name}/${op.name}`,
@@ -223,6 +226,10 @@ export class OpService {
       OPS_TEAM_ID: config.team.id,
       OPS_TEAM_NAME: config.team.name,
       OPS_HOST_PLATFORM: os.platform(),
+    }
+
+    if (parsedArgs.flags.batch) {
+      defaultEnv.SDK_BATCH_MODE = '1'
     }
 
     let opsHome =
@@ -398,6 +405,27 @@ export class OpService {
   }
 
   createContainer = async (inputs: OpRunInputs): Promise<OpRunInputs> => {
+    // TODO: This is a quick hack. We'll be able to do better when we
+    // record daemon versions on publish.
+    if (inputs.parsedArgs.flags.batch) {
+      try {
+        const { stdout: versionOutput } = await exec(
+          `docker run --rm ${inputs.op.image} /bin/sdk-daemon --version`,
+        )
+        const versionComponents = versionOutput
+          .split('.')
+          .map((piece: string) => parseInt(piece))
+        // support starts at daemon version 2.2.0
+        if (versionComponents[0] < 2 || versionComponents[1] < 2) {
+          throw 'temp'
+        }
+      } catch (err) {
+        throw new Error(
+          'Op does not support batch mode. Rebuild it with the latest CLI to add support.',
+        )
+      }
+    }
+
     try {
       const { op, options } = inputs
       const container = await this.containerService.create(op, options)
