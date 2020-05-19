@@ -1,11 +1,3 @@
-/**
- * @author: JP Lew (jp@cto.ai)
- * @date: Sunday, 28th April 2019 2:54:44 am
- * @lastModifiedBy: JP Lew (jp@cto.ai)
- * @lastModifiedTime: Monday, 9th September 2019 12:15:02 pm
- * @copyright (c) 2019 CTO.ai
- */
-
 export const OPS_API_HOST = process.env.OPS_API_HOST || 'https://cto.ai/'
 
 export const OPS_API_PATH = process.env.OPS_API_PATH || 'api/v1'
