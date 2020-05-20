@@ -107,17 +107,11 @@ export default class AccountSignin extends Command {
   sendAnalytics = (config: Config) => {
     try {
       this.services.analytics.track(
+        'Ops CLI Signin',
         {
-          userId: config.user.email,
-          teamId: config.team.id,
-          cliEvent: 'Ops CLI Signin',
-          event: 'Ops CLI Signin',
-          properties: {
-            email: config.user.email,
-            username: config.user.username,
-          },
+          username: config.user.username,
         },
-        this.accessToken,
+        config,
       )
     } catch (err) {
       this.debug('%O', err)

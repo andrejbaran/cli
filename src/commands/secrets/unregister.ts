@@ -7,15 +7,17 @@ import {
   NoTeamFound,
   UserUnauthorized,
 } from '~/errors/CustomErrors'
+import { Config } from '~/types'
 
 interface UnregisterInput {
+  config: Config
   confirmDelete: boolean
 }
 
 export default class UnregisterSecret extends Command {
   static description = 'Unregister a secrets provider for a team'
 
-  unregisterConfirm = async (): Promise<UnregisterInput> => {
+  unregisterConfirm = async (inputs): Promise<UnregisterInput> => {
     const { team } = this.state.config
     const { confirmDelete } = await this.ux.prompt<{ confirmDelete: boolean }>({
       type: 'confirm',
@@ -25,7 +27,7 @@ export default class UnregisterSecret extends Command {
       )} team?`,
     })
 
-    return { confirmDelete }
+    return { ...inputs, confirmDelete }
   }
 
   unregisterAPI = async (inputs: UnregisterInput): Promise<UnregisterInput> => {
@@ -73,21 +75,14 @@ export default class UnregisterSecret extends Command {
 
   sendAnalytics = async (inputs: UnregisterInput) => {
     try {
-      const { user, team, tokens } = this.state.config
+      const { config } = inputs
       this.services.analytics.track(
+        'Ops CLI Secrets:Unregister',
         {
-          userId: user.email,
-          teamId: team.id,
-          cliEvent: 'Ops CLI Secrets:Unregister',
-          event: 'Ops CLI Secrets:Unregister',
-          properties: {
-            email: user.email,
-            username: user.username,
-            hasBeenDeleted: inputs.confirmDelete,
-            team: team.name,
-          },
+          username: config.user.username,
+          hasBeenDeleted: inputs.confirmDelete,
         },
-        tokens.accessToken,
+        config,
       )
       return inputs
     } catch (err) {
@@ -97,21 +92,20 @@ export default class UnregisterSecret extends Command {
   }
 
   async run() {
+    const config = await this.isLoggedIn()
     try {
-      await this.isLoggedIn()
-
       const unregisterPipeline = asyncPipe(
         this.unregisterConfirm,
         this.unregisterAPI,
         this.sendAnalytics,
         this.logMessage,
       )
-      await unregisterPipeline()
+      await unregisterPipeline({ config })
     } catch (err) {
       this.debug('%O', err)
       this.config.runHook('error', {
         err,
-        accessToken: this.state.config.tokens.accessToken,
+        accessToken: config.tokens.accessToken,
       })
     }
   }

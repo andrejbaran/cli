@@ -1,12 +1,13 @@
 import { ux } from '@cto.ai/sdk'
 import Command, { flags } from '~/base'
 import { InvalidTeamNameFormat } from '~/errors/CustomErrors'
-import { Team } from '~/types'
+import { Team, Config } from '~/types'
 import { asyncPipe, validCharsTeamName } from '~/utils'
 
 const { white, reset } = ux.colors
 
 export interface CreateInputs {
+  config: Config
   name: string | undefined
   team: Team
 }
@@ -19,15 +20,15 @@ export default class TeamCreate extends Command {
   }
 
   guardAgainstInvalidName = async (
-    name: string | undefined,
-  ): Promise<Pick<CreateInputs, 'name'>> => {
+    inputs: CreateInputs,
+  ): Promise<Omit<CreateInputs, 'team'>> => {
     try {
-      if (!name) return { name }
+      if (!name) return { ...inputs }
       const isValidName = await this.validateTeamName(name)
       if (!isValidName || typeof isValidName === 'string') {
         throw new InvalidTeamNameFormat(null)
       }
-      return { name }
+      return { ...inputs, name }
     } catch (err) {
       throw err
     }
@@ -80,21 +81,21 @@ export default class TeamCreate extends Command {
     return inputs
   }
 
-  sendAnalytics = (userId: string) => (inputs: CreateInputs): void => {
+  sendAnalytics = (inputs: CreateInputs): void => {
     const {
-      team: { id: teamId, name },
+      team: { name },
+      config: { user, team, tokens },
     } = inputs
     this.services.analytics.track(
       {
-        cliEvent: 'Ops CLI Team:Create',
+        user: user.email,
+        team: team.name,
         event: 'Ops CLI Team:Create',
-        userId,
-        teamId,
         properties: {
-          teamName: name,
+          createTeam: name,
         },
       },
-      this.accessToken,
+      tokens.accessToken,
     )
   }
 
@@ -120,21 +121,24 @@ export default class TeamCreate extends Command {
     let {
       flags: { name },
     } = this.parse(TeamCreate)
+    const config = await this.isLoggedIn()
     try {
-      await this.isLoggedIn()
       const createPipeline = asyncPipe(
         this.guardAgainstInvalidName,
         this.promptForTeamName,
         this.createTeam,
         this.logMessage,
         this.setTeamConfig,
-        this.sendAnalytics(this.user.email),
+        this.sendAnalytics,
       )
 
-      await createPipeline(name)
+      await createPipeline({ name, config })
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err, accessToken: this.accessToken })
+      this.config.runHook('error', {
+        err,
+        accessToken: config.tokens.accessToken,
+      })
     }
   }
 }

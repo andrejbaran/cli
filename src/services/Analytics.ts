@@ -10,7 +10,7 @@ import Analytics from 'analytics-node'
 import Debug from 'debug'
 import { OPS_SEGMENT_KEY, NODE_ENV, OPS_DEBUG } from '../constants/env'
 import { FeathersClient } from './Feathers'
-import { ApiService } from '~/types'
+import { ApiService, Config } from '~/types'
 const debug = Debug('ops:AnalyticsService')
 
 interface SegmentIdentify {
@@ -44,15 +44,28 @@ export class AnalyticsService {
   }
 
   /* The track method lets you record the actions your users perform. */
-  track(payload: AnalyticsTrack, accessToken?: string) {
+  track(event: string, properties: any, config: Config) {
     if (OPS_DEBUG) {
       return null
     }
-    if (accessToken) {
+    const {
+      user: { email },
+      team: { name: activeTeam },
+      tokens: { accessToken },
+    } = config
+    if (email && activeTeam && accessToken) {
       this.api
         .create(
           '/private/log/event',
-          { metadata: payload, tags: ['track'] },
+          {
+            metadata: {
+              userId: email,
+              team: activeTeam,
+              event,
+              properties,
+            },
+            tags: ['track'],
+          },
           {
             headers: {
               Authorization: accessToken,
@@ -63,6 +76,11 @@ export class AnalyticsService {
           debug('%O', err)
         })
     }
-    return this.segmentClient.track(payload)
+    return this.segmentClient.track({
+      userId: email,
+      team: activeTeam,
+      event,
+      properties,
+    } as AnalyticsTrack)
   }
 }

@@ -12,19 +12,14 @@ export default class SecretsList extends Command {
 
   sendAnalytics = (inputs: SecretListInputs) => async () => {
     try {
+      const { config, secrets } = inputs
       this.services.analytics.track(
+        'Ops CLI Secrets:List',
         {
-          userId: this.state.config.user.email,
-          teamId: this.state.config.team.id,
-          cliEvent: 'Ops CLI Secrets:List',
-          event: 'Ops CLI Secrets:List',
-          properties: {
-            email: this.state.config.user.email,
-            username: this.state.config.user.username,
-            results: inputs.secrets.length,
-          },
+          username: config.user.username,
+          results: secrets.length,
         },
-        this.state.config.tokens.accessToken,
+        config,
       )
     } catch (err) {
       this.debug('%O', err)

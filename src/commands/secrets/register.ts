@@ -1,14 +1,12 @@
 import { ux } from '@cto.ai/sdk'
 import Command from '~/base'
-import { Team, State } from '~/types'
+import { Team, Config } from '~/types'
 import { asyncPipe, terminalText } from '~/utils'
 import {
   InvalidTeamNameFormat,
   RegisterSecretsProvider,
   NoTeamFound,
   UserUnauthorized,
-  SecretsProviderFound,
-  NoSecretsProviderFound,
   InvalidSecretToken,
   InvalidSecretVault,
 } from '~/errors/CustomErrors'
@@ -16,7 +14,7 @@ import {
 const { white, reset } = ux.colors
 
 export interface RegisterInputs {
-  activeTeam: Team
+  config: Config
   url: string | undefined
   token: string | undefined
 }
@@ -36,14 +34,14 @@ export default class SecretsRegister extends Command {
   }
 
   promptForSecretsProviderCredentials = async (
-    team: Team,
+    inputs: RegisterInputs,
   ): Promise<RegisterInputs> => {
     const { url, token } = await ux.prompt<{ url: string; token: string }>([
       {
         type: 'input',
         name: 'url',
         message: `\n🔐 Register your secret storage to share secrets and passwords with team ${reset.blueBright(
-          `${team.name}`,
+          `${inputs.config.team.name}`,
         )}    \n${reset.grey('Enter your secret storage')} ${reset.blue(
           'url',
         )} ${reset.grey('and')} ${reset.blue('access token.')}\n${reset.grey(
@@ -69,13 +67,13 @@ export default class SecretsRegister extends Command {
       },
     ])
 
-    return { activeTeam: team, url, token }
+    return { ...inputs, url, token }
   }
 
   registerSecretsProvider = async (inputs: RegisterInputs) => {
     try {
       await this.services.api.create(
-        `/private/teams/${inputs.activeTeam.name}/secrets/register`,
+        `/private/teams/${inputs.config.team.name}/secrets/register`,
         {
           token: inputs.token,
           url: inputs.url,
@@ -99,44 +97,39 @@ export default class SecretsRegister extends Command {
         case 403:
           throw new InvalidSecretToken(err)
         case 404:
-          throw new NoTeamFound(inputs.activeTeam.name)
+          throw new NoTeamFound(inputs.config.team.name)
         default:
           throw new RegisterSecretsProvider(err)
       }
     }
   }
 
-  sendAnalytics = (state: State) => async () => {
-    const { team } = state.config
-    const { email, username } = state.config.user
-
+  sendAnalytics = async (inputs: RegisterInputs) => {
+    const { config } = inputs
     this.services.analytics.track(
+      'Ops CLI Secrets:Register',
       {
-        userId: email,
-        teamId: team.id,
-        cliEvent: 'Ops CLI Secrets:Register',
-        event: 'Ops CLI Secrets:Register',
-        properties: {
-          email,
-          username,
-        },
+        username: config.user.username,
       },
-      this.accessToken,
+      config,
     )
   }
 
   async run() {
+    const config = await this.isLoggedIn()
     try {
-      await this.isLoggedIn()
       const switchPipeline = asyncPipe(
         this.promptForSecretsProviderCredentials,
         this.registerSecretsProvider,
-        this.sendAnalytics(this.state),
+        this.sendAnalytics,
       )
-      await switchPipeline(this.state.config.team)
+      await switchPipeline(config)
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err, accessToken: this.accessToken })
+      this.config.runHook('error', {
+        err,
+        accessToken: config.tokens.accessToken,
+      })
     }
   }
 }

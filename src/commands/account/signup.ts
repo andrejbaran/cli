@@ -1,9 +1,8 @@
 import Command, { flags } from '~/base'
 import { INTERCOM_EMAIL } from '~/constants/env'
-import { asyncPipe } from '../../utils/asyncPipe'
+import { asyncPipe, terminalText } from '~/utils'
 import { AnalyticsError, SSOError } from '~/errors/CustomErrors'
 import { Config, Tokens } from '~/types'
-import { terminalText } from '../../utils/terminalText'
 
 export default class AccountSignup extends Command {
   static description = 'Creates an account to use with ops CLI.'
@@ -72,16 +71,11 @@ export default class AccountSignup extends Command {
   sendAnalytics = (config: Config) => {
     try {
       this.services.analytics.track(
+        'Ops CLI Signup',
         {
-          userId: config.user.email,
-          cliEvent: 'Ops CLI Signup',
-          event: 'Ops CLI Signup',
-          properties: {
-            email: config.user.email,
-            username: config.user.username,
-          },
+          username: config.user.username,
         },
-        this.accessToken,
+        config,
       )
     } catch (err) {
       this.debug('%O', err)
