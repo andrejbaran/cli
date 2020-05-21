@@ -11,8 +11,8 @@
 
 import { ErrorTemplate } from '../errors/ErrorTemplate'
 import { errorSource } from '../constants/errorSource'
-import { FeathersClient } from '~/services/Feathers'
-import { INTERCOM_EMAIL } from '~/constants/env'
+import { INTERCOM_EMAIL, OPS_API_HOST } from '~/constants/env'
+import axios from 'axios'
 
 const { UNEXPECTED } = errorSource
 
@@ -29,10 +29,9 @@ export default async function error(
 ) {
   const { accessToken } = options
   if (accessToken) {
-    const api = new FeathersClient()
-    await api
-      .create(
-        '/log/event',
+    await axios
+      .post(
+        `${OPS_API_HOST}analytics-service/private/events`,
         { metadata: options.err },
         {
           headers: {
