@@ -46,7 +46,7 @@ export class AnalyticsService {
           },
           {
             headers: {
-              Authorization: accessToken,
+              Authorization: `Bearer ${accessToken}`,
             },
           },
         )
