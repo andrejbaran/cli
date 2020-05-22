@@ -594,11 +594,7 @@ export default class Run extends Command {
   async run() {
     const config = await this.isLoggedIn()
     try {
-      this.ux.spinner.start('initializing')
-
       const parsedArgs: RunCommandArgs = this.customParse(Run, this.argv)
-      //@ts-ignore
-      this.ux.spinner.stop()
       const {
         args: { nameOrPath },
       } = parsedArgs
