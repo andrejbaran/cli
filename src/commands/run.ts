@@ -592,10 +592,9 @@ export default class Run extends Command {
   }
 
   async run() {
+    const config = await this.isLoggedIn()
     try {
       this.ux.spinner.start('initializing')
-      await this.isLoggedIn()
-      const { config } = this.state
 
       const parsedArgs: RunCommandArgs = this.customParse(Run, this.argv)
       //@ts-ignore
@@ -636,7 +635,10 @@ export default class Run extends Command {
       }
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err, accessToken: this.accessToken })
+      this.config.runHook('error', {
+        err,
+        accessToken: config.tokens.accessToken,
+      })
     }
   }
 }
