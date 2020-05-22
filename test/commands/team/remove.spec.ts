@@ -42,7 +42,7 @@ describe('getActiveTeamCreator', () => {
     const inputs = { config: mockConfig } as TeamRemoveInputs
     const res = await cmd.getActiveTeamCreator(inputs)
 
-    expect(mockFeathersService.find).toHaveBeenCalledWith(
+    await expect(mockFeathersService.find).toHaveBeenCalledWith(
       `/private/teams/${mockTeamName}/creator`,
       {
         headers: {
@@ -50,7 +50,7 @@ describe('getActiveTeamCreator', () => {
         },
       },
     )
-    expect(res.creator).toBe(mockCreator)
+    await expect(res.creator).toBe(mockCreator)
   })
 
   test('should handle errors if the api returns an exception', async () => {
