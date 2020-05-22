@@ -8,19 +8,9 @@
 
 import Analytics from 'analytics-node'
 import Debug from 'debug'
-import { OPS_SEGMENT_KEY, NODE_ENV, OPS_DEBUG } from '../constants/env'
-import { FeathersClient } from './Feathers'
-import { ApiService, Config } from '~/types'
+import axios from 'axios'
+import { OPS_API_HOST, OPS_SEGMENT_KEY, OPS_DEBUG } from '../constants/env'
 const debug = Debug('ops:AnalyticsService')
-
-interface SegmentIdentify {
-  userId?: string | number
-  anonymousId?: string | number
-  traits?: any
-  timestamp?: Date
-  context?: any
-  integrations?: any
-}
 
 interface AnalyticsTrack {
   userId?: string | number
@@ -36,11 +26,9 @@ interface AnalyticsTrack {
 
 export class AnalyticsService {
   segmentClient: Analytics
-  api: ApiService
 
   constructor(writeKey: string = OPS_SEGMENT_KEY) {
     this.segmentClient = new Analytics(writeKey)
-    this.api = new FeathersClient()
   }
 
   /* The track method lets you record the actions your users perform. */
@@ -54,9 +42,9 @@ export class AnalyticsService {
       tokens: { accessToken },
     } = config
     if (email && activeTeam && accessToken) {
-      this.api
-        .create(
-          '/private/log/event',
+      axios
+        .post(
+          `${OPS_API_HOST}analytics-service/private/events`,
           {
             metadata: {
               userId: email,
@@ -68,7 +56,7 @@ export class AnalyticsService {
           },
           {
             headers: {
-              Authorization: accessToken,
+              Authorization: `Bearer ${accessToken}`,
             },
           },
         )

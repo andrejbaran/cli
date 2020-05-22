@@ -1,7 +1,7 @@
 import Debug from 'debug'
-import { ErrorTemplate } from '../errors/ErrorTemplate'
+import axios from 'axios'
 import { errorSource } from '../constants/errorSource'
-import { FeathersClient } from '~/services/Feathers'
+import { OPS_API_HOST } from '~/constants/env'
 
 const debug = Debug('ops:ErrorService')
 const { UNEXPECTED } = errorSource
@@ -13,15 +13,14 @@ interface HandleErrorInputs {
 
 export class ErrorService {
   public log = console.log
-  constructor(protected api = new FeathersClient()) {}
+  constructor() {}
 
   handleError = async (inputs: HandleErrorInputs): Promise<void> => {
     const { accessToken, err } = inputs
     if (accessToken) {
-      const api = new FeathersClient()
-      await api
-        .create(
-          '/log/event',
+      await axios
+        .post(
+          `${OPS_API_HOST}analytics-service/private/events`,
           { metadata: err },
           {
             headers: {

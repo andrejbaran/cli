@@ -24,7 +24,7 @@ $ npm install -g @cto.ai/ops
 $ ops COMMAND
 running command...
 $ ops (-v|--version|version)
-@cto.ai/ops/1.8.3 darwin-x64 node-v11.14.0
+@cto.ai/ops/1.8.5 darwin-x64 node-v11.14.0
 $ ops --help [COMMAND]
 USAGE
   $ ops COMMAND
@@ -292,9 +292,10 @@ USAGE
   $ ops run [NAMEORPATH]
 
 ARGUMENTS
-  NAMEORPATH  Name or path of the command or workflow you want to run.
+  NAMEORPATH  Name or path of the Op you want to run.
 
 OPTIONS
+  -B, --batch  Runs the op in non-interactive batch mode.
   -b, --build  Builds the op before running. Must provide a path to the op.
   -h, --help   show CLI help
 ```
