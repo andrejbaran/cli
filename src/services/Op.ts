@@ -84,23 +84,18 @@ export class OpService {
       )
 
       this.analytics.track(
+        'Ops CLI Build',
         {
-          userId: user.email,
-          cliEvent: 'Ops CLI Build',
-          event: 'Ops CLI Build',
-          properties: {
-            name: op.name,
-            team: teamName,
-            namespace: `@${teamName}/${op.name}`,
-            runtime: 'CLI',
-            email: user.email,
-            username: user.username,
-
-            description: op.description,
-            image: `${OPS_REGISTRY_HOST}/${op.name}:${op.version}`,
-          },
+          username: user.username,
+          team: teamName,
+          name: op.name,
+          version: op.version,
+          description: op.description,
+          namespace: `@${teamName}/${op.name}`,
+          namespace_version: `@${teamName}/${op.name}:${op.version}`,
+          image: `${OPS_REGISTRY_HOST}/${op.name}:${op.version}`,
         },
-        accessToken,
+        config,
       )
     }
   }

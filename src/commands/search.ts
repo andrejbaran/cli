@@ -1,25 +1,15 @@
 import fuzzy from 'fuzzy'
-import * as fs from 'fs-extra'
-import * as path from 'path'
-import * as yaml from 'yaml'
-import Command, { flags } from '../base'
+import Command, { flags } from '~/base'
 import {
   Answers,
   OpCommand,
   Fuzzy,
   SearchInputs,
   OpsFindResponse,
-} from '../types'
-import { asyncPipe } from '../utils/asyncPipe'
-import { AnalyticsError, APIError } from '../errors/CustomErrors'
-import {
-  OP_FILE,
-  COMMAND,
-  WORKFLOW,
-  WORKFLOW_TYPE,
-  GLUECODE_TYPE,
-} from '../constants/opConfig'
-import { pluralize, parseYaml } from '~/utils'
+} from '~/types'
+import { AnalyticsError, APIError } from '~/errors/CustomErrors'
+import { COMMAND, WORKFLOW_TYPE, GLUECODE_TYPE } from '~/constants/opConfig'
+import { pluralize, asyncPipe } from '~/utils'
 
 export default class Search extends Command {
   static description = 'Search for ops in your workspaces.'
@@ -125,27 +115,19 @@ export default class Search extends Command {
 
   sendAnalytics = (filter: string) => async (inputs: SearchInputs) => {
     const {
-      selectedOp,
-      selectedOp: { id: opId, teamID },
+      selectedOp: { name, teamName, version },
+      config,
     } = inputs
-    const teamOp = teamID === this.team.id
     try {
       this.services.analytics.track(
+        'Ops CLI Search',
         {
-          userId: this.user.email,
-          teamId: this.team.id,
-          cliEvent: 'Ops CLI Search',
-          event: 'Ops CLI Search',
-          properties: {
-            email: this.user.email,
-            username: this.user.username,
-            selectedOp: opId,
-            teamOp,
-            results: this.ops.length,
-            filter,
-          },
+          username: config.user.username,
+          selectedOp: `@${teamName}/${name}:${version}`,
+          results: this.ops.length,
+          filter,
         },
-        this.accessToken,
+        config,
       )
     } catch (err) {
       this.debug('%O', err)
@@ -197,10 +179,8 @@ export default class Search extends Command {
     const {
       args: { filter = '' },
     } = this.parse(Search)
-
+    const config = await this.isLoggedIn()
     try {
-      await this.isLoggedIn()
-
       const searchPipeline = asyncPipe(
         this.startSpinner,
         this.getApiOpsAndWorkflows,
@@ -211,13 +191,16 @@ export default class Search extends Command {
         this.stopSpinner,
         this.selectOpPrompt,
         this.showRunMessage,
-        this.sendAnalytics(filter),
+        this.sendAnalytics,
       )
-      await searchPipeline({ filter })
+      await searchPipeline({ filter, config })
     } catch (err) {
       await this.ux.spinner.stop(`${this.ux.colors.errorRed('Failed')}`)
       this.debug('%O', err)
-      this.config.runHook('error', { err, accessToken: this.accessToken })
+      this.config.runHook('error', {
+        err,
+        accessToken: config.tokens.accessToken,
+      })
     }
   }
 }

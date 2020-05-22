@@ -9,7 +9,8 @@
 import Analytics from 'analytics-node'
 import Debug from 'debug'
 import axios from 'axios'
-import { OPS_API_HOST, OPS_SEGMENT_KEY, OPS_DEBUG } from '../constants/env'
+import { OPS_API_HOST, OPS_SEGMENT_KEY, OPS_DEBUG } from '~/constants/env'
+import { Config } from '~/types'
 const debug = Debug('ops:AnalyticsService')
 
 interface AnalyticsTrack {

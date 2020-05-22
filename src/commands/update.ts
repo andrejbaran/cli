@@ -2,9 +2,9 @@ import { ux } from '@cto.ai/sdk'
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 
-import Command, { flags } from '../base'
-import { getLatestVersion } from '../utils/get-latest-version'
-import { PermissionsError } from '../errors/CustomErrors'
+import Command, { flags } from '~/base'
+import { getLatestVersion } from '~/utils/get-latest-version'
+import { PermissionsError } from '~/errors/CustomErrors'
 
 export default class Update extends Command {
   static description = 'Update the Ops CLI.'
@@ -43,17 +43,13 @@ export default class Update extends Command {
   async trackAnalytics(newVersion: string | undefined) {
     if (this.user) {
       await this.services.analytics.track(
+        'Ops CLI Update',
         {
-          userId: this.user.email,
-          teamId: this.team.id,
-          cliEvent: 'Ops CLI Update',
-          event: 'Ops CLI Update',
-          properties: {
-            oldVersion: this.config.version,
-            newVersion,
-          },
+          username: this.user.username,
+          oldVersion: this.config.version,
+          newVersion,
         },
-        this.accessToken,
+        this.state.config,
       )
     }
   }

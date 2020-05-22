@@ -31,6 +31,7 @@ import {
   OpsYml,
   OpWorkflow,
   RegistryAuth,
+  Config,
 } from '../types'
 import { asyncPipe, getOpImageTag, parseYaml, getOpUrl } from '../utils'
 import getDocker from '../utils/get-docker'
@@ -42,6 +43,7 @@ import {
 import { ErrorTemplate } from '~/errors/ErrorTemplate'
 
 export interface PublishInputs {
+  config: Config
   opPath: string
   docker: Docker
   commandsAndWorkflows: string
@@ -330,7 +332,10 @@ export default class Publish extends Command {
     }
   }
 
-  publishOpsAndWorkflows = async (inputs: PublishInputs) => {
+  publishOpsAndWorkflows = (config: Config) => async (
+    inputs: PublishInputs,
+  ) => {
+    inputs = { ...inputs, config }
     switch (inputs.commandsAndWorkflows) {
       case COMMAND:
         await this.opsPublishLoop(inputs)
@@ -344,7 +349,7 @@ export default class Publish extends Command {
     }
   }
 
-  opsPublishLoop = async ({ opCommands, version }: PublishInputs) => {
+  opsPublishLoop = async ({ opCommands, version, config }: PublishInputs) => {
     try {
       for (const op of opCommands) {
         if (!isValidOpName(op.name)) {
@@ -406,7 +411,7 @@ export default class Publish extends Command {
             version,
           )
 
-          this.sendAnalytics('op', apiOp)
+          this.sendAnalytics('op', apiOp, config)
         }
       }
     } catch (err) {
@@ -417,7 +422,11 @@ export default class Publish extends Command {
     }
   }
 
-  workflowsPublishLoop = async ({ opWorkflows, version }: PublishInputs) => {
+  workflowsPublishLoop = async ({
+    opWorkflows,
+    version,
+    config,
+  }: PublishInputs) => {
     try {
       for (const workflow of opWorkflows) {
         if (!isValidOpName(workflow.name)) {
@@ -510,7 +519,7 @@ export default class Publish extends Command {
               `<${OPS_API_HOST}${this.team.name}/${apiWorkflow.name}>`,
             )}\n`,
           )
-          this.sendAnalytics('workflow', apiWorkflow)
+          this.sendAnalytics('workflow', apiWorkflow, config)
         } catch (err) {
           this.debug('%O', err)
           const InvalidWorkflowStepCodes = [400, 404]
@@ -537,18 +546,15 @@ export default class Publish extends Command {
   sendAnalytics = (
     publishType: string,
     opOrWorkflow: OpCommand | OpWorkflow,
+    config: Config,
   ) => {
-    this.services.analytics.track({
-      userId: this.user.email,
-      teamId: this.team.id,
-      cliEvent: 'Ops CLI Publish',
-      event: 'Ops CLI Publish',
-      properties: {
+    this.services.analytics.track(
+      'Ops CLI Publish',
+      {
         name: opOrWorkflow.name,
-        team: this.team.name,
-        namespace: `@${this.team.name}/${opOrWorkflow.name}`,
-        email: this.user.email,
-        username: this.user.username,
+        team: config.team.name,
+        namespace: `@${config.team.name}/${opOrWorkflow.name}`,
+        username: config.user.username,
         type: publishType,
         description: opOrWorkflow.description,
         image: `${OPS_REGISTRY_HOST}/${opOrWorkflow.id.toLowerCase()}:${
@@ -556,7 +562,8 @@ export default class Publish extends Command {
         }`,
         tag: opOrWorkflow.version,
       },
-    })
+      config,
+    )
   }
 
   _validateDescription(input: string) {
@@ -566,8 +573,8 @@ export default class Publish extends Command {
   }
 
   async run() {
+    const config = await this.isLoggedIn()
     try {
-      await this.isLoggedIn()
       const { args } = this.parse(Publish)
 
       const publishPipeline = asyncPipe(
@@ -578,12 +585,15 @@ export default class Publish extends Command {
         this.selectOpsAndWorkFlows,
         this.findOpsWhereVersionAlreadyExists,
         this.getNewVersion,
-        this.publishOpsAndWorkflows,
+        this.publishOpsAndWorkflows(config),
       )
       await publishPipeline(args.path)
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err, accessToken: this.accessToken })
+      this.config.runHook('error', {
+        err,
+        accessToken: config.tokens.accessToken,
+      })
     }
   }
 }

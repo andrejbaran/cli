@@ -84,18 +84,15 @@ export default class TeamCreate extends Command {
   sendAnalytics = (inputs: CreateInputs): void => {
     const {
       team: { name },
-      config: { user, team, tokens },
+      config,
     } = inputs
     this.services.analytics.track(
+      'Ops CLI Team:Create',
       {
-        user: user.email,
-        team: team.name,
-        event: 'Ops CLI Team:Create',
-        properties: {
-          createTeam: name,
-        },
+        username: config.user.username,
+        createTeam: name,
       },
-      tokens.accessToken,
+      config,
     )
   }
 

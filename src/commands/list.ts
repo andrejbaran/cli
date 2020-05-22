@@ -196,17 +196,15 @@ export default class List extends Command {
   }
 
   sendAnalytics = async (inputs: ListInputs) => {
+    const { config, opResults, selectedOp } = inputs
     this.services.analytics.track(
+      'Ops CLI List',
       {
-        userId: this.user.email,
-        teamId: this.team.id,
-        cliEvent: 'Ops CLI List',
-        event: 'Ops CLI List',
-        properties: {
-          email: this.user.email,
-        },
+        username: config.user.username,
+        results: opResults.length,
+        selectedOp: `${selectedOp.teamName}/${selectedOp.name}:${selectedOp.version}`,
       },
-      this.accessToken,
+      config,
     )
     return inputs
   }

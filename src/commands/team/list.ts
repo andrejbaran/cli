@@ -10,7 +10,7 @@ export interface ListInputs {
   activeTeam: Team
   teams: Team[]
   displayTeams: displayTeam[]
-  configs: Config
+  config: Config
 }
 
 export default class TeamList extends Command {
@@ -22,8 +22,8 @@ export default class TeamList extends Command {
 
   getActiveTeam = async (inputs: ListInputs): Promise<ListInputs> => {
     try {
-      if (!inputs.configs.team) throw new Error()
-      return { ...inputs, activeTeam: inputs.configs.team }
+      if (!inputs.config.team) throw new Error()
+      return { ...inputs, activeTeam: inputs.config.team }
     } catch (err) {
       this.debug('%O', err)
       throw new ConfigError(err)
@@ -33,7 +33,7 @@ export default class TeamList extends Command {
   getTeamsFromApi = async (inputs: ListInputs): Promise<ListInputs> => {
     try {
       const { data: teams } = await this.services.api.find('/private/teams', {
-        headers: { Authorization: inputs.configs.tokens.accessToken },
+        headers: { Authorization: inputs.config.tokens.accessToken },
       })
       return { ...inputs, teams }
     } catch (err) {
@@ -74,24 +74,14 @@ export default class TeamList extends Command {
   }
 
   sendAnalytics = (inputs: ListInputs) => {
-    const {
-      user: { email, username },
-    } = inputs.configs
-    const {
-      activeTeam: { id: teamId },
-    } = inputs
+    const { config, teams } = inputs
     this.services.analytics.track(
+      'Ops CLI Team:List',
       {
-        userId: email,
-        cliEvent: 'Ops CLI Team:List',
-        event: 'Ops CLI Team:List',
-        properties: {
-          email,
-          username,
-          teamId,
-        },
+        username: config.user.username,
+        results: teams.length,
       },
-      inputs.configs.tokens.accessToken,
+      config,
     )
   }
   startSpinner = async (inputs: ListInputs) => {
@@ -106,7 +96,7 @@ export default class TeamList extends Command {
   }
   async run() {
     await this.parse(TeamList)
-    const configs = await this.isLoggedIn()
+    const config = await this.isLoggedIn()
     try {
       const listPipeline = asyncPipe(
         this.startSpinner,
@@ -118,13 +108,13 @@ export default class TeamList extends Command {
         this.sendAnalytics,
       )
 
-      await listPipeline({ configs })
+      await listPipeline({ config })
     } catch (err) {
       await this.ux.spinner.stop(`${this.ux.colors.errorRed('Failed')}`)
       this.debug('%O', err)
       this.config.runHook('error', {
         err,
-        accessToken: configs.tokens.accessToken,
+        accessToken: config.tokens.accessToken,
       })
     }
   }

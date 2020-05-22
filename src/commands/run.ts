@@ -566,36 +566,27 @@ export default class Run extends Command {
 
   sendAnalytics = async (inputs: RunInputs): Promise<RunInputs> => {
     const {
-      opOrWorkflow: { id, name, description, version },
+      opOrWorkflow: { id, name, description, version, teamName },
       parsedArgs: { opParams },
-      config: {
-        user: { username, email },
-        team: { name: teamName, id: teamId },
-      },
+      config,
     } = inputs
     this.services.analytics.track(
+      'Ops CLI Run',
       {
-        userId: email,
-        teamId,
-        cliEvent: 'Ops CLI Run',
-        event: 'Ops CLI Run',
-        properties: {
-          name,
-          team: teamName,
-          email,
-          username,
-          namespace: `${teamName}/${name}`,
-          runtime: 'CLI',
-          id,
-          description,
-          image: `${OPS_REGISTRY_HOST}/${name}:${version}`,
-          argments: opParams.length,
-          cliVersion: this.config.version,
-          version,
-          namespace_version: `${teamName}/${name}:${version}`,
-        },
+        username: config.user.username,
+        id,
+        name,
+        description,
+        version,
+        team: teamName,
+        namespace: `${teamName}/${name}`,
+        namespace_version: `${teamName}/${name}:${version}`,
+        image: `${OPS_REGISTRY_HOST}/${name}:${version}`,
+        argments: opParams.length,
+        runtime: 'CLI',
+        cliVersion: this.config.version,
       },
-      this.accessToken,
+      config,
     )
     return inputs
   }

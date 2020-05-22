@@ -4,6 +4,7 @@ import { asyncPipe } from '~/utils'
 import { Team, Config } from '~/types'
 
 export interface JoinInputs {
+  config: Config
   inviteCode: string
   newTeam: Team
 }
@@ -11,7 +12,7 @@ export interface JoinInputs {
 export default class TeamJoin extends Command {
   public static description = 'Accept an invite to join a team.'
 
-  inviteCodePrompt = async (): Promise<Pick<JoinInputs, 'inviteCode'>> => {
+  inviteCodePrompt = async (inputs): Promise<Omit<JoinInputs, 'newTeam'>> => {
     const { inviteCode } = await this.ux.prompt<{ inviteCode: string }>({
       type: 'input',
       name: 'inviteCode',
@@ -20,7 +21,7 @@ export default class TeamJoin extends Command {
       )}`,
       validate: (input: string): boolean => !!input,
     })
-    return { inviteCode }
+    return { ...inputs, inviteCode }
   }
   startSpinner = async (inputs: JoinInputs) => {
     this.log('')
@@ -73,25 +74,15 @@ export default class TeamJoin extends Command {
     return inputs
   }
 
-  sendAnalytics = (config: Config) => (inputs: JoinInputs): void => {
-    const {
-      newTeam: { id: teamId },
-    } = inputs
-    const {
-      user: { email, username },
-    } = config
+  sendAnalytics = (inputs: JoinInputs): void => {
+    const { config, newTeam } = inputs
     this.services.analytics.track(
+      'Ops CLI Team:Join',
       {
-        userId: email,
-        teamId,
-        cliEvent: 'Ops CLI Team:Join',
-        event: 'Ops CLI Team:Join',
-        properties: {
-          email,
-          username,
-        },
+        username: config.user.username,
+        newTeam: newTeam.name,
       },
-      this.accessToken,
+      config,
     )
   }
 
@@ -101,9 +92,8 @@ export default class TeamJoin extends Command {
   }
 
   async run() {
-    this.parse(TeamJoin)
+    const config = await this.isLoggedIn()
     try {
-      await this.isLoggedIn()
       const joinPipeline = asyncPipe(
         this.inviteCodePrompt,
         this.startSpinner,
@@ -111,9 +101,9 @@ export default class TeamJoin extends Command {
         this.setActiveTeam,
         this.stopSpinner,
         this.logMessage,
-        this.sendAnalytics(this.state.config),
+        this.sendAnalytics,
       )
-      await joinPipeline()
+      await joinPipeline({ config })
     } catch (err) {
       this.ux.spinner.stop(`${this.ux.colors.errorRed('Failed')}`)
       this.debug('%O', err)

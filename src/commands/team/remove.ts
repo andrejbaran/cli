@@ -190,25 +190,14 @@ export default class TeamRemove extends Command {
   }
 
   sendAnalytics = async (inputs: Inputs): Promise<void> => {
-    const {
-      config: {
-        user: { email, username },
-        tokens: { accessToken },
-        team: { name: activeTeamName },
-      },
-    } = inputs
+    const { config, memberToRemove } = inputs
     await this.services.analytics.track(
+      'Ops CLI Team:Remove',
       {
-        userId: email,
-        cliEvent: 'Ops CLI Team:Remove',
-        event: 'Ops CLI Team:Remove',
-        properties: {
-          email,
-          username,
-          activeTeamName,
-        },
+        username: config.user.username,
+        removedMember: memberToRemove.username,
       },
-      accessToken,
+      config,
     )
   }
 
