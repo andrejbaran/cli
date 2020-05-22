@@ -22,7 +22,6 @@ export default class TeamList extends Command {
 
   getActiveTeam = async (inputs: ListInputs): Promise<ListInputs> => {
     try {
-      if (!inputs.config.team) throw new Error()
       return { ...inputs, activeTeam: inputs.config.team }
     } catch (err) {
       this.debug('%O', err)

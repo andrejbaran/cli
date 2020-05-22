@@ -55,9 +55,10 @@ describe('testSendAnalytics', () => {
     cmd.isLoggedIn = jest.fn().mockReturnValue(mockConfig)
     cmd.user = mockUser
     cmd.team = mockTeam
+    cmd.state = { config: mockConfig }
 
     await cmd.run()
 
-    expect(mockAnalyticsService.track.mock.calls.length).toBe(1)
+    await expect(mockAnalyticsService.track).toBeCalledTimes(1)
   })
 })

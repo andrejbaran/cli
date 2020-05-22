@@ -4,7 +4,7 @@ import * as Config from '@oclif/config'
 import { Services, InitPaths, InitParams } from '~/types'
 import { COMMAND, WORKFLOW, OpTypes } from '~/constants/opConfig'
 import { AnalyticsService } from '~/services/Analytics'
-import { createMockUser, createMockTeam } from '../mocks'
+import { createMockUser, createMockTeam, createMockConfig } from '../mocks'
 
 jest.mock('fs-extra')
 
@@ -302,6 +302,7 @@ describe('opsInit', () => {
   test('sendAnalytics', async () => {
     const mockAnalyticsService = new AnalyticsService()
     mockAnalyticsService.track = jest.fn().mockReturnValue(null)
+    const mockConfig = createMockConfig({})
     cmd = new Init([], config, { analytics: mockAnalyticsService } as Services)
 
     cmd.getNameAndDescription = jest
@@ -313,7 +314,7 @@ describe('opsInit', () => {
 
     const initPaths = {} as InitPaths
     const initParams = {} as InitParams
-    await cmd.sendAnalytics({ initPaths, initParams })
+    await cmd.sendAnalytics(mockConfig)({ initPaths, initParams })
 
     expect(cmd.services.analytics.track).toHaveBeenCalledTimes(1)
   })

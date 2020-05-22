@@ -10,6 +10,7 @@ export default class AccountReset extends Command {
         Boolean(tokens) && this.user && this.team && this.isTokenValid(tokens)
 
       await this.services.keycloakService.keycloakResetFlow(isUserSignedIn)
+      console.log('isUserSignedIn :>> ', isUserSignedIn)
       if (isUserSignedIn) {
         await this.services.analytics.track(
           'Ops CLI Reset',

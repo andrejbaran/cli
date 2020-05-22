@@ -1,6 +1,6 @@
 import { ux } from '@cto.ai/sdk'
 import Command from '~/base'
-import { Team, Config } from '~/types'
+import { Config } from '~/types'
 import { asyncPipe, terminalText } from '~/utils'
 import {
   InvalidTeamNameFormat,

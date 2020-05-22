@@ -23,12 +23,12 @@ export default class TeamCreate extends Command {
     inputs: CreateInputs,
   ): Promise<Omit<CreateInputs, 'team'>> => {
     try {
-      if (!name) return { ...inputs }
-      const isValidName = await this.validateTeamName(name)
+      if (!inputs.name) return { ...inputs }
+      const isValidName = await this.validateTeamName(inputs.name)
       if (!isValidName || typeof isValidName === 'string') {
         throw new InvalidTeamNameFormat(null)
       }
-      return { ...inputs, name }
+      return inputs
     } catch (err) {
       throw err
     }

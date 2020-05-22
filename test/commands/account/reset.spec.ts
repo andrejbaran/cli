@@ -27,19 +27,20 @@ describe('accountReset', () => {
 
     cmd.user = createMockUser({})
     cmd.team = createMockTeam({})
+    cmd.state = { config }
 
     cmd.readConfig = jest.fn().mockReturnValue({
-      tokens: createMockTokens({}),
+      tokens: createMockTokens({ accessToken: 'blah' }),
     })
 
     cmd.isTokenValid = jest.fn().mockReturnValue(true)
 
     await cmd.run()
 
-    expect(cmd.readConfig.mock.calls.length).toBe(1)
-    expect(mockKeycloakService.keycloakResetFlow.mock.calls.length).toBe(1)
-    expect(cmd.isTokenValid.mock.calls.length).toBe(1)
-    expect(mockAnalyticsService.track.mock.calls.length).toBe(1)
+    expect(cmd.readConfig).toBeCalledTimes(1)
+    expect(mockKeycloakService.keycloakResetFlow).toBeCalledTimes(1)
+    expect(cmd.isTokenValid).toBeCalledTimes(1)
+    expect(mockAnalyticsService.track).toBeCalledTimes(1)
   })
 
   test('should fail if keycloakresetflow returns an error', async () => {
@@ -55,7 +56,6 @@ describe('accountReset', () => {
 
     cmd.user = createMockUser({})
     cmd.team = createMockTeam({})
-    cmd.debug = jest.fn().mockReturnValue(null)
     cmd.config.runHook = jest.fn().mockReturnValue(null)
 
     cmd.readConfig = jest.fn().mockReturnValue({
@@ -66,11 +66,10 @@ describe('accountReset', () => {
 
     await cmd.run()
 
-    expect(cmd.readConfig.mock.calls.length).toBe(1)
-    expect(mockKeycloakService.keycloakResetFlow.mock.calls.length).toBe(1)
-    expect(cmd.isTokenValid.mock.calls.length).toBe(1)
-    expect(mockAnalyticsService.track.mock.calls.length).toBe(0)
-    expect(cmd.debug.mock.calls.length).toBe(1)
-    expect(cmd.config.runHook.mock.calls.length).toBe(1)
+    expect(cmd.readConfig).toBeCalledTimes(1)
+    expect(mockKeycloakService.keycloakResetFlow).toBeCalledTimes(1)
+    expect(cmd.isTokenValid).toBeCalledTimes(1)
+    expect(mockAnalyticsService.track).toBeCalledTimes(0)
+    expect(cmd.config.runHook).toBeCalledTimes(1)
   })
 })

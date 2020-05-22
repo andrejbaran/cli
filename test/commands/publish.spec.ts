@@ -5,11 +5,11 @@ import { BuildSteps } from '~/services/BuildSteps'
 import { FeathersClient } from '~/services/Feathers'
 import { RegistryAuthService } from '~/services/RegistryAuth'
 import { ImageService } from '~/services/Image'
-import { OpCommand, RegistryAuth, User } from '~/types'
+import { OpCommand, RegistryAuth } from '~/types'
 import { OpWorkflow } from '~/types/OpsYml'
 import { Services } from '~/types'
 import { Publish as PublishService } from '~/services/Publish'
-import { createMockWorkflow } from '../mocks'
+import { createMockWorkflow, createMockConfig } from '../mocks'
 
 let cmd: Publish
 
@@ -222,8 +222,8 @@ describe('BuildStep', () => {
 })
 
 it('should publish ops in a loop', async () => {
-  const mockConfig = {} as Config.IConfig
-  mockConfig.runHook = jest.fn().mockReturnValue(true)
+  const config = {} as Config.IConfig
+  config.runHook = jest.fn().mockReturnValue(true)
 
   const mockImageService = new ImageService()
   mockImageService.checkLocalImage = jest.fn().mockResolvedValue(true)
@@ -242,7 +242,7 @@ it('should publish ops in a loop', async () => {
   mockRegistryAuthService.delete = jest.fn().mockReturnValue({} as RegistryAuth)
   mockRegistryAuthService.create = jest.fn().mockReturnValue({} as RegistryAuth)
 
-  cmd = new Publish([], mockConfig, {
+  cmd = new Publish([], config, {
     publishService: mockPublishService,
     imageService: mockImageService,
     registryAuthService: mockRegistryAuthService,
@@ -252,13 +252,16 @@ it('should publish ops in a loop', async () => {
     name: 'team-name',
   }
 
+  const mockConfig = createMockConfig({ team: cmd.team })
+
   cmd.getRegistryAuth = jest.fn().mockReturnValue({} as RegistryAuth)
   cmd.ux.prompt = jest
     .fn()
     .mockResolvedValue({ publishDescription: 'mockDescription' })
   cmd.sendAnalytics = jest.fn()
-
+  cmd.isLoggedIn = jest.fn().mockReturnValue(mockConfig)
   const inputs: PublishInputs = {
+    config: mockConfig,
     version: 'test',
     opCommands: [
       {
@@ -305,5 +308,9 @@ it('should publish ops in a loop', async () => {
     'test',
   )
 
-  expect(cmd.sendAnalytics).toHaveBeenCalledWith('op', { id: 'published' })
+  expect(cmd.sendAnalytics).toHaveBeenCalledWith(
+    'op',
+    { id: 'published' },
+    mockConfig,
+  )
 })

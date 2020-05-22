@@ -1,8 +1,9 @@
 import SecretsSet, { SetSecretInputs } from '~/commands/secrets/set'
-import { SecretValueFileError } from '~/errors/CustomErrors'
+import { ValueFileError } from '~/errors/CustomErrors'
 import * as fs from 'fs-extra'
 import { FeathersClient } from '~/services'
-import { Services, Team, State } from '~/types'
+import { Services, State } from '~/types'
+import { createMockConfig } from '../../mocks'
 
 jest.mock('fs-extra')
 
@@ -47,7 +48,7 @@ describe('set secrets', () => {
   describe('resolveFileSecret', () => {
     test('should return its input directly if no filename is provided', async () => {
       const input = {
-        state: {} as State,
+        config: createMockConfig({}),
         value: 'myvalue',
         key: 'mykey',
       }
@@ -63,7 +64,7 @@ describe('set secrets', () => {
       fs.readFile.mockResolvedValue(contents)
 
       const input = {
-        state: {} as State,
+        config: createMockConfig({}),
         key: 'mykey',
         valueFilename: 'myfile',
       }
@@ -71,7 +72,7 @@ describe('set secrets', () => {
       const result = await cmd.resolveFileSecret(input)
 
       expect(result).toEqual({
-        state: {} as State,
+        config: createMockConfig({}),
         key: 'mykey',
         valueFilename: 'myfile',
         value: contents,
@@ -85,14 +86,12 @@ describe('set secrets', () => {
       fs.readFile.mockRejectedValue('error!')
 
       const input = {
-        state: {} as State,
+        config: createMockConfig({}),
         key: 'mykey',
         valueFilename: 'myfile',
       }
 
-      await expect(cmd.resolveFileSecret(input)).rejects.toThrow(
-        SecretValueFileError,
-      )
+      await expect(cmd.resolveFileSecret(input)).rejects.toThrow(ValueFileError)
 
       expect(fs.readFile).toHaveBeenCalledTimes(1)
       expect(fs.readFile).toHaveBeenCalledWith('myfile', 'utf8')
@@ -105,7 +104,7 @@ describe('set secrets', () => {
       cmd.ux.print = jest.fn()
 
       const input = {
-        state: { config: { team: { name: 'test-team' } } } as State,
+        config: { team: { name: 'test-team' } },
         value: 'myvalue',
         key: 'mykey',
       }
@@ -123,7 +122,7 @@ describe('set secrets', () => {
       cmd.ux.print = jest.fn()
 
       const input = {
-        state: { config: { team: { name: 'test-team' } } } as State,
+        config: { team: { name: 'test-team' } },
         value: null,
         key: 'mykey',
       }
@@ -131,7 +130,7 @@ describe('set secrets', () => {
       const result = await cmd.promptForSecret(input)
 
       expect(result).toEqual({
-        state: input.state,
+        config: input.config,
         value: 'myvalue',
         key: 'mykey',
       })
@@ -152,7 +151,7 @@ describe('set secrets', () => {
       cmd.ux.print = jest.fn()
 
       const input = {
-        state: { config: { team: { name: 'test-team' } } } as State,
+        config: { team: { name: 'test-team' } },
         value: null,
         key: 'mykey',
       }
@@ -160,7 +159,7 @@ describe('set secrets', () => {
       const result = await cmd.promptForSecret(input)
 
       expect(result).toEqual({
-        state: input.state,
+        config: input.config,
         value: 'myvalue',
         key: 'mykey',
       })
@@ -181,7 +180,7 @@ describe('set secrets', () => {
       cmd.ux.print = jest.fn()
 
       const input = {
-        state: { config: { team: { name: 'test-team' } } } as State,
+        config: { team: { name: 'test-team' } },
         value: 'myvalue',
         key: null,
       }
@@ -189,7 +188,7 @@ describe('set secrets', () => {
       const result = await cmd.promptForSecret(input)
 
       expect(result).toEqual({
-        state: input.state,
+        config: input.config,
         value: 'myvalue',
         key: 'mykey',
       })
@@ -211,7 +210,7 @@ describe('set secrets', () => {
       cmd.ux.print = jest.fn()
 
       const input = {
-        state: { config: { team: { name: 'test-team' } } } as State,
+        config: { team: { name: 'test-team' } },
         value: null,
         key: null,
       }
@@ -219,7 +218,7 @@ describe('set secrets', () => {
       const result = await cmd.promptForSecret(input)
 
       expect(result).toEqual({
-        state: input.state,
+        config: input.config,
         value: 'myvalue',
         key: 'mykey',
       })
@@ -247,7 +246,7 @@ describe('set secrets', () => {
       cmd.ux.print = jest.fn()
 
       const input = {
-        state: { config: { team: { name: 'test-team' } } } as State,
+        config: { team: { name: 'test-team' } },
         value: null,
         key: "we don't expect this to work!",
       }
@@ -255,7 +254,7 @@ describe('set secrets', () => {
       const result = await cmd.promptForSecret(input)
 
       expect(result).toEqual({
-        state: input.state,
+        config: input.config,
         value: 'myvalue',
         key: 'mykey',
       })
@@ -279,7 +278,7 @@ describe('set secrets', () => {
   test('should call teams/${inputs.activeTeam.name}/secrets with correct payload', async () => {
     const name = 'FAKE_TEAM_NAME'
     const inputs: SetSecretInputs = {
-      state: { config: { team: { name: 'my-team' } } } as State,
+      config: { team: { name: 'my-team' } },
       key: 'my-key',
       value: 'my-value',
     }

@@ -113,9 +113,10 @@ export default class Search extends Command {
     return inputs
   }
 
-  sendAnalytics = (filter: string) => async (inputs: SearchInputs) => {
+  sendAnalytics = async (inputs: SearchInputs) => {
     const {
       selectedOp: { name, teamName, version },
+      filter,
       config,
     } = inputs
     try {
