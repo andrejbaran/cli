@@ -49,9 +49,9 @@ export class AnalyticsService {
           {
             metadata: {
               userId: email,
-              team: activeTeam,
+
               event,
-              properties,
+              properties: { ...properties, team: activeTeam },
             },
             tags: ['track'],
           },
@@ -69,7 +69,7 @@ export class AnalyticsService {
       userId: email,
       team: activeTeam,
       event,
-      properties,
+      properties: { ...properties, team: activeTeam },
     } as AnalyticsTrack)
   }
 }
