@@ -9,7 +9,7 @@ let config
 describe('guardAgainstInvalidName', () => {
   test('should return undefined if no name is provided', async () => {
     cmd = new TeamCreate([], config)
-    const res = await cmd.guardAgainstInvalidName(undefined)
+    const res = await cmd.guardAgainstInvalidName({ name: undefined })
     expect(res.name).toBeUndefined()
   })
 
@@ -17,7 +17,7 @@ describe('guardAgainstInvalidName', () => {
     const teamName = 'awesome-team-name'
     cmd = new TeamCreate([], config)
     cmd.validateTeamName = jest.fn().mockReturnValue(true)
-    const res = await cmd.guardAgainstInvalidName('awesome-team-name')
+    const res = await cmd.guardAgainstInvalidName({ name: 'awesome-team-name' })
     expect(cmd.validateTeamName).toBeCalled()
     expect(res.name).toBe(teamName)
   })
@@ -25,9 +25,9 @@ describe('guardAgainstInvalidName', () => {
   test('should throw an error if invalid format', async () => {
     cmd = new TeamCreate([], config)
     cmd.validateTeamName = jest.fn().mockReturnValue(false)
-    await expect(cmd.guardAgainstInvalidName('badFormat')).rejects.toThrow(
-      new InvalidTeamNameFormat(null),
-    )
+    await expect(
+      cmd.guardAgainstInvalidName({ name: 'badFormat' }),
+    ).rejects.toThrow(new InvalidTeamNameFormat(null))
     expect(cmd.validateTeamName).toBeCalled()
   })
 })

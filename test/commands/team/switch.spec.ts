@@ -11,14 +11,14 @@ let config
 let input: SwitchInputs
 beforeEach(async () => {
   config = await Config.load()
-  input = { configs: config } as SwitchInputs
+  input = { config } as SwitchInputs
 })
 describe('getActiveTeam', () => {
   test('should successfully retrieve active team from configs', async () => {
     const mockTeam = createMockTeam({ name: 'FAKE_TEAM_NAME' })
     cmd = new TeamSwitch([], config)
     cmd.readConfig = jest.fn().mockReturnValue({ team: mockTeam })
-    input.configs.team = mockTeam
+    input.config.team = mockTeam
     const res = await cmd.getActiveTeam(input)
     expect(res.activeTeam).toBe(mockTeam)
   })
@@ -43,7 +43,7 @@ describe('getTeamsFromApi', () => {
     const mockFeathersService = new FeathersClient()
     mockFeathersService.find = jest.fn().mockReturnValue({ data: [mockTeam] })
     cmd = new TeamSwitch([], config, { api: mockFeathersService } as Services)
-    input.configs.tokens = { accessToken: mockToken } as Tokens
+    input.config.tokens = { accessToken: mockToken } as Tokens
     const res = await cmd.getTeamsFromApi(input)
     expect(res.teams[0]).toBe(mockTeam)
     expect(mockFeathersService.find).toBeCalledWith('/private/teams', {
@@ -58,7 +58,7 @@ describe('getTeamsFromApi', () => {
     const mockFeathersService = new FeathersClient()
     mockFeathersService.find = jest.fn().mockRejectedValue(new Error())
     cmd = new TeamSwitch([], config, { api: mockFeathersService } as Services)
-    input.configs.tokens = { accessToken: mockToken } as Tokens
+    input.config.tokens = { accessToken: mockToken } as Tokens
     await expect(cmd.getTeamsFromApi({} as SwitchInputs)).rejects.toThrowError(
       new APIError(null),
     )

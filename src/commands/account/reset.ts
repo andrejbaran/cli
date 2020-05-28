@@ -12,16 +12,11 @@ export default class AccountReset extends Command {
       await this.services.keycloakService.keycloakResetFlow(isUserSignedIn)
       if (isUserSignedIn) {
         await this.services.analytics.track(
+          'Ops CLI Reset',
           {
-            userId: this.user.email,
-            cliEvent: 'Ops CLI Reset',
-            event: 'Ops CLI Reset',
-            properties: {
-              email: this.user.email,
-              username: this.user.username,
-            },
+            username: this.user.username,
           },
-          this.accessToken,
+          this.state.config,
         )
       }
     } catch (err) {

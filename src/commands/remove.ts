@@ -209,29 +209,21 @@ export default class Remove extends Command {
 
   sendAnalytics = async (inputs: RemoveInputs) => {
     const {
-      opOrWorkflow: { id, name, description },
-      config: {
-        user: { email, username },
-        team: { id: teamId },
-        tokens: { accessToken },
-      },
+      opOrWorkflow: { id, name, description, version },
+      config,
     } = inputs
     this.services.analytics.track(
+      'Ops CLI Remove',
+
       {
-        userId: email,
-        teamId,
-        cliEvent: 'Ops CLI Remove',
-        event: 'Ops CLI Remove',
-        properties: {
-          email,
-          username,
-          id,
-          name,
-          description,
-          image: `${OPS_REGISTRY_HOST}/${name}`,
-        },
+        username: config.user.username,
+        id,
+        name,
+        description,
+        version,
+        image: `${OPS_REGISTRY_HOST}/${name}:${version}`,
       },
-      accessToken,
+      config,
     )
     return inputs
   }

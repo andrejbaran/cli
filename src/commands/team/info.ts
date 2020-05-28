@@ -95,24 +95,16 @@ export default class TeamInfo extends Command {
 
   sendAnalytics = async (inputs: InfoInputs) => {
     const {
-      config: {
-        user: { email, username },
-        tokens: { accessToken },
-      },
+      config,
       activeTeam: { name: activeTeamName },
     } = inputs
     await this.services.analytics.track(
+      'Ops CLI Team:Info',
       {
-        userId: email,
-        cliEvent: 'Ops CLI Team:Info',
-        event: 'Ops CLI Team:Info',
-        properties: {
-          email,
-          username,
-          activeTeamName,
-        },
+        username: config.user.username,
+        activeTeamName,
       },
-      accessToken,
+      config,
     )
   }
   startSpinner = async (inputs: InfoInputs) => {

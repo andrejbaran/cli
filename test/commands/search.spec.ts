@@ -118,15 +118,15 @@ describe('sendAnalytics', () => {
   test('Test if analytics are sent', async () => {
     const mockAnalyticsService = new AnalyticsService()
     mockAnalyticsService.track = jest.fn().mockReturnValue(null)
-
     cmd = new Search([], config, {
       analytics: mockAnalyticsService,
     } as Services)
-
+    const mockConfig = createMockConfig({})
     const inputs = {
       filter: 'FAKE_FILTER',
       apiOps: [],
       selectedOp: createMockOp({}) as OpCommand,
+      config: mockConfig,
     } as SearchInputs
 
     cmd.readConfig = jest.fn().mockReturnValue({
@@ -138,7 +138,7 @@ describe('sendAnalytics', () => {
     cmd.isLoggedIn = jest.fn().mockReturnValue(true)
     cmd.config.runHook = jest.fn().mockReturnValue(null)
 
-    await cmd.sendAnalytics('')(inputs)
+    await cmd.sendAnalytics(inputs)
 
     expect(mockAnalyticsService.track).toHaveBeenCalledTimes(1)
   })

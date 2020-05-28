@@ -1,6 +1,7 @@
 import SecretsRegister, { RegisterInputs } from '~/commands/secrets/register'
 import { FeathersClient } from '~/services'
-import { Services, Team } from '~/types'
+import { Services } from '~/types'
+import { createMockConfig } from '../../mocks'
 
 let cmd: SecretsRegister
 let config
@@ -8,6 +9,7 @@ let config
 describe('register secrets', () => {
   const mockFeathersService = new FeathersClient()
   mockFeathersService.create = jest.fn().mockReturnValue({ data: '' })
+
   cmd = new SecretsRegister([], config, {
     api: mockFeathersService,
   } as Services)
@@ -23,19 +25,19 @@ describe('register secrets', () => {
   })
 
   test('should successfully register a secrets provider in the api', async () => {
-    const name = 'FAKE_TEAM_NAME'
+    const mockConfig = createMockConfig({ team: { name: 'fakeTeamName' } })
     const inputs: RegisterInputs = {
-      activeTeam: { name: 'my-team' } as Team,
+      config: mockConfig,
       url: 'http://mysecretstore.com',
       token: 'my-token',
     }
     const fakeToken = 'FAKETOKEN'
 
     cmd.accessToken = fakeToken
-    const res = await cmd.registerSecretsProvider(inputs as RegisterInputs)
+    await cmd.registerSecretsProvider(inputs as RegisterInputs)
 
     expect(mockFeathersService.create).toBeCalledWith(
-      `/private/teams/${inputs.activeTeam.name}/secrets/register`,
+      `/private/teams/${inputs.config.team.name}/secrets/register`,
       {
         token: inputs.token,
         url: inputs.url,
