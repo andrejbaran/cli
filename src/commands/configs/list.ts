@@ -16,27 +16,14 @@ export default class ConfigsList extends Command {
 
   sendAnalytics = async (inputs: ConfigListInputs) => {
     try {
-      const {
-        config: {
-          user: { email, username },
-          team,
-          tokens: { accessToken },
-        },
-        teamConfigs,
-      } = inputs
+      const { config, teamConfigs } = inputs
       this.services.analytics.track(
+        'Ops CLI Configs:List',
         {
-          userId: email,
-          teamId: team.id,
-          cliEvent: 'Ops CLI Configs:List',
-          event: 'Ops CLI Configs:List',
-          properties: {
-            email,
-            username,
-            results: teamConfigs.length,
-          },
+          username: config.user.username,
+          results: teamConfigs.length,
         },
-        accessToken,
+        config,
       )
     } catch (err) {
       this.debug('%O', err)

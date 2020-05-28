@@ -9,7 +9,7 @@ import {
   CouldNotInitializeOp,
   EnumeratingLangsError,
 } from '~/errors/CustomErrors'
-import { Container, InitParams, InitPaths, Question } from '~/types'
+import { Container, InitParams, InitPaths, Question, Config } from '~/types'
 import { appendSuffix, validVersionChars } from '~/utils'
 import { asyncPipe } from '~/utils/asyncPipe'
 
@@ -311,7 +311,7 @@ export default class Init extends Command {
     return { initPaths, initParams }
   }
 
-  sendAnalytics = async ({
+  sendAnalytics = (config: Config) => async ({
     initPaths,
     initParams,
   }: {
@@ -323,24 +323,17 @@ export default class Init extends Command {
       const { templates } = initParams
       const { name, description } = this.getNameAndDescription(initParams)
       this.services.analytics.track(
+        'Ops CLI Init',
         {
-          userId: this.user.email,
-          teamId: this.team.id,
-          cliEvent: 'Ops CLI Init',
-          event: 'Ops CLI Init',
-          properties: {
-            name,
-            team: this.team.name,
-            namespace: `@${this.team.name}/${name}`,
-            runtime: 'CLI',
-            email: this.user.email,
-            username: this.user.username,
-            path: destDir,
-            description,
-            templates,
-          },
+          name,
+          namespace: `@${config.team.name}/${name}`,
+          runtime: 'CLI',
+          username: config.user.username,
+          path: destDir,
+          description,
+          templates,
         },
-        this.accessToken,
+        config,
       )
       return {
         initPaths,
@@ -411,8 +404,8 @@ export default class Init extends Command {
     const {
       args: { name },
     } = this.parse(Init)
+    const config = await this.isLoggedIn()
     try {
-      await this.isLoggedIn()
       const initPipeline = asyncPipe(
         this.determineTemplate,
         this.determineQuestions,
@@ -421,14 +414,17 @@ export default class Init extends Command {
         this.copyTemplateFiles,
         this.customizePackageJson,
         this.customizeYaml,
-        this.sendAnalytics,
+        this.sendAnalytics(config),
         this.logMessages,
       )
 
       await initPipeline({ prompts: this.initPrompts, name })
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err, accessToken: this.accessToken })
+      this.config.runHook('error', {
+        err,
+        accessToken: config.tokens.accessToken,
+      })
     }
   }
 }

@@ -166,23 +166,15 @@ export default class ConfigsSet extends Command {
   }
 
   sendAnalytics = async (inputs: ConfigSetInputs) => {
-    const {
-      team,
-      user: { email, username },
-    } = inputs.config
+    const { config, key } = inputs
     try {
       this.services.analytics.track(
+        'Ops CLI Configs:Set',
         {
-          userId: email,
-          teamId: team.id,
-          cliEvent: 'Ops CLI Configs:Set',
-          event: 'Ops CLI Configs:Set',
-          properties: {
-            email,
-            username,
-          },
+          username: config.user.username,
+          setConfigKey: key,
         },
-        this.accessToken,
+        config,
       )
       return inputs
     } catch (err) {

@@ -1,19 +1,18 @@
 import Command, { flags } from '~/base'
-import { SecretListInputs } from '~/types'
+import { SecretListInputs, Config } from '~/types'
 import { asyncPipe } from '~/utils/asyncPipe'
 import {
-  APIError,
   AnalyticsError,
   NoSecretsProviderFound,
   NoSecretFound,
   UserUnauthorized,
   InvalidSecretToken,
-  RegisterSecretsProvider,
   InvalidSecretVault,
   SecretNotFound,
 } from '~/errors/CustomErrors'
 
 interface SecretDeleteInput {
+  config: Config
   selectedSecret: string
   confirmDelete: boolean
 }
@@ -26,9 +25,7 @@ export default class SecretsDelete extends Command {
     key: flags.string({ char: 'k', description: 'Secret Key Name' }),
   }
 
-  confirmSecretDeletion = async (
-    inputs: Pick<SecretListInputs, 'selectedSecret'>,
-  ): Promise<SecretDeleteInput> => {
+  confirmSecretDeletion = async (inputs): Promise<SecretDeleteInput> => {
     const { selectedSecret } = inputs
     if (typeof selectedSecret === 'undefined') {
       throw new NoSecretFound()
@@ -42,7 +39,7 @@ export default class SecretsDelete extends Command {
       )} from team ${this.ux.colors.multiBlue(this.state.config.team.name)}?`,
     })
 
-    return { selectedSecret, confirmDelete }
+    return { ...inputs, selectedSecret, confirmDelete }
   }
 
   deleteSecretAPI = async (
@@ -99,20 +96,19 @@ export default class SecretsDelete extends Command {
 
   sendAnalytics = async (inputs: SecretDeleteInput) => {
     try {
+      const {
+        config,
+        confirmDelete: hasBeenDeleted,
+        selectedSecret: deletedSecretKey,
+      } = inputs
       this.services.analytics.track(
+        'Ops CLI Secrets:Delete',
         {
-          userId: this.state.config.user.email,
-          teamId: this.state.config.team.id,
-          cliEvent: 'Ops CLI Secrets:Delete',
-          event: 'Ops CLI Secrets:Delete',
-          properties: {
-            email: this.state.config.user.email,
-            username: this.state.config.user.username,
-            hasBeenDeleted: inputs.confirmDelete,
-            deletedSecretKey: inputs.selectedSecret,
-          },
+          username: config.user.username,
+          hasBeenDeleted,
+          deletedSecretKey,
         },
-        this.state.config.tokens.accessToken,
+        config,
       )
       return inputs
     } catch (err) {
@@ -125,9 +121,8 @@ export default class SecretsDelete extends Command {
     let {
       flags: { key },
     } = this.parse(SecretsDelete)
+    const config = await this.isLoggedIn()
     try {
-      await this.isLoggedIn()
-
       const inputs: { selectedSecret: string } = key
         ? { selectedSecret: key }
         : await this.services.secretService.runListPipeline(
@@ -142,7 +137,7 @@ export default class SecretsDelete extends Command {
         this.logMessage,
       )
 
-      await secretDeletePipeline(inputs)
+      await secretDeletePipeline({ ...inputs, config })
     } catch (err) {
       this.debug('%O', err)
       this.config.runHook('error', { err })

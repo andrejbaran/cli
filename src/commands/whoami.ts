@@ -1,5 +1,4 @@
 import Command, { flags } from '../base'
-import { Config } from '../types'
 
 export default class Whoami extends Command {
   static description = 'Display your user information'
@@ -44,14 +43,11 @@ export default class Whoami extends Command {
     }
     this.log('\n')
     this.services.analytics.track(
+      'Ops CLI Whoami',
       {
-        userId: this.user.email,
-        teamId: this.team.id,
-        cliEvent: 'Ops CLI Whoami',
-        event: 'Ops CLI Whoami',
-        properties: {},
+        username: config.user.username,
       },
-      this.accessToken,
+      config,
     )
   }
 }

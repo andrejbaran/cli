@@ -134,26 +134,15 @@ export default class TeamInvite extends Command {
     return inputs
   }
 
-  sendAnalytics = (config: Config) => (inputs: InviteInputs): void => {
-    const { inviteesArray } = inputs
-    const {
-      user: { email, username },
-      team: { id: teamId, name: teamName },
-    } = config
+  sendAnalytics = (inputs: InviteInputs): void => {
+    const { inviteesArray, config } = inputs
     this.services.analytics.track(
+      'Ops CLI Team:Invite',
       {
-        userId: email,
-        teamId,
-        cliEvent: 'Ops CLI Team:Invite',
-        event: 'Ops CLI Team:Invite',
-        properties: {
-          email,
-          username,
-          invitees: inviteesArray,
-          team: teamName,
-        },
+        username: config.user.username,
+        invitees: inviteesArray,
       },
-      this.accessToken,
+      config,
     )
   }
 
@@ -162,8 +151,8 @@ export default class TeamInvite extends Command {
       flags: { invitees },
       argv,
     } = this.parse(TeamInvite)
+    const config = await this.isLoggedIn()
     try {
-      await this.isLoggedIn()
       if (argv.length) {
         throw new Error(
           'team:invite doesn\'t accept any arguments. Please use the -i flag like this: ops team:invite "user1, user2@gmail.com, user3@something"',
@@ -175,13 +164,16 @@ export default class TeamInvite extends Command {
         this.splitInvitees,
         this.inviteUserToTeam,
         this.printInviteResponses,
-        this.sendAnalytics(this.state.config),
+        this.sendAnalytics,
       )
 
-      await invitePipeline({ invitees, config: this.state.config })
+      await invitePipeline({ invitees, config })
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err, accessToken: this.accessToken })
+      this.config.runHook('error', {
+        err,
+        accessToken: config.tokens.accessToken,
+      })
     }
   }
 }

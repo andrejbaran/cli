@@ -1,6 +1,6 @@
-import Command, { flags } from '../../base'
+import Command, { flags } from '~/base'
 import { ux } from '@cto.ai/sdk'
-import { INTERCOM_EMAIL } from '../../constants/env'
+import { INTERCOM_EMAIL } from '~/constants/env'
 export default class AccountSupport extends Command {
   static description = 'Contact our support team with questions.'
 
@@ -10,7 +10,7 @@ export default class AccountSupport extends Command {
 
   async run(this: any) {
     this.parse(AccountSupport)
-    await this.isLoggedIn()
+    const config = await this.isLoggedIn()
 
     this.log('')
     this.log('❔ Please reach out to us with questions anytime!')
@@ -29,14 +29,11 @@ export default class AccountSupport extends Command {
     this.log('')
 
     this.services.analytics.track(
+      'Ops CLI Support',
       {
-        userId: this.user.email,
-        teamId: this.team.id,
-        cliEvent: 'Ops CLI Support',
-        event: 'Ops CLI Support',
-        properties: {},
+        username: this.user.username,
       },
-      this.accessToken,
+      config,
     )
   }
 }

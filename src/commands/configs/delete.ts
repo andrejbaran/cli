@@ -73,25 +73,15 @@ export default class ConfigsDelete extends Command {
 
   sendAnalytics = async (inputs: ConfigDeleteInput) => {
     try {
-      const {
-        config: { user, team, tokens },
-        confirmDelete,
-        selectedConfig,
-      } = inputs
+      const { config, confirmDelete, selectedConfig } = inputs
       this.services.analytics.track(
+        'Ops CLI Configs:Delete',
         {
-          userId: user.email,
-          teamId: team.id,
-          cliEvent: 'Ops CLI Configs:Delete',
-          event: 'Ops CLI Configs:Delete',
-          properties: {
-            email: user.email,
-            username: user.username,
-            hasBeenDeleted: confirmDelete,
-            deletedSecretKey: selectedConfig,
-          },
+          username: config.user.username,
+          hasBeenDeleted: confirmDelete,
+          deletedConfigKey: selectedConfig,
         },
-        tokens.accessToken,
+        config,
       )
       return inputs
     } catch (err) {

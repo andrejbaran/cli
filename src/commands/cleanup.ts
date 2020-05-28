@@ -67,10 +67,9 @@ export class Cleanup extends Command {
     const {
       args: { opName },
     }: Output<{}, { opName: string }> = this.parse(Cleanup)
+    const config = await this.isLoggedIn()
     try {
       this.docker = await getDocker(this, 'publish')
-
-      await this.isLoggedIn()
 
       if (!this.docker) return
 
@@ -96,28 +95,29 @@ export class Cleanup extends Command {
 
       // remove both the images for the matching op name
       const { id, name } = ops.data[0]
-      const imagebyId = formImageName(id, this.team.name, OPS_REGISTRY_HOST)
-      const imagebyName = formImageName(name, this.team.name, OPS_REGISTRY_HOST)
+      const imagebyId = formImageName(id, config.team.name, OPS_REGISTRY_HOST)
+      const imagebyName = formImageName(
+        name,
+        config.team.name,
+        OPS_REGISTRY_HOST,
+      )
       await removeImage(this.docker, imagebyId)
       await removeImage(this.docker, imagebyName)
       this.services.analytics.track(
+        'Ops CLI Cleanup',
         {
-          userId: this.user.email,
-          teamId: this.team.id,
-          cliEvent: 'Ops CLI Cleanup',
-          event: 'Ops CLI Cleanup',
-          properties: {
-            email: this.user.email,
-            username: this.user.username,
-          },
+          username: config.user.username,
         },
-        this.accessToken,
+        config,
       )
 
       this.log(`\n Successfully removed images for ${opName}`)
     } catch (err) {
       this.debug('%O', err)
-      this.config.runHook('error', { err, accessToken: this.accessToken })
+      this.config.runHook('error', {
+        err,
+        accessToken: config.tokens.accessToken,
+      })
     }
   }
 }
