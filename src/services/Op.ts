@@ -220,6 +220,8 @@ export class OpService {
       OPS_OP_NAME: op.name,
       OPS_TEAM_ID: config.team.id,
       OPS_TEAM_NAME: config.team.name,
+      OPS_USER_NAME: config.user.username,
+      OPS_USER_EMAIL: config.user.email,
       OPS_HOST_PLATFORM: os.platform(),
     }
 
